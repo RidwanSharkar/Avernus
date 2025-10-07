@@ -299,7 +299,7 @@ export class AudioSystem extends System {
 
   // Play enemy bow draw sound
   public playEnemyBowDrawSound(position: Vector3) {
-    return this.playWeaponSound('bow_draw', position, { volume: 0.15 }); // 0.6 * 0.25
+    return this.playWeaponSound('bow_draw', position, { volume: 0.125 }); // 0.6 * 0.25
   }
 
   // Play enemy bow release sound
@@ -326,7 +326,7 @@ export class AudioSystem extends System {
 
   // Play enemy sabres shadow step sound
   public playEnemySabresShadowStepSound(position: Vector3) {
-    return this.playWeaponSound('sabres_shadow_step', position, { volume: 0.4 }); // 0.8 * 0.5
+    return this.playWeaponSound('sabres_shadow_step', position, { volume: 0.65 }); // 0.8 * 0.5
   }
 
   // Play enemy sabres skyfall sound
@@ -341,18 +341,18 @@ export class AudioSystem extends System {
 
   // Play enemy crossentropy sound
   public playEnemyCrossentropySound(position: Vector3) {
-    return this.playWeaponSound('crossentropy', position, { volume: 0.225 }); // 0.9 * 0.25
+    return this.playWeaponSound('crossentropy', position, { volume: 0.3 }); // 0.9 * 0.25
   }
 
   // Play enemy sword swing sounds
   public playEnemySwordSwingSound(comboStep: 1 | 2 | 3, position: Vector3) {
     const soundId = `sword_swing_${comboStep}`;
-    return this.playWeaponSound(soundId, position, { volume: 0.2 }); // 0.8 * 0.25
+    return this.playWeaponSound(soundId, position, { volume: 0.1 }); // 0.8 * 0.25
   }
 
   // Play enemy sword deflect sound
   public playEnemySwordDeflectSound(position: Vector3) {
-    return this.playWeaponSound('sword_deflect', position, { volume: 0.45 }); // 0.9 * 0.5
+    return this.playWeaponSound('sword_deflect', position, { volume: 0.75 }); // 0.9 * 0.5
   }
 
   // Play enemy sword charge sound
@@ -367,12 +367,12 @@ export class AudioSystem extends System {
 
   // Play enemy colossus strike sound
   public playEnemyColossusStrikeSound(position: Vector3) {
-    return this.playWeaponSound('colossus_strike', position, { volume: 0.5 }); // 1.0 * 0.5
+    return this.playWeaponSound('colossus_strike', position, { volume: 0.8 }); // 1.0 * 0.5
   }
 
   // Play enemy frost nova sound
   public playEnemyFrostNovaSound(position: Vector3) {
-    return this.playWeaponSound('frost_nova', position, { volume: 0.45 }); // 0.9 * 0.5
+    return this.playWeaponSound('frost_nova', position, { volume: 0.75 }); // 0.9 * 0.5
   }
 
   // Play enemy backstab sound

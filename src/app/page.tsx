@@ -610,11 +610,11 @@ function HomeContent() {
                     Choose 2 weapons to equip. Each weapon has their 'Q' ability unlocked by default; all other abilities are unlocked by spending Skill Points. Each weapon has unique abilities and playstyles:
                   </p>
                   <ul className="text-gray-300 text-sm space-y-1 ml-4">
-                    <li>• <strong className="text-green-400">Bow (VIPER)</strong>:</li>
-                    <li>• <strong className="text-sky-400">Greatsword (IMMORTAL)</strong>:</li>
-                    <li>• <strong className="text-blue-400">Scythe (WEAVER)</strong>:</li>
-                    <li>• <strong className="text-purple-400">Runeblade (TEMPLAR)</strong>: </li>
-                    <li>• <strong className="text-red-400">Sabres (ASSASSIN)</strong>:</li>
+                    <li>• <strong className="text-green-400">Bow (VIPER) Ranged sniper with burst, harass and long-range siege potential</strong>:</li>
+                    <li>• <strong className="text-sky-400">Greatsword (IMMORTAL) Versatile offensive figher with distance-closing and defensive capabilities</strong>:</li>
+                    <li>• <strong className="text-blue-400">Scythe (WEAVER) Mana-based caster with offensive and defensive fire and ice spells</strong>:</li>
+                    <li>• <strong className="text-purple-400">Runeblade (TEMPLAR) Mana-based knight with life-stealing, area control and debuff abilities</strong>: </li>
+                    <li>• <strong className="text-red-400">Sabres (ASSASSIN) Stealth-based close-quarters specialist with high-risk, high-reward damage</strong>:</li>
                   </ul>
                 </div>
 

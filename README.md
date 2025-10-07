@@ -28,21 +28,21 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 5. **Master Combat**: Switch weapons mid-fight and combine abilities for devastating combos
 
 ### Game Format and Rules
-• Each player has a Tower and 3 Inhibitors.
-• Each player's Tower summons 3 Units every 45 seconds.
-• Player kills and Summoned Unit kills award experience points.
-• Leveling up grants a Skill Point to unlock additional abilities.
-• Players respawn upon 12.5 seconds after death.
-• Only Summoned Units can damage the opposing player's Tower.
-• Players can destroy the opposing player's Inhibitors to upgrade their Summoned Units into ELITES.
+• Each player has a Tower and 3 Inhibitors.<br>
+• Each player's Tower summons 3 Units every 45 seconds.<br>
+• Player kills and Summoned Unit kills award experience points.<br>
+• Leveling up grants a Skill Point to unlock additional abilities.<br>
+• Players respawn upon 12.5 seconds after death.<br>
+• Only Summoned Units can damage the opposing player's Tower.<br>
+• Players can destroy the opposing player's Inhibitors to upgrade their Summoned Units into ELITES.<br>
 • The first player to destroy the opposing player's Tower wins.
 
 ### Game Objectives
-• Defend your Tower from the enemy player's Summoned Units
-• Defend your Inhibitors from the enemy Player
-• Use your Summoned Units to damage the enemy Player's Tower
-• Destroy the enemy Player's Inhibitors to upgrade your Summoned Units into ELITES
-• Level up to gain combat bonuses and to invest Skill Points into additional weapon abilities
+• Defend your Tower from the enemy player's Summoned Units<br>
+• Defend your Inhibitors from the enemy Player<br>
+• Use your Summoned Units to damage the enemy Player's Tower<br>
+• Destroy the enemy Player's Inhibitors to upgrade your Summoned Units into ELITES<br>
+• Level up to gain combat bonuses and to invest Skill Points into additional weapon abilities<br>
 • Destroy the enemy Player's Tower to win the game
 
 ---
