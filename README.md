@@ -1,6 +1,6 @@
-# 🎮 AVERNUS - Multiplayer PVP Game
+# 🎮 AVERNUS
 
-A fast-paced, competitive 1v1 multiplayer 3D action game featuring real-time combat, strategic weapon switching, and deep progression systems. Built with modern web technologies for smooth, scalable gameplay.
+A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time combat and strategic weapon switching, with dozens of combinations and progression systems within a semi-MOBA format.
 
 
 ## 🌟 Key Features  
@@ -28,15 +28,11 @@ A fast-paced, competitive 1v1 multiplayer 3D action game featuring real-time com
 3. **Unlock Abilities**: Spend skill points on powerful abilities (Q, E, R, F keys)
 4. **Master Combat**: Switch weapons mid-fight and combine abilities for devastating combos
 
-### Game Modes
-- **Multiplayer**: Co-op against AI enemies with up to 4 players
-- **PVP**: 1v1-4v4 competitive matches with player-vs-player combat
-- **Single Player**: Practice mode with endless waves of enemies
 
 ## ⚔️ Weapon Classes & Abilities
 
 ### 💎 Greatsword - IMMORTAL
-**Playstyle**: Balanced melee fighter with charge attacks and defensive capabilities
+**Playstyle**: Versatile offensive figher with distance-closing and defensive capabilities
 - **🛡️ Q - Fullguard** (7s): Creates a protective barrier that blocks all incoming damage for 3 seconds. Cannot attack while shielded.
 - **🔱 E - Charge** (8s): Dash forward, instantly generating 25 rage and damaging enemies in your path.
 - **⚡️ R - Colossus Strike** (5s): {25+ RAGE} Consumes all rage to execute an enemy player, calling down a lightning bolt that deals increasing damage based on the amount of rage consumed.
@@ -46,7 +42,7 @@ A fast-paced, competitive 1v1 multiplayer 3D action game featuring real-time com
 ![greatsword](https://github.com/user-attachments/assets/9a4f5757-b28d-492c-80f0-d9abe4a25d6b)
 
 ### 🏹 Bow - VIPER
-**Playstyle**: Ranged damage dealer with burst potential and area control
+**Playstyle**: Ranged sniper with burst and siege potential
 - **🎯 Q - Frost Bite** (5s): {50 ENERGY} Fires 5 arrows in an arc, dealing 30 damage per arrow and applying a 50% SLOW effect for 5 seconds. An enemy can be hit by multiple arrows at close range.
 - **🐍 E - Cobra Shot** (2s): {60 ENERGY} Fires a laced arrow that applies VENOM damage over time to the target, preventing shield regeneration for 6 seconds.
 - **🐉 R - Viper Sting** (2s): {60 ENERGY} Fires a powerful piercing arrow that returns to you after a short delay. Each hit on an enemy creates a soul fragment that heals you for 20 HP each when returned.
@@ -61,7 +57,7 @@ A fast-paced, competitive 1v1 multiplayer 3D action game featuring real-time com
 
 
 ### ⚔️ Sabres - ASSASSIN
-**Playstyle**: Stealth-based fighter with mobility and high-risk, high-reward damage
+**Playstyle**: Stealth-based close-quarters specialist with high-risk, high-reward damage
 - **🔪 Q - Backstab** (2s): {60 ENERGY} Strikes the target with both sabres, dealing 75 damage or 175 damage if attacking the target from behind. Refund 45 energy if the target is stunned.
 - **💥 E - Flourish** (1.5s): {35 ENERGY} Unleash a flurry of slashes that deals increased damage with successive hits on the same target, stacking up to 3 times. Expending 3 stacks applies STUN for 4 seconds.
 - **🐦‍🔥 R - Divebomb** (6s): {40 ENERGY} Leap into the air and crash down, dealing 125 damage and applying STUN for 2 seconds to enemies caught below.
@@ -73,7 +69,7 @@ A fast-paced, competitive 1v1 multiplayer 3D action game featuring real-time com
 
 
 ### 🦋 Scythe - WEAVER
-**Playstyle**: Mana-based mage with crowd control and burst damage
+**Playstyle**: Mana-based caster with offensive and defensive fire and ice spells
 - **🔆 Q - Sunwell** (1s): {30 MANA} Transmutes mana to heal you for 60 HP.
 - **❄️ E - Coldsnap** (12s): {50 MANA} Conjures an explosive ice vortex that applies FREEZE to enemies, immobilizing them for 6 seconds.
 - **🔥 R - Crossentropy** (2s): {40 MANA} Charges for 1 second to fire an accelerating plasma bolt that deals 10 additional damage per stack of BURNING.
@@ -88,7 +84,7 @@ A fast-paced, competitive 1v1 multiplayer 3D action game featuring real-time com
 
 
 ### 🔮 Runeblade - TEMPLAR
-**Playstyle**: Dark magic user with life-stealing and debuff abilities
+**Playstyle**: Mana-based knight with life-stealing, area control and debuff abilities
 - **⛓️ Q - Void Grasp** (5s): {35 MANA} Fires grasping chains that latch onto the first enemy hit, pulling them towards you.
 - **🪝 E - Wraithblade** (3s): {35 MANA} A swift strike that inflicts enemies hit with the CORRUPTED debuff for 8 seconds. reducing movement speed by 90%. Afflicted enemies regain 10% movement speed per second.
 - **👻 R - Hexed Smite** (3s): {45 MANA} Calls down unholy energy, dealing damage to enemy players in a small area, healing you for the same amount of damage dealt.
@@ -138,8 +134,6 @@ A fast-paced, competitive 1v1 multiplayer 3D action game featuring real-time com
 - **Spatial Hashing**: Fast collision detection for hundreds of entities
 
 ## 🏗️ Entity Component System (ECS) Architecture
-
-Nocturne's core architecture is built around a high-performance Entity Component System that enables modular, scalable game development. This pattern separates data (Components) from logic (Systems) and provides flexible entity composition.
 
 ### Core ECS Classes
 
@@ -212,14 +206,14 @@ world.render(deltaTime);
 
 ### System Architecture
 
-#### **Update Systems** (60 FPS)
+#### **Update Systems**
 - **MovementSystem**: WASD input, physics simulation, dash mechanics
 - **CombatSystem**: Damage calculation, healing, death handling
 - **ControlSystem**: Player input, weapon switching, ability management
 - **CollisionSystem**: Spatial hash collision detection
 - **AudioSystem**: Spatial audio positioning and playback
 
-#### **Render Systems** (60 FPS)
+#### **Render Systems**
 - **RenderSystem**: Three.js rendering with LOD management
 - **CameraSystem**: Dynamic camera positioning and smoothing
 - **HealthBarSystem**: Health bar positioning and updates
@@ -266,7 +260,7 @@ world.emitEvent('enemy_killed', { enemyId, killerId });
 const events = world.getEvents('enemy_killed');
 ```
 
-### ECS Benefits
+### ECS Architecture vs. Eidolon
 
 - **Modularity**: Components and systems are independent and reusable
 - **Performance**: Only relevant systems process relevant entities
@@ -275,5 +269,4 @@ const events = world.getEvents('enemy_killed');
 - **Memory Efficiency**: Object pooling prevents garbage collection spikes
 - **Type Safety**: Full TypeScript support with component type checking
 
-This ECS architecture enables Nocturne to handle hundreds of entities simultaneously while maintaining smooth 60 FPS performance and providing a foundation for easy feature expansion.
 
