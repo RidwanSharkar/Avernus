@@ -36,7 +36,7 @@ A fast-paced, competitive multiplayer 3D action game featuring real-time combat,
 
 ## ⚔️ Weapon Classes & Abilities
 
-### 💎 Sword - The Versatile Warrior
+### 💎 Greatsword - IMMORTAL
 **Playstyle**: Balanced melee fighter with charge attacks and defensive capabilities
 - **🛡️ Q - Fullguard** (7s): Creates a protective barrier that blocks all incoming damage for 3 seconds. Cannot attack while shielded.
 - **🔱 E - Charge** (8s): Dash forward, instantly generating 25 rage and damaging enemies in your path.
@@ -44,7 +44,7 @@ A fast-paced, competitive multiplayer 3D action game featuring real-time combat,
 - **🌪 F - Divine Wind** (1.5s): {10 RAGE} Charges a gust of wind that launches your sword forward, dealing 120 piercing damage to enemies hit. Hitting an enemy player reduces the cooldown of Charge by 4 seconds.
 - **⚜️ P - Titan's Breath** (Passive): Increases maximum health by 350 and health regeneration to 30 HP per second outside of combat.
 
-### 🏹 Bow - The Precise Marksman
+### 🏹 Bow - VIPER
 **Playstyle**: Ranged damage dealer with burst potential and area control
 - **🎯 Q - Frost Bite** (5s): {50 ENERGY} Fires 5 arrows in an arc, dealing 30 damage per arrow and applying a 50% SLOW effect for 5 seconds. An enemy can be hit by multiple arrows at close range.
 - **🐍 E - Cobra Shot** (2s): {60 ENERGY} Fires a laced arrow that applies VENOM damage over time to the target, preventing shield regeneration for 6 seconds.
@@ -52,7 +52,13 @@ A fast-paced, competitive multiplayer 3D action game featuring real-time combat,
 - **🪶 F - Cloudkill** (4s): {40 ENERGY} Launches an artillery barrage of arrows from the sky that rain down on enemy locations.
 - **🍃 P - Tempest Rounds** (Passive): Replaces primary attack with a 3-round burst attack. Each arrow deals 30 damage.
 
-### ⚔️ Sabres - The Deadly Assassin
+![1007(5)](https://github.com/user-attachments/assets/77656231-e0c8-48cd-9fda-824c752fddee)
+
+![1007(8)](https://github.com/user-attachments/assets/9fbd5387-7c24-4102-a8dd-0397c2968e1f)
+
+
+
+### ⚔️ Sabres - ASSASSIN
 **Playstyle**: Stealth-based fighter with mobility and high-risk, high-reward damage
 - **🔪 Q - Backstab** (2s): {60 ENERGY} Strikes the target with both sabres, dealing 75 damage or 175 damage if attacking the target from behind. Refund 45 energy if the target is stunned.
 - **💥 E - Flourish** (1.5s): {35 ENERGY} Unleash a flurry of slashes that deals increased damage with successive hits on the same target, stacking up to 3 times. Expending 3 stacks applies STUN for 4 seconds.
@@ -60,7 +66,11 @@ A fast-paced, competitive multiplayer 3D action game featuring real-time combat,
 - **🌒 F - Shadow Step** (10s): Fade into the shadows, becoming INVISIBLE for 5 seconds.
 - **☠️ P - Cutthroat Oath** (Passive): Permanently increases critical strike chance by 30%.
 
-### 🦋 Scythe - The Arcane Sorcerer
+![1007(9)](https://github.com/user-attachments/assets/bb745611-2a1d-4a1a-8939-081753099d36)
+
+
+
+### 🦋 Scythe - WEAVER
 **Playstyle**: Mana-based mage with crowd control and burst damage
 - **🔆 Q - Sunwell** (1s): {30 MANA} Transmutes mana to heal you for 60 HP.
 - **❄️ E - Coldsnap** (12s): {50 MANA} Conjures an explosive ice vortex that applies FREEZE to enemies, immobilizing them for 6 seconds.
@@ -68,13 +78,32 @@ A fast-paced, competitive multiplayer 3D action game featuring real-time combat,
 - **🪬 F - Mantra** (5s): {75 MANA} Summons a totem that heals you for 20 HP per second while blasting nearby enemies that enter its range. Lasts 8 seconds.
 - **💠 P - Cryoflame** (Passive): Modifies primary attack to deal increased damage but no longer apply BURNING. Cryoflame Bolts deal double damage to enemies afflicted by FREEZE.
 
-### 🔮 Runeblade - The Cursed Summoner
+![1007](https://github.com/user-attachments/assets/45cc79bf-a0bc-4a55-b7d0-75c047a8831c)
+
+![1007(1)](https://github.com/user-attachments/assets/9bcf5e8b-c33b-4c10-aee6-03d353645f05)
+
+![1007(2)](https://github.com/user-attachments/assets/cbf7f6c6-bb28-4993-8814-74bc9933fdf3)
+
+![1007(3)](https://github.com/user-attachments/assets/201d3cc4-2c6a-40f2-b39b-95f57cf9287a)
+
+![1007(4)](https://github.com/user-attachments/assets/575df64e-844c-4f2e-96b1-68b0034a7610)
+
+![1007(6)](https://github.com/user-attachments/assets/5a9aa6a4-3cfe-42c7-854e-b512414ee2cd)
+
+![1007(10)](https://github.com/user-attachments/assets/ef444bef-cc54-4c37-a78b-7d7d68a36d3e)
+
+![1007(7)](https://github.com/user-attachments/assets/35bd7561-9867-46ca-9a22-db542bd86537)
+
+### 🔮 Runeblade - TEMPLAR
 **Playstyle**: Dark magic user with life-stealing and debuff abilities
 - **⛓️ Q - Void Grasp** (5s): {35 MANA} Fires grasping chains that latch onto the first enemy hit, pulling them towards you.
 - **🪝 E - Wraithblade** (3s): {35 MANA} A swift strike that inflicts enemies hit with the CORRUPTED debuff for 8 seconds. reducing movement speed by 90%. Afflicted enemies regain 10% movement speed per second.
 - **👻 R - Hexed Smite** (3s): {45 MANA} Calls down unholy energy, dealing damage to enemy players in a small area, healing you for the same amount of damage dealt.
 - **💔 F - Heartrend** (Toggle): {24 MANA/S} Toggle a force-multiplier aura that increases critical strike chance by 45% and critical strike damage by 75%.
 - **🩸 P - Bloodpact** (Passive): Reduces mana costs by 10% and heals for 15% of all attack damage dealt.
+
+
+
 
 ## 📊 Progression System
 
