@@ -23,11 +23,12 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 ## 🎮 How to Play
 
 ### Quick Start
-1. **Choose Your Weapons**: Select primary and secondary weapons from 5 classes
-2. **Level Up**: Gain experience by dealing damage and eliminating enemies/players
-3. **Unlock Abilities**: Spend skill points on powerful abilities (Q, E, R, F keys)
-4. **Master Combat**: Switch weapons mid-fight and combine abilities for devastating combos
+1. **Choose 2 Weapons**: Select a primary and secondary weapons from 5 classes. Each weapon starts off with their 'Q' ability by default. 
+3. **Level Up**: Gain experience by eliminating enemy players and their summoned units. 
+4. **Unlock Abilities**: Spend skill points on new abilities (E, R, F keys)
+5. **Master Combat**: Switch weapons mid-fight and combine abilities for devastating combos
 
+---
 
 ## ⚔️ Weapon Classes & Abilities
 
@@ -37,17 +38,23 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 - **🔱 E - Charge** (8s): Dash forward, instantly generating 25 rage and damaging enemies in your path.
 - **⚡️ R - Colossus Strike** (5s): {25+ RAGE} Consumes all rage to execute an enemy player, calling down a lightning bolt that deals increasing damage based on the amount of rage consumed.
 - **🌪 F - Divine Wind** (1.5s): {10 RAGE} Charges a gust of wind that launches your sword forward, dealing 120 piercing damage to enemies hit. Hitting an enemy player reduces the cooldown of Charge by 4 seconds.
-- **⚜️ P - Titan's Breath** (Passive): Increases maximum health by 350 and health regeneration to 30 HP per second outside of combat.
-  
+- **⚜️ P - Titan's Breath** (Passive): Increases maximum health by 350 and health regeneration to 30 HP per second outside of combat (consecutive 5 seconds of not taking damage).
+
+![greatsword2](https://github.com/user-attachments/assets/83ca4b6e-efe1-4cb1-b93e-a001f8ad4d03)
+
 ![greatsword](https://github.com/user-attachments/assets/9a4f5757-b28d-492c-80f0-d9abe4a25d6b)
 
+---
+
 ### 🏹 Bow - VIPER
-**Playstyle**: Ranged sniper with burst and siege potential
+**Playstyle**: Ranged sniper with burst, harass and long-range siege potential
 - **🎯 Q - Frost Bite** (5s): {50 ENERGY} Fires 5 arrows in an arc, dealing 30 damage per arrow and applying a 50% SLOW effect for 5 seconds. An enemy can be hit by multiple arrows at close range.
 - **🐍 E - Cobra Shot** (2s): {60 ENERGY} Fires a laced arrow that applies VENOM damage over time to the target, preventing shield regeneration for 6 seconds.
 - **🐉 R - Viper Sting** (2s): {60 ENERGY} Fires a powerful piercing arrow that returns to you after a short delay. Each hit on an enemy creates a soul fragment that heals you for 20 HP each when returned.
 - **🪶 F - Cloudkill** (4s): {40 ENERGY} Launches an artillery barrage of arrows from the sky that rain down on enemy locations.
 - **🍃 P - Tempest Rounds** (Passive): Replaces primary attack with a 3-round burst attack. Each arrow deals 30 damage.
+
+![bow0](https://github.com/user-attachments/assets/b1d85d1b-7d2b-4610-abe6-5bfa173c7537)
 
 ![bow](https://github.com/user-attachments/assets/b5a67b0f-b4ea-457d-9e27-bb6b7f5e4c67)
 
@@ -55,18 +62,25 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 ![bow2](https://github.com/user-attachments/assets/9c6bcc77-add9-4b9f-a4ae-ee1d1a494f10)
 
+![bow3](https://github.com/user-attachments/assets/10442056-a76e-4f72-8210-d298e8271ee2)
+
+---
 
 ### ⚔️ Sabres - ASSASSIN
 **Playstyle**: Stealth-based close-quarters specialist with high-risk, high-reward damage
 - **🔪 Q - Backstab** (2s): {60 ENERGY} Strikes the target with both sabres, dealing 75 damage or 175 damage if attacking the target from behind. Refund 45 energy if the target is stunned.
 - **💥 E - Flourish** (1.5s): {35 ENERGY} Unleash a flurry of slashes that deals increased damage with successive hits on the same target, stacking up to 3 times. Expending 3 stacks applies STUN for 4 seconds.
 - **🐦‍🔥 R - Divebomb** (6s): {40 ENERGY} Leap into the air and crash down, dealing 125 damage and applying STUN for 2 seconds to enemies caught below.
-- **🌒 F - Shadow Step** (10s): Fade into the shadows, becoming INVISIBLE for 5 seconds.
+- **🌒 F - Shadow Step** (10s): Fade into the shadows, becoming INVISIBLE for 5 seconds. Dealing damage does not break stealth.
 - **☠️ P - Cutthroat Oath** (Passive): Permanently increases critical strike chance by 30%.
+
+![sabres3](https://github.com/user-attachments/assets/1cab3a0e-cfc1-4c5f-aa0e-0b75bdb7481f)
 
 ![sabres](https://github.com/user-attachments/assets/49f06421-7842-45f4-9ed0-01e5eac790f6)
 
+![sabres2](https://github.com/user-attachments/assets/2f9ebaef-4890-4897-876d-03702d638854)
 
+---
 
 ### 🦋 Scythe - WEAVER
 **Playstyle**: Mana-based caster with offensive and defensive fire and ice spells
@@ -76,12 +90,15 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 - **🪬 F - Mantra** (5s): {75 MANA} Summons a totem that heals you for 20 HP per second while blasting nearby enemies that enter its range. Lasts 8 seconds.
 - **💠 P - Cryoflame** (Passive): Modifies primary attack to deal increased damage but no longer apply BURNING. Cryoflame Bolts deal double damage to enemies afflicted by FREEZE.
 
-![scythe](https://github.com/user-attachments/assets/ec0ff71c-5e34-459d-a959-9fe2197ecb96)
+![scythe0](https://github.com/user-attachments/assets/51fe6ba4-5ab0-4c38-87f1-85bf16f9c27a)
 
 ![scythe1](https://github.com/user-attachments/assets/6eccc6a5-489d-4370-8293-574825a7c917)
 
 ![scythe2](https://github.com/user-attachments/assets/87ed8a70-e972-4fee-b87d-399e22643e47)
 
+![scythe3](https://github.com/user-attachments/assets/079657fb-ccc2-4730-bfa9-342c16960f65)
+
+---
 
 ### 🔮 Runeblade - TEMPLAR
 **Playstyle**: Mana-based knight with life-stealing, area control and debuff abilities
@@ -93,14 +110,15 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 ![runeblade](https://github.com/user-attachments/assets/d0221986-6fae-42a8-9143-8092ea6c3bcd)
 
+![runeblade2](https://github.com/user-attachments/assets/44b3d91a-21de-4b54-be95-73d676fec0c6)
 
-
+---
 
 ## 📊 Progression System
 
 ### Leveling & Experience
 - **5 Levels** with increasing health (1000 + 150 per level)
-- **Exponential XP Requirements**: 50 → 100 → 200 → 400 total XP
+- **XP Requirements**: 50 → 100 → 200 → 400 total XP
 - **Combat Rewards**: Damage dealt and eliminations grant experience
 - **Skill Points**: 1 point per level + 2 starting points
 
