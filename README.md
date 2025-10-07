@@ -1,8 +1,7 @@
-# 🎮 AVERNUS - Multiplayer 3D Action Game
+# 🎮 AVERNUS - Multiplayer PVP Game
 
-A fast-paced, competitive multiplayer 3D action game featuring real-time combat, strategic weapon switching, and deep progression systems. Built with modern web technologies for smooth, scalable gameplay.
+A fast-paced, competitive 1v1 multiplayer 3D action game featuring real-time combat, strategic weapon switching, and deep progression systems. Built with modern web technologies for smooth, scalable gameplay.
 
-![Game Preview](https://via.placeholder.com/800x400/2d1b69/ffffff?text=Nocturne+Gameplay)
 
 ## 🌟 Key Features  
 
@@ -43,6 +42,8 @@ A fast-paced, competitive multiplayer 3D action game featuring real-time combat,
 - **⚡️ R - Colossus Strike** (5s): {25+ RAGE} Consumes all rage to execute an enemy player, calling down a lightning bolt that deals increasing damage based on the amount of rage consumed.
 - **🌪 F - Divine Wind** (1.5s): {10 RAGE} Charges a gust of wind that launches your sword forward, dealing 120 piercing damage to enemies hit. Hitting an enemy player reduces the cooldown of Charge by 4 seconds.
 - **⚜️ P - Titan's Breath** (Passive): Increases maximum health by 350 and health regeneration to 30 HP per second outside of combat.
+  
+![greatsword](https://github.com/user-attachments/assets/9a4f5757-b28d-492c-80f0-d9abe4a25d6b)
 
 ### 🏹 Bow - VIPER
 **Playstyle**: Ranged damage dealer with burst potential and area control
@@ -52,10 +53,11 @@ A fast-paced, competitive multiplayer 3D action game featuring real-time combat,
 - **🪶 F - Cloudkill** (4s): {40 ENERGY} Launches an artillery barrage of arrows from the sky that rain down on enemy locations.
 - **🍃 P - Tempest Rounds** (Passive): Replaces primary attack with a 3-round burst attack. Each arrow deals 30 damage.
 
-![1007(5)](https://github.com/user-attachments/assets/77656231-e0c8-48cd-9fda-824c752fddee)
+![bow](https://github.com/user-attachments/assets/b5a67b0f-b4ea-457d-9e27-bb6b7f5e4c67)
 
-![1007(8)](https://github.com/user-attachments/assets/9fbd5387-7c24-4102-a8dd-0397c2968e1f)
+![bow1](https://github.com/user-attachments/assets/453f112c-a136-4676-82e9-cb8b53df1593)
 
+![bow2](https://github.com/user-attachments/assets/9c6bcc77-add9-4b9f-a4ae-ee1d1a494f10)
 
 
 ### ⚔️ Sabres - ASSASSIN
@@ -66,7 +68,7 @@ A fast-paced, competitive multiplayer 3D action game featuring real-time combat,
 - **🌒 F - Shadow Step** (10s): Fade into the shadows, becoming INVISIBLE for 5 seconds.
 - **☠️ P - Cutthroat Oath** (Passive): Permanently increases critical strike chance by 30%.
 
-![1007(9)](https://github.com/user-attachments/assets/bb745611-2a1d-4a1a-8939-081753099d36)
+![sabres](https://github.com/user-attachments/assets/49f06421-7842-45f4-9ed0-01e5eac790f6)
 
 
 
@@ -78,21 +80,12 @@ A fast-paced, competitive multiplayer 3D action game featuring real-time combat,
 - **🪬 F - Mantra** (5s): {75 MANA} Summons a totem that heals you for 20 HP per second while blasting nearby enemies that enter its range. Lasts 8 seconds.
 - **💠 P - Cryoflame** (Passive): Modifies primary attack to deal increased damage but no longer apply BURNING. Cryoflame Bolts deal double damage to enemies afflicted by FREEZE.
 
-![1007](https://github.com/user-attachments/assets/45cc79bf-a0bc-4a55-b7d0-75c047a8831c)
+![scythe](https://github.com/user-attachments/assets/ec0ff71c-5e34-459d-a959-9fe2197ecb96)
 
-![1007(1)](https://github.com/user-attachments/assets/9bcf5e8b-c33b-4c10-aee6-03d353645f05)
+![scythe1](https://github.com/user-attachments/assets/6eccc6a5-489d-4370-8293-574825a7c917)
 
-![1007(2)](https://github.com/user-attachments/assets/cbf7f6c6-bb28-4993-8814-74bc9933fdf3)
+![scythe2](https://github.com/user-attachments/assets/87ed8a70-e972-4fee-b87d-399e22643e47)
 
-![1007(3)](https://github.com/user-attachments/assets/201d3cc4-2c6a-40f2-b39b-95f57cf9287a)
-
-![1007(4)](https://github.com/user-attachments/assets/575df64e-844c-4f2e-96b1-68b0034a7610)
-
-![1007(6)](https://github.com/user-attachments/assets/5a9aa6a4-3cfe-42c7-854e-b512414ee2cd)
-
-![1007(10)](https://github.com/user-attachments/assets/ef444bef-cc54-4c37-a78b-7d7d68a36d3e)
-
-![1007(7)](https://github.com/user-attachments/assets/35bd7561-9867-46ca-9a22-db542bd86537)
 
 ### 🔮 Runeblade - TEMPLAR
 **Playstyle**: Dark magic user with life-stealing and debuff abilities
@@ -101,6 +94,8 @@ A fast-paced, competitive multiplayer 3D action game featuring real-time combat,
 - **👻 R - Hexed Smite** (3s): {45 MANA} Calls down unholy energy, dealing damage to enemy players in a small area, healing you for the same amount of damage dealt.
 - **💔 F - Heartrend** (Toggle): {24 MANA/S} Toggle a force-multiplier aura that increases critical strike chance by 45% and critical strike damage by 75%.
 - **🩸 P - Bloodpact** (Passive): Reduces mana costs by 10% and heals for 15% of all attack damage dealt.
+
+![runeblade](https://github.com/user-attachments/assets/d0221986-6fae-42a8-9143-8092ea6c3bcd)
 
 
 
