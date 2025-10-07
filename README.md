@@ -1,6 +1,6 @@
 # 🎮 AVERNUS
 
-A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time combat and strategic weapon switching, with dozens of combinations and progression systems within a semi-MOBA format.
+A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time combat with strategic weapon switching, dozens of ability combinations and a progression system within a semi-MOBA format.
 
 
 ## 🌟 Key Features  
@@ -18,7 +18,6 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 - **Dynamic Progression**: Level up to 5, unlock abilities, and master multiple weapon combinations
 - **Real-time Combat**: Precise hit detection, damage numbers, and visual feedback
 - **Strategic Depth**: Resource management, cooldowns, and ability combos
-- **Competitive Balance**: Health scaling, experience rewards, and skill-based matchmaking
 
 ## 🎮 How to Play
 
@@ -27,6 +26,24 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 3. **Level Up**: Gain experience by eliminating enemy players and their summoned units. 
 4. **Unlock Abilities**: Spend skill points on new abilities (E, R, F keys)
 5. **Master Combat**: Switch weapons mid-fight and combine abilities for devastating combos
+
+### Game Format and Rules
+• Each player has a Tower and 3 Inhibitors.
+• Each player's Tower summons 3 Units every 45 seconds.
+• Player kills and Summoned Unit kills award experience points.
+• Leveling up grants a Skill Point to unlock additional abilities.
+• Players respawn upon 12.5 seconds after death.
+• Only Summoned Units can damage the opposing player's Tower.
+• Players can destroy the opposing player's Inhibitors to upgrade their Summoned Units into ELITES.
+• The first player to destroy the opposing player's Tower wins.
+
+### Game Objectives
+• Defend your Tower from the enemy player's Summoned Units
+• Defend your Inhibitors from the enemy Player
+• Use your Summoned Units to damage the enemy Player's Tower
+• Destroy the enemy Player's Inhibitors to upgrade your Summoned Units into ELITES
+• Level up to gain combat bonuses and to invest Skill Points into additional weapon abilities
+• Destroy the enemy Player's Tower to win the game
 
 ---
 
