@@ -37,8 +37,8 @@ export class SummonedUnitSystem extends System {
   // Wave completion callback
   private onWaveComplete?: () => void;
 
-  // Elite unit tracking based on destroyed enemy pillars
-  private destroyedEnemyPillars: Map<string, number> = new Map(); // ownerId -> number of destroyed enemy pillars
+  // Elite unit tracking based on opponent's lost pillars
+  private destroyedEnemyPillars: Map<string, number> = new Map(); // playerId -> number of their own pillars that have been destroyed
 
   // Reusable objects
   private tempVector = new Vector3();
@@ -512,12 +512,15 @@ export class SummonedUnitSystem extends System {
   }
 
   public onEnemyPillarDestroyed(destroyerPlayerId: string, pillarOwnerId: string): void {
-    // Track destroyed enemy pillars for the destroyer
-    const currentCount = this.destroyedEnemyPillars.get(destroyerPlayerId) || 0;
-    this.destroyedEnemyPillars.set(destroyerPlayerId, currentCount + 1);
+    // Track destroyed pillars for each player (pillars they've lost to opponents)
+    // Players get elite units when their opponent's pillars are destroyed
+    const currentCount = this.destroyedEnemyPillars.get(pillarOwnerId) || 0;
+    this.destroyedEnemyPillars.set(pillarOwnerId, currentCount + 1);
   }
 
   private getEliteUnitCount(ownerId: string): number {
+    // Note: This method would need to be updated to find opponent and count their lost pillars
+    // Currently unused in PVP mode (server-authoritative)
     const destroyedPillars = this.destroyedEnemyPillars.get(ownerId) || 0;
     return Math.min(destroyedPillars, 3); // Max 3 elite units (one per enemy pillar destroyed)
   }

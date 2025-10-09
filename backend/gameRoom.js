@@ -48,8 +48,8 @@ class GameRoom {
     // PVP Death confirmation system
     this.pendingKills = new Map(); // victimId -> { killerId, killerName, victimName, damageType, timestamp }
 
-    // Elite unit tracking for PVP - track destroyed enemy pillars per player
-    this.destroyedEnemyPillars = new Map(); // playerId -> number of enemy pillars they have destroyed
+    // Elite unit tracking for PVP - track destroyed pillars per player
+    this.destroyedEnemyPillars = new Map(); // playerId -> number of their own pillars that have been destroyed
   }
 
   // Start the actual game
@@ -93,12 +93,13 @@ class GameRoom {
     // In PVP mode, players start with fixed health. In multiplayer, health scales with kill count
     const baseHealth = 200;
     const maxHealth = gameMode === 'pvp' ? baseHealth : baseHealth + this.killCount;
-    
+
+    // Create player object first
     this.players.set(playerId, {
       id: playerId,
       name: playerName,
-      position: { x: 0, y: 1, z: 0 },
-      rotation: { x: 0, y: 0, z: 0 },
+      position: { x: 0, y: 1, z: 0 }, // Temporary position, will be updated for PVP
+      rotation: { x: 0, y: 0, z: 0 }, // Temporary rotation, will be updated for PVP
       weapon: weapon,
       subclass: subclass,
       health: maxHealth, // Start with full health
@@ -107,6 +108,41 @@ class GameRoom {
       movementDirection: { x: 0, y: 0, z: 0 },
       joinedAt: Date.now()
     });
+
+    // Calculate player position and rotation for PVP mode (after player is added)
+    if (gameMode === 'pvp') {
+      // Position players closer to their tower and facing the opposing tower
+      const playerIndex = this.players.size - 1; // Current player index (0-based, after adding)
+      const totalPlayers = 2; // Max players for positioning
+      const mapRadius = 29;
+      const baseRadius = mapRadius * 0.6; // Base radius for pillars (about 11.6 units from center)
+      const towerOffset = 3; // Towers are positioned 3 units further out than pillars
+      const playerSpawnDistance = baseRadius * 0.3; // Players spawn closer to their tower side (about 3.5 units from center)
+
+      // Calculate angle for this player's position (same as tower positioning)
+      const angleStep = (Math.PI * 2) / Math.max(totalPlayers, 2);
+      const angle = playerIndex * angleStep;
+
+      // Position player closer to their tower
+      const spawnX = Math.sin(angle) * playerSpawnDistance;
+      const spawnZ = Math.cos(angle) * playerSpawnDistance;
+
+      const playerPosition = { x: spawnX, y: 1, z: spawnZ };
+
+      // Calculate rotation to face the opposing tower
+      // For 2 players: Player 1 faces Player 2 (angle π), Player 2 faces Player 1 (angle 0)
+      const opposingAngle = (playerIndex + 1) % totalPlayers * angleStep;
+      const rotationY = opposingAngle; // Y rotation in radians to face opposing tower
+
+      const playerRotation = { x: 0, y: rotationY, z: 0 };
+
+      // Update player object with correct position and rotation
+      const player = this.players.get(playerId);
+      if (player) {
+        player.position = playerPosition;
+        player.rotation = playerRotation;
+      }
+    }
     
     // Create tower and pillars for PVP mode
     if (gameMode === 'pvp') {
@@ -426,7 +462,7 @@ class GameRoom {
       // Track destroyed enemy pillars for elite unit spawning (destroyer gets elite units)
       this.onEnemyPillarDestroyed(sourcePlayerId, pillar.ownerId);
 
-      console.log(`💥 Pillar destroyed! ${sourcePlayerId} destroyed ${pillar.ownerId}'s pillar. ${sourcePlayerId} now has ${this.destroyedEnemyPillars.get(sourcePlayerId) || 0} destroyed enemy pillars (elites: ${this.getEliteUnitCount(sourcePlayerId)})`);
+      console.log(`💥 Pillar destroyed! ${sourcePlayerId} destroyed ${pillar.ownerId}'s pillar. ${pillar.ownerId} has lost ${this.destroyedEnemyPillars.get(pillar.ownerId) || 0} pillars. Opponent gets ${this.getEliteUnitCount(sourcePlayerId)} elite units`);
     }
 
     // Broadcast pillar damage
@@ -453,16 +489,25 @@ class GameRoom {
   }
 
   onEnemyPillarDestroyed(destroyerPlayerId, pillarOwnerId) {
-    // Track destroyed enemy pillars for the destroyer (they get elite units as reward)
-    // This will be used by the summoned unit system to spawn elites
-    const key = destroyerPlayerId; // The player who destroyed the pillar gets elite units
-    const currentCount = this.destroyedEnemyPillars.get(key) || 0;
-    this.destroyedEnemyPillars.set(key, currentCount + 1);
+    // Track destroyed pillars for each player (pillars they've lost to opponents)
+    // Players get elite units when their opponent's pillars are destroyed
+    const currentCount = this.destroyedEnemyPillars.get(pillarOwnerId) || 0;
+    this.destroyedEnemyPillars.set(pillarOwnerId, currentCount + 1);
   }
 
   getEliteUnitCount(playerId) {
-    const destroyedPillars = this.destroyedEnemyPillars.get(playerId) || 0;
-    return Math.min(destroyedPillars, 3); // Max 3 elite units (one per enemy pillar destroyed)
+    // In 1v1 PVP, elite units are granted when the opponent's pillars are destroyed
+    // Find the opponent (the other player in the room)
+    const playerIds = Array.from(this.players.keys());
+    const opponentId = playerIds.find(id => id !== playerId);
+
+    if (!opponentId) {
+      return 0; // No opponent found (shouldn't happen in 1v1)
+    }
+
+    // Return how many pillars the opponent has lost
+    const opponentLostPillars = this.destroyedEnemyPillars.get(opponentId) || 0;
+    return Math.min(opponentLostPillars, 3); // Max 3 elite units (one per opponent pillar destroyed)
   }
 
   getPillars() {
@@ -955,11 +1000,15 @@ class GameRoom {
         };
       }
       
-      // Spawn 3 units: some normal, some elite based on how many enemy pillars the player has destroyed
+      // Spawn 3 units: some normal, some elite based on how many of the opponent's pillars have been destroyed
       const eliteCount = this.getEliteUnitCount(tower.ownerId);
       const normalCount = 3 - eliteCount;
 
-      console.log(`🎯 [${tower.ownerId}] Spawning units: ${normalCount} normal, ${eliteCount} elite (destroyed enemy pillars: ${this.destroyedEnemyPillars.get(tower.ownerId) || 0})`);
+      // Find opponent for logging
+      const playerIds = Array.from(this.players.keys());
+      const opponentId = playerIds.find(id => id !== tower.ownerId);
+
+      console.log(`🎯 [${tower.ownerId}] Spawning units: ${normalCount} normal, ${eliteCount} elite (opponent lost pillars: ${this.destroyedEnemyPillars.get(opponentId) || 0})`);
 
       // Spawn normal units first
       for (let i = 0; i < normalCount; i++) {

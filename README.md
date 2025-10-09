@@ -1,11 +1,12 @@
-# 🎮 AVERNUS
+# 🌋 AVERNUS 1.0
 
 A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time combat with strategic weapon switching, dozens of ability combinations and a progression system within a semi-MOBA format.
 
+GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
 
-## 🌟 Key Features  
+## 🪐 Key Features  
 
-### ⚡ Technical Specs
+### 🔩 Technical Specs
 - **Real-time Multiplayer**: Socket.io-powered networking with sub-60ms latency
 - **ECS Architecture**: Entity-Component-System for optimal performance and modularity
 - **Advanced 3D Rendering**: Three.js with WebGL, LOD management, and instanced rendering
@@ -13,11 +14,11 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 - **Performance Optimizations**: Object pooling, state batching, and performance monitoring
 - **Scalable Backend**: Node.js server with automatic scaling and health monitoring
 
-### 🎯 Gameplay Systems
+### ⚙️ Gameplay Systems
 - **5 Unique Weapon Classes**: Each with distinct playstyles and 4-5 unlockable abilities
 - **Dynamic Progression**: Level up to 5, unlock abilities, and master multiple weapon combinations
 - **Real-time Combat**: Precise hit detection, damage numbers, and visual feedback
-- **Strategic Depth**: Resource management, cooldowns, and ability combos
+- **Strategic Depth**: Resource management, cooldowns, ability combos and timings
 
 ## 🎮 How to Play
 
@@ -27,7 +28,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 4. **Unlock Abilities**: Spend skill points on new abilities (E, R, F keys)
 5. **Master Combat**: Switch weapons mid-fight and combine abilities for devastating combos
 
-### Game Format and Rules
+### 📜 Game Format and Rules
 • Each player has a Tower and 3 Inhibitors.<br>
 • Each player's Tower summons 3 Units every 45 seconds.<br>
 • Player kills and Summoned Unit kills award experience points.<br>
@@ -37,7 +38,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 • Players can destroy the opposing player's Inhibitors to upgrade their Summoned Units into ELITES.<br>
 • The first player to destroy the opposing player's Tower wins.
 
-### Game Objectives
+### 🏆 Game Objectives
 • Defend your Tower from the enemy player's Summoned Units<br>
 • Defend your Inhibitors from the enemy Player<br>
 • Use your Summoned Units to damage the enemy Player's Tower<br>
@@ -47,9 +48,9 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 ---
 
-## ⚔️ Weapon Classes & Abilities
+## 🗡️ Weapon Classes & Abilities
 
-### 💎 Greatsword - IMMORTAL
+### 💎 Greatsword - {IMMORTAL}
 **Playstyle**: Versatile offensive figher with distance-closing and defensive capabilities
 - **🛡️ Q - Fullguard** (7s): Creates a protective barrier that blocks all incoming damage for 3 seconds. Cannot attack while shielded.
 - **🔱 E - Charge** (8s): Dash forward, instantly generating 25 rage and damaging enemies in your path.
@@ -63,7 +64,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 ---
 
-### 🏹 Bow - VIPER
+### 🏹 Bow - {VIPER}
 **Playstyle**: Ranged sniper with burst, harass and long-range siege potential
 - **🎯 Q - Frost Bite** (5s): {50 ENERGY} Fires 5 arrows in an arc, dealing 30 damage per arrow and applying a 50% SLOW effect for 5 seconds. An enemy can be hit by multiple arrows at close range.
 - **🐍 E - Cobra Shot** (2s): {60 ENERGY} Fires a laced arrow that applies VENOM damage over time to the target, preventing shield regeneration for 6 seconds.
@@ -83,7 +84,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 ---
 
-### ⚔️ Sabres - ASSASSIN
+### ⚔️ Sabres - {ASSASSIN}
 **Playstyle**: Stealth-based close-quarters specialist with high-risk, high-reward damage
 - **🔪 Q - Backstab** (2s): {60 ENERGY} Strikes the target with both sabres, dealing 75 damage or 175 damage if attacking the target from behind. Refund 45 energy if the target is stunned.
 - **💥 E - Flourish** (1.5s): {35 ENERGY} Unleash a flurry of slashes that deals increased damage with successive hits on the same target, stacking up to 3 times. Expending 3 stacks applies STUN for 4 seconds.
@@ -99,7 +100,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 ---
 
-### 🦋 Scythe - WEAVER
+### 🦋 Scythe - {WEAVER}
 **Playstyle**: Mana-based caster with offensive and defensive fire and ice spells
 - **🔆 Q - Sunwell** (1s): {30 MANA} Transmutes mana to heal you for 60 HP.
 - **❄️ E - Coldsnap** (12s): {50 MANA} Conjures an explosive ice vortex that applies FREEZE to enemies, immobilizing them for 6 seconds.
@@ -117,7 +118,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 ---
 
-### 🔮 Runeblade - TEMPLAR
+### 🔮 Runeblade - {TEMPLAR}
 **Playstyle**: Mana-based knight with life-stealing, area control and debuff abilities
 - **⛓️ Q - Void Grasp** (5s): {35 MANA} Fires grasping chains that latch onto the first enemy hit, pulling them towards you.
 - **🪝 E - Wraithblade** (3s): {35 MANA} A swift strike that inflicts enemies hit with the CORRUPTED debuff for 8 seconds. reducing movement speed by 90%. Afflicted enemies regain 10% movement speed per second.
@@ -134,15 +135,14 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 ## 📊 Progression System
 
 ### Leveling & Experience
-- **5 Levels** with increasing health (1000 + 150 per level)
-- **XP Requirements**: 50 → 100 → 200 → 400 total XP
-- **Combat Rewards**: Damage dealt and eliminations grant experience
+- **5 Levels** with increasing health (1000 + 150 per level). The Scythe and Runeblade increase their maximum mana pool per level, while the Greatsword, Sabres, and Bow instead gain increased critical strike chance and critical strike damage per level.
+- **EXP Requirements**: 50 → 100 → 200 → 400 total XP to level up.
+- **Combat Rewards**: Players and their summoned unit kills grant experience points.
 - **Skill Points**: 1 point per level + 2 starting points
 
 ### Ability Unlocking
-- **4 Abilities per Weapon**: Q, E, R, F (plus passive P)
+- **4 Abilities per Weapon**: {Q} unlocked by default, {E}, {R}, {F} active hotkeys and a passive ability choice {P}
 - **Strategic Choices**: Mix and match abilities across weapon slots
-- **Persistent Unlocks**: Abilities remain unlocked across games
 
 ## 🛠️ Technical Architecture
 

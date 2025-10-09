@@ -78,7 +78,7 @@ import EnhancedGround from '@/components/environment/EnhancedGround';
 
 
 import { DamageNumberData } from '@/components/DamageNumbers';
-import { setGlobalCriticalRuneCount, setGlobalCritDamageRuneCount } from '@/core/DamageCalculator';
+import { setGlobalCriticalRuneCount, setGlobalCritDamageRuneCount, setControlSystem } from '@/core/DamageCalculator';
 import Environment from '@/components/environment/Environment';
 import { useBowPowershot } from '@/components/projectiles/useBowPowershot';
 import { triggerGlobalViperSting } from '@/components/projectiles/ViperStingManager';
@@ -3748,7 +3748,10 @@ const hasMana = useCallback((amount: number) => {
       };
       
       const { player, controlSystem, towerSystem, pillarSystem } = setupPVPGame(engine, scene, camera as PerspectiveCamera, gl, damagePlayerWithMapping, damageTower, damagePillar, damageSummonedUnit, damageEnemy, selectedWeapons, cameraSystemRef);
-      
+
+      // Set control system reference for damage calculations (needed for weapon passives)
+      setControlSystem(controlSystem);
+
       // Update player entity with correct socket ID for team validation
       if (socket?.id) {
         player.userData = player.userData || {};
