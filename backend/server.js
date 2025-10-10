@@ -196,6 +196,25 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle chat messages
+  socket.on('chat-message', (data) => {
+    const { roomId, message } = data;
+
+    if (!gameRooms.has(roomId)) return;
+
+    const room = gameRooms.get(roomId);
+
+    // Check if player is in the room
+    if (!room.getPlayer(socket.id)) return;
+
+    // Broadcast chat message to all players in the room
+    socket.to(roomId).emit('chat-message', {
+      message: message
+    });
+
+    console.log(`💬 Chat message from ${socket.id} in room ${roomId}: ${message.message}`);
+  });
+
   // Handle manual disconnect (when user intentionally leaves)
   socket.on('leave-room', () => {
     console.log(`Player manually left: ${socket.id}`);

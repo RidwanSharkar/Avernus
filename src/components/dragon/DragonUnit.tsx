@@ -3,6 +3,7 @@ import { Group, Vector3 } from 'three';
 import React from 'react';
 import BonePlate from './BonePlate';
 import BoneWings from './BoneWings';
+import AscendantBoneWings from './AscendantBoneWings';
 import { DragonHorns } from './DragonHorns';
 import ChargedOrbitals, { DashChargeStatus } from './ChargedOrbitals';
 import BoneAura from './BoneAura';
@@ -30,6 +31,7 @@ interface DragonUnitProps {
   chargeProgress?: number;
   isSwinging?: boolean;
   isSpinning?: boolean;
+  purchasedItems?: string[]; // Purchased cosmetic items
   onBowRelease?: (finalProgress: number, isPerfectShot?: boolean) => void;
   onScytheSwingComplete?: () => void;
   onSwordSwingComplete?: () => void;
@@ -185,7 +187,8 @@ export default function DragonUnit({
   rageSpent,
   collectedBones = 0,
   isWingJetsActive = false,
-  combatSystem
+  combatSystem,
+  purchasedItems = []
 }: DragonUnitProps) {
   
   const groupRef = useRef<Group>(null);
@@ -335,27 +338,45 @@ export default function DragonUnit({
     </group>
   ), []);
 
+  const hasAscendantWings = purchasedItems.includes('ascendant_wings');
+
   const wings = useMemo(() => (
     <group position={[0, 0.2, -0.15]}>
       {/* Left Wing */}
       <group rotation={[0, Math.PI / 5.5, 0]}>
-        <BoneWings 
-          isLeftWing={true}
-          parentRef={groupRef}
-          isDashing={isDashing}
-        />
+        {hasAscendantWings ? (
+          <AscendantBoneWings
+            isLeftWing={true}
+            parentRef={groupRef}
+            isDashing={isDashing}
+          />
+        ) : (
+          <BoneWings
+            isLeftWing={true}
+            parentRef={groupRef}
+            isDashing={isDashing}
+          />
+        )}
       </group>
-      
+
       {/* Right Wing */}
       <group rotation={[0, -Math.PI / 5.5, 0]}>
-        <BoneWings 
-          isLeftWing={false}
-          parentRef={groupRef}
-          isDashing={isDashing}
-        />
+        {hasAscendantWings ? (
+          <AscendantBoneWings
+            isLeftWing={false}
+            parentRef={groupRef}
+            isDashing={isDashing}
+          />
+        ) : (
+          <BoneWings
+            isLeftWing={false}
+            parentRef={groupRef}
+            isDashing={isDashing}
+          />
+        )}
       </group>
     </group>
-  ), [isDashing]);
+  ), [isDashing, hasAscendantWings]);
 
   return (
     <group ref={groupRef} position={[position.x, position.y + 0.2, position.z]}>

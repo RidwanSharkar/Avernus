@@ -29,6 +29,10 @@ export interface Player {
   // PVP Experience system
   experience?: number;
   level?: number;
+  // Essence currency system
+  essence?: number;
+  // Purchased items
+  purchasedItems?: string[];
 }
 
 export interface Enemy {
@@ -85,6 +89,14 @@ interface RoomPreview {
   summonedUnits: SummonedUnit[];
 }
 
+interface ChatMessage {
+  id: string;
+  playerId: string;
+  playerName: string;
+  message: string;
+  timestamp: number;
+}
+
 // Animation state type for better type safety
 type PlayerAnimationState = {
   isCharging?: boolean;
@@ -136,6 +148,10 @@ interface MultiplayerContextType {
   killCount: number;
   gameStarted: boolean;
   gameMode: 'multiplayer' | 'pvp';
+
+  // Chat state
+  chatMessages: ChatMessage[];
+  isChatOpen: boolean;
 
   // Weapon selection state
   selectedWeapons: {
@@ -190,6 +206,9 @@ interface MultiplayerContextType {
   updatePlayerExperience: (playerId: string, experience: number) => void;
   updatePlayerLevel: (playerId: string, level: number) => void;
 
+  // Essence currency system actions
+  updatePlayerEssence: (playerId: string, essence: number) => void;
+
   // Shield actions
   updatePlayerShield: (playerId: string, shield: number, maxShield?: number) => void;
 
@@ -200,6 +219,14 @@ interface MultiplayerContextType {
   // Skill point system actions
   unlockAbility: (unlock: AbilityUnlock) => void;
   updateSkillPointsForLevel: (level: number) => void;
+
+  // Merchant purchase actions
+  purchaseItem: (itemId: string, cost: number, currency: 'essence') => boolean;
+
+  // Chat actions
+  sendChatMessage: (message: string) => void;
+  openChat: () => void;
+  closeChat: () => void;
 
   // Direct state setters for local visual updates (use with caution)
   setPlayers: React.Dispatch<React.SetStateAction<Map<string, Player>>>;
@@ -241,7 +268,11 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     tertiary?: WeaponType;
   } | null>(null);
   const [skillPointData, setSkillPointData] = useState<SkillPointData>(SkillPointSystem.getInitialSkillPointData());
-  
+
+  // Chat state
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Throttling refs to prevent infinite re-render loops
@@ -718,6 +749,28 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
       });
     });
 
+    // Purchase system event handler
+    addEventHandler('player-purchase', (data) => {
+      setPlayers(prev => {
+        const updated = new Map(prev);
+        const player = updated.get(data.playerId);
+        if (player) {
+          updated.set(data.playerId, {
+            ...player,
+            essence: data.currency === 'essence' ? (player.essence || 0) - data.cost : player.essence,
+            purchasedItems: [...(player.purchasedItems || []), data.itemId]
+          });
+        }
+        return updated;
+      });
+    });
+
+    // Chat system event handler
+    addEventHandler('chat-message', (data) => {
+      const chatMessage = data.message as ChatMessage;
+      setChatMessages(prev => [...prev.slice(-49), chatMessage]); // Keep last 50 messages
+    });
+
     setSocket(newSocket);
 
     return () => {
@@ -1027,6 +1080,16 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     }
   }, [socket, currentRoomId]);
 
+  const updatePlayerEssence = useCallback((playerId: string, essence: number) => {
+    if (socket && currentRoomId) {
+      socket.emit('player-essence-changed', {
+        roomId: currentRoomId,
+        playerId,
+        essence
+      });
+    }
+  }, [socket, currentRoomId]);
+
   const updatePlayerShield = useCallback((playerId: string, shield: number, maxShield?: number) => {
     if (socket && currentRoomId) {
       socket.emit('player-shield-changed', {
@@ -1096,6 +1159,83 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     setSkillPointData(newSkillPointData);
   }, [skillPointData]);
 
+  const purchaseItem = useCallback((itemId: string, cost: number, currency: 'essence'): boolean => {
+    // Try to find local player by socket ID first, then by looking for any player (for single-player mode)
+    let localPlayer = players.get(socket?.id || '');
+    if (!localPlayer) {
+      // If no player found by socket ID, try to find any player (for cases where socket isn't connected)
+      const allPlayers = Array.from(players.values());
+      localPlayer = allPlayers.find(p => p.id) || undefined;
+    }
+
+    if (!localPlayer) {
+      return false;
+    }
+
+    // Check if item is already purchased
+    if (localPlayer.purchasedItems?.includes(itemId)) {
+      return false;
+    }
+
+    // Check if player has enough essence
+    const currentEssence = localPlayer.essence || 0;
+    if (currentEssence < cost) {
+      return false;
+    }
+
+    // Deduct essence and add item to purchased items
+    const updatedPlayer = {
+      ...localPlayer,
+      essence: currentEssence - cost,
+      purchasedItems: [...(localPlayer.purchasedItems || []), itemId]
+    };
+
+    setPlayers(prev => new Map(prev).set(localPlayer.id, updatedPlayer));
+
+    // Broadcast to other players
+    if (socket && currentRoomId) {
+      socket.emit('player-purchase', {
+        roomId: currentRoomId,
+        playerId: localPlayer.id,
+        itemId,
+        cost,
+        currency
+      });
+    }
+
+    return true;
+  }, [players, socket, currentRoomId]);
+
+  // Chat functions
+  const sendChatMessage = useCallback((message: string) => {
+    if (!socket || !currentRoomId || !socket.id) return;
+
+    const chatMessage: ChatMessage = {
+      id: `${Date.now()}-${Math.random()}`,
+      playerId: socket.id,
+      playerName: players.get(socket.id)?.name || 'Unknown',
+      message: message.trim(),
+      timestamp: Date.now()
+    };
+
+    // Add to local chat messages immediately
+    setChatMessages(prev => [...prev.slice(-49), chatMessage]); // Keep last 50 messages
+
+    // Broadcast to other players
+    socket.emit('chat-message', {
+      roomId: currentRoomId,
+      message: chatMessage
+    });
+  }, [socket, currentRoomId, players]);
+
+  const openChat = useCallback(() => {
+    setIsChatOpen(true);
+  }, []);
+
+  const closeChat = useCallback(() => {
+    setIsChatOpen(false);
+  }, []);
+
   const contextValue: MultiplayerContextType = {
     socket,
     isConnected,
@@ -1138,6 +1278,7 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     damagePillar,
     updatePlayerExperience,
     updatePlayerLevel,
+    updatePlayerEssence,
     updatePlayerShield,
     selectedWeapons,
     setSelectedWeapons,
@@ -1145,6 +1286,12 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     skillPointData,
     unlockAbility,
     updateSkillPointsForLevel,
+    purchaseItem,
+    chatMessages,
+    isChatOpen,
+    sendChatMessage,
+    openChat,
+    closeChat,
     setPlayers
   };
 

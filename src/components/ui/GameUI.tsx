@@ -3,6 +3,7 @@ import { WeaponType } from '@/components/dragon/weapons';
 import HotkeyPanel from './HotkeyPanel';
 import { SkillPointData, AbilityUnlock } from '@/utils/SkillPointSystem';
 import { RuneCounter } from './RuneCounter';
+import ChatUI from './ChatUI';
 
 interface GameUIProps {
   currentWeapon: WeaponType;
@@ -26,6 +27,7 @@ interface GameUIProps {
   onWeaponSwitch?: (slot: 1 | 2 | 3) => void;
   skillPointData?: SkillPointData;
   onUnlockAbility?: (unlock: AbilityUnlock) => void;
+  purchasedItems?: string[];
   criticalRuneCount?: number;
   critDamageRuneCount?: number;
   criticalChance?: number;
@@ -98,6 +100,7 @@ export default function GameUI({
   onWeaponSwitch,
   skillPointData,
   onUnlockAbility,
+  purchasedItems = [],
   criticalRuneCount = 0,
   critDamageRuneCount = 0,
   criticalChance = 0,
@@ -483,7 +486,11 @@ export default function GameUI({
         onWeaponSwitch={onWeaponSwitch}
         skillPointData={skillPointData}
         onUnlockAbility={handleUnlockAbility}
+        purchasedItems={purchasedItems}
       />
+
+      {/* Chat UI */}
+      <ChatUI />
     </>
   );
 }

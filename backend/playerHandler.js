@@ -550,6 +550,80 @@ function handlePlayerEvents(socket, gameRooms) {
       timestamp
     });
   });
+
+  // Handle player essence changes
+  socket.on('player-essence-changed', (data) => {
+    const { roomId, playerId, essence } = data;
+
+    if (!gameRooms.has(roomId)) return;
+
+    const room = gameRooms.get(roomId);
+    const player = room.getPlayer(playerId || socket.id);
+
+    if (player) {
+      // Add essence to current amount (initialize to 0 if undefined)
+      const currentEssence = player.essence || 0;
+      player.essence = currentEssence + essence;
+
+      // Broadcast essence change to all players in the room (including the sender for consistency)
+      room.io.to(roomId).emit('player-essence-changed', {
+        playerId: playerId || socket.id,
+        essence: player.essence,
+        timestamp: Date.now()
+      });
+    }
+  });
+
+  socket.on('player-purchase', (data) => {
+    const { roomId, playerId, itemId, cost, currency } = data;
+
+    if (!gameRooms.has(roomId)) return;
+
+    const room = gameRooms.get(roomId);
+    const player = room.getPlayer(playerId || socket.id);
+
+    if (player) {
+      // Initialize purchasedItems array if it doesn't exist
+      if (!player.purchasedItems) {
+        player.purchasedItems = [];
+      }
+
+      // Check if item is already purchased
+      if (player.purchasedItems.includes(itemId)) {
+        return; // Item already purchased
+      }
+
+      // Only handle essence currency
+      if (currency !== 'essence') {
+        return; // Invalid currency
+      }
+
+      // Check if player has enough essence
+      if ((player.essence || 0) < cost) {
+        return; // Not enough essence
+      }
+
+      // Deduct essence and add item
+      player.essence = (player.essence || 0) - cost;
+      player.purchasedItems.push(itemId);
+
+      // Broadcast purchase to all players in the room
+      room.io.to(roomId).emit('player-purchase', {
+        playerId: playerId || socket.id,
+        itemId,
+        cost,
+        currency,
+        timestamp: Date.now()
+      });
+
+      // Also broadcast essence update
+      room.io.to(roomId).emit('player-essence-changed', {
+        playerId: playerId || socket.id,
+        essence: player.essence,
+        timestamp: Date.now()
+      });
+    }
+  });
 }
 
 module.exports = { handlePlayerEvents };

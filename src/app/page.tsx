@@ -9,8 +9,10 @@ import DamageNumbers from '../components/DamageNumbers';
 import GameUI from '../components/ui/GameUI';
 import { getGlobalRuneCounts, getCriticalChance, getCriticalDamageMultiplier } from '../core/DamageCalculator';
 import ExperienceBar from '../components/ui/ExperienceBar';
+import EssenceDisplay from '../components/ui/EssenceDisplay';
 import { MultiplayerProvider, useMultiplayer } from '../contexts/MultiplayerContext';
 import RoomJoin from '../components/ui/RoomJoin';
+import MerchantUI from '../components/ui/MerchantUI';
 import { weaponAbilities, getAbilityIcon, type AbilityData } from '../utils/weaponAbilities';
 
 // Extend Window interface to include audioSystem
@@ -76,7 +78,7 @@ function AbilityTooltip({ content, visible, x, y }: TooltipProps) {
 }
 
 function HomeContent() {
-  const { selectedWeapons, setSelectedWeapons, skillPointData, unlockAbility, updateSkillPointsForLevel } = useMultiplayer();
+  const { selectedWeapons, setSelectedWeapons, skillPointData, unlockAbility, updateSkillPointsForLevel, purchaseItem, players, socket } = useMultiplayer();
 
   const [damageNumbers, setDamageNumbers] = useState<DamageNumberData[]>([]);
   const [cameraInfo, setCameraInfo] = useState<{
@@ -86,6 +88,7 @@ function HomeContent() {
     camera: null,
     size: { width: 0, height: 0 }
   });
+  const [localPurchasedItems, setLocalPurchasedItems] = useState<string[]>([]);
   const [gameState, setGameState] = useState({
     playerHealth: 200,
     maxHealth: 200,
@@ -133,6 +136,8 @@ function HomeContent() {
   const [roomJoinMode, setRoomJoinMode] = useState<'multiplayer' | 'pvp'>('multiplayer');
   const [playerExperience, setPlayerExperience] = useState(0);
   const [playerLevel, setPlayerLevel] = useState(1);
+  const [playerEssence, setPlayerEssence] = useState(50); // Start with 50 essence
+  const [showMerchantUI, setShowMerchantUI] = useState(false);
   const [showRulesPanel, setShowRulesPanel] = useState(false);
 
   // Local weapon selection state
@@ -385,6 +390,10 @@ function HomeContent() {
     }
   };
 
+  const handleEssenceUpdate = (essence: number) => {
+    setPlayerEssence(essence);
+  };
+
   // Initialize tempSelectedWeapons and weapon positions when selectedWeapons changes
   useEffect(() => {
     if (selectedWeapons) {
@@ -426,6 +435,23 @@ function HomeContent() {
       setWeaponPositions({});
     }
   }, [tempSelectedWeapons]);
+
+  // Sync localPurchasedItems with multiplayer context player data
+  useEffect(() => {
+    if (players.size > 0) {
+      // Find the local player (either by socket ID or first player if in single-player mode)
+      let localPlayer = players.get(socket?.id || '');
+      if (!localPlayer) {
+        // If no player found by socket ID, try to find any player (for cases where socket isn't connected)
+        const allPlayers = Array.from(players.values());
+        localPlayer = allPlayers.find(p => p.id) || undefined;
+      }
+
+      if (localPlayer?.purchasedItems) {
+        setLocalPurchasedItems(localPlayer.purchasedItems);
+      }
+    }
+  }, [players, socket?.id]);
 
   // Initialize audio system for UI sounds
   useEffect(() => {
@@ -691,6 +717,8 @@ function HomeContent() {
               onGameStateUpdate={handleGameStateUpdate}
               onControlSystemUpdate={handleControlSystemUpdate}
               onExperienceUpdate={handleExperienceUpdate}
+              onEssenceUpdate={handleEssenceUpdate}
+              onMerchantUIUpdate={setShowMerchantUI}
               selectedWeapons={selectedWeapons}
             />
           )}
@@ -732,6 +760,7 @@ function HomeContent() {
             {/* Game UI - Outside Canvas */}
             <div className="absolute bottom-4 left-4">
               <GameUI
+                key={`gameui-${localPurchasedItems.length}-${localPurchasedItems.join(',')}`}
                 currentWeapon={controlSystem?.getCurrentWeapon() || selectedWeapons?.primary || gameState.currentWeapon}
                 playerHealth={gameState.playerHealth}
                 maxHealth={gameState.maxHealth}
@@ -749,6 +778,7 @@ function HomeContent() {
                 }}
                 skillPointData={skillPointData}
                 onUnlockAbility={unlockAbility}
+                purchasedItems={localPurchasedItems}
                 criticalRuneCount={getGlobalRuneCounts().criticalRunes}
                 critDamageRuneCount={getGlobalRuneCounts().critDamageRunes}
                 criticalChance={getCriticalChance()}
@@ -762,6 +792,55 @@ function HomeContent() {
                 experience={playerExperience}
                 level={playerLevel}
                 isLocalPlayer={true}
+              />
+            )}
+
+            {/* Essence Display - Only show in PVP mode */}
+            {gameMode === 'pvp' && (
+              <EssenceDisplay
+                essence={playerEssence}
+                isLocalPlayer={true}
+              />
+            )}
+
+            {/* Merchant UI - Only show in PVP mode */}
+            {gameMode === 'pvp' && (
+              <MerchantUI
+                isVisible={showMerchantUI}
+                onClose={() => setShowMerchantUI(false)}
+                onPurchase={(itemId) => {
+                  // Find the item details
+                  const MERCHANT_ITEMS = [
+                    {
+                      id: 'damage_boost',
+                      name: 'Damage Boost',
+                      description: 'Permanently increases your weapon damage by 15%',
+                      cost: 75,
+                      currency: 'essence' as const
+                    },
+                    {
+                      id: 'ascendant_wings',
+                      name: 'Ascendant Wings',
+                      description: 'Beautiful angelic wings that replace your dragon wings with a celestial appearance',
+                      cost: 50,
+                      currency: 'essence' as const
+                    }
+                  ];
+
+                  const item = MERCHANT_ITEMS.find(item => item.id === itemId);
+                  if (item) {
+                    const success = purchaseItem(item.id, item.cost, item.currency);
+                    if (success) {
+                      // Update local state for immediate UI feedback
+                      setLocalPurchasedItems(prev => {
+                        if (!prev.includes(item.id)) {
+                          return [...prev, item.id];
+                        }
+                        return prev;
+                      });
+                    }
+                  }
+                }}
               />
             )}
           </>

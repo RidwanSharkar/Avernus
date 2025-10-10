@@ -28,6 +28,7 @@ interface DragonRendererProps {
   chargeProgress?: number;
   chargeDirection?: Vector3;
   isSwinging?: boolean;
+  purchasedItems?: string[];
   isSpinning?: boolean;
   onBowRelease?: (finalProgress: number, isPerfectShot?: boolean) => void;
   onScytheSwingComplete?: () => void;
@@ -146,7 +147,8 @@ export default function DragonRenderer({
   targetPlayerData,
   rageSpent,
   onDamageNumbersReady,
-  combatSystem
+  combatSystem,
+  purchasedItems = []
 }: DragonRendererProps) {
   const mountRef = useRef(false);
   if (!mountRef.current) {
@@ -445,6 +447,7 @@ export default function DragonRenderer({
           targetPlayerData={targetPlayerData}
           rageSpent={rageSpent}
           combatSystem={combatSystem}
+          purchasedItems={purchasedItems}
         />
       </group>
       

@@ -32,6 +32,9 @@ export class ControlSystem extends System {
   private projectileSystem: ProjectileSystem;
   private audioSystem: AudioSystem | null = null;
   private playerEntity: Entity | null = null;
+
+  // Input control
+  private inputDisabled: boolean = false;
   
   // Callback for bow release effects
   private onBowReleaseCallback?: (finalProgress: number, isPerfectShot?: boolean) => void;
@@ -388,6 +391,14 @@ export class ControlSystem extends System {
     this.playerEntity = entity;
   }
 
+  public setInputDisabled(disabled: boolean): void {
+    this.inputDisabled = disabled;
+  }
+
+  public setAllowAllInput(allow: boolean): void {
+    this.inputManager.setAllowAllInput(allow);
+  }
+
   public update(entities: Entity[], deltaTime: number): void {
     if (!this.playerEntity) return;
 
@@ -395,6 +406,9 @@ export class ControlSystem extends System {
     const playerMovement = this.playerEntity.getComponent(Movement);
 
     if (!playerTransform || !playerMovement) return;
+
+    // If input is disabled (e.g., chat is open), skip input processing
+    if (this.inputDisabled) return;
 
     // If player is dead, allow input processing but set movement to 0
     if (this.isPlayerDead) {

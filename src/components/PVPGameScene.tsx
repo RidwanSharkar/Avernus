@@ -33,6 +33,7 @@ import { CombatSystem } from '@/systems/CombatSystem';
 import { TowerSystem } from '@/systems/TowerSystem';
 import { PillarSystem } from '@/systems/PillarSystem';
 import { InterpolationSystem } from '@/systems/InterpolationSystem';
+import { MerchantSystem } from '@/systems/MerchantSystem';
 import { WeaponType, WeaponSubclass } from '@/components/dragon/weapons';
 import { ReanimateRef } from '@/components/weapons/Reanimate';
 import PVPReanimateEffect from '@/components/weapons/PVPReanimateEffect';
@@ -71,6 +72,7 @@ import { pvpObjectPool } from '@/utils/PVPObjectPool';
 import { pvpStateBatcher, PVPStateUpdateHelpers } from '@/utils/PVPStateBatcher';
 import DeflectShieldManager, { triggerGlobalDeflectShield } from '@/components/weapons/DeflectShieldManager';
 import PlayerHealthBar from '@/components/ui/PlayerHealthBar';
+import MerchantUI from '@/components/ui/MerchantUI';
 import TowerRenderer from '@/components/towers/TowerRenderer';
 import PillarRenderer from '@/components/environment/PillarRenderer';
 import SummonedUnitRenderer from '@/components/SummonedUnitRenderer';
@@ -110,7 +112,9 @@ interface PVPGameSceneProps {
   }) => void;
   onControlSystemUpdate?: (controlSystem: any) => void;
   onExperienceUpdate?: (experience: number, level: number) => void;
+  onEssenceUpdate?: (essence: number) => void;
   onScoreboardUpdate?: (playerKills: Map<string, number>, players: Map<string, any>) => void;
+  onMerchantUIUpdate?: (isVisible: boolean) => void;
   selectedWeapons?: {
     primary: WeaponType;
     secondary: WeaponType;
@@ -119,7 +123,7 @@ interface PVPGameSceneProps {
   skillPointData?: SkillPointData;
 }
 
-export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, onCameraUpdate, onGameStateUpdate, onControlSystemUpdate, onExperienceUpdate, onScoreboardUpdate, selectedWeapons, skillPointData }: PVPGameSceneProps = {}) {
+export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, onCameraUpdate, onGameStateUpdate, onControlSystemUpdate, onExperienceUpdate, onEssenceUpdate, onScoreboardUpdate, onMerchantUIUpdate, selectedWeapons, skillPointData }: PVPGameSceneProps = {}) {
   const { scene, camera, gl, size } = useThree();
   const {
     players,
@@ -150,7 +154,11 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
     damagePillar, // New function for pillar damage
     damageSummonedUnit, // New function for summoned unit damage
     damageEnemy, // New function for enemy damage with source player tracking
-    socket
+    socket,
+    updatePlayerEssence,
+    isChatOpen,
+    openChat,
+    closeChat,
   } = useMultiplayer();
 
 
@@ -172,6 +180,52 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
 
   // PVP Kill Counter - tracks kills for all players
   const [playerKills, setPlayerKills] = useState<Map<string, number>>(new Map());
+
+  // Merchant system state
+  const [isMerchantNearby, setIsMerchantNearby] = useState(false);
+  const [isMerchantVisible, setIsMerchantVisible] = useState(false);
+  const [merchantRotation, setMerchantRotation] = useState<[number, number, number]>([0, 0, 0]);
+  const merchantSystemRef = useRef<MerchantSystem | null>(null);
+  const isMerchantNearbyRef = useRef(false);
+  const isMerchantVisibleRef = useRef(false);
+
+  // Merchant interaction handler
+  const handleMerchantInteraction = useCallback(() => {
+    if (isMerchantNearby) {
+      if (merchantSystemRef.current) {
+        merchantSystemRef.current.interact();
+      }
+      onMerchantUIUpdate?.(true); // Show merchant UI
+      // Play interaction sound or effect here if needed
+    }
+  }, [isMerchantNearby, onMerchantUIUpdate]);
+
+  // Keyboard event handler for merchant interaction and chat
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Handle Enter key for chat (only when not in input fields)
+      if (event.key === 'Enter' && !isChatOpen && event.target === document.body) {
+        event.preventDefault();
+        openChat();
+      }
+
+      // Handle merchant interaction
+      if (event.key.toLowerCase() === 'e' && isMerchantNearby) {
+        handleMerchantInteraction();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isMerchantNearby, handleMerchantInteraction, isChatOpen, openChat]);
+
+  // Disable control system input and allow all keyboard input when chat is open
+  useEffect(() => {
+    if (controlSystemRef.current) {
+      controlSystemRef.current.setInputDisabled(isChatOpen);
+      controlSystemRef.current.setAllowAllInput(isChatOpen);
+    }
+  }, [isChatOpen]);
 
   // Function to increment kill count for a player
   const incrementKillCount = useCallback((playerId: string) => {
@@ -1441,12 +1495,17 @@ const [maxMana, setMaxMana] = useState(150);
   const handlePvpWaveComplete = useCallback((eventData: any) => {
     const { winnerPlayerId, defeatedPlayerId, isLocalPlayerWinner, waveId } = eventData;
 
+    // Award 10 essence when any enemy player's wave is defeated (even if we didn't win)
+    if (defeatedPlayerId && defeatedPlayerId !== socket?.id) {
+      updatePlayerEssence(socket?.id!, 10);
+    }
+
     if (isLocalPlayerWinner) {
       // Local player won - no experience awarded (wave experience system removed)
     } else {
       // Opponent won - no experience for local player
     }
-  }, []);
+  }, [socket, updatePlayerEssence]);
 
   // Listen for wave completion events from server
   useEffect(() => {
@@ -3318,6 +3377,46 @@ const hasMana = useCallback((amount: number) => {
 
       // Increment kill counter for the killer
       incrementKillCount(killerId);
+
+      // Award 20 essence for player kills
+      updatePlayerEssence(killerId, 20);
+    };
+
+    const handlePillarDestroyed = (data: any) => {
+      if (!data || !data.destroyerId) {
+        return;
+      }
+
+      const { destroyerId } = data;
+
+      // Award 150 essence to the player who destroyed the pillar
+      updatePlayerEssence(destroyerId, 150);
+    };
+
+    const handlePlayerEssenceChanged = (data: any) => {
+      if (!data || !data.playerId || typeof data.essence !== 'number') {
+        return;
+      }
+
+      const { playerId, essence } = data;
+
+      // Update the players map with new essence
+      setPlayers(prevPlayers => {
+        const newPlayers = new Map(prevPlayers);
+        const player = newPlayers.get(playerId);
+        if (player) {
+          newPlayers.set(playerId, {
+            ...player,
+            essence
+          });
+        }
+        return newPlayers;
+      });
+
+      // If this is the local player, notify parent component
+      if (playerId === socket?.id && onEssenceUpdate) {
+        onEssenceUpdate(essence);
+      }
     };
 
 
@@ -3384,6 +3483,8 @@ const hasMana = useCallback((amount: number) => {
     socket.on('player-healing', handlePlayerHealing);
     socket.on('player-experience-gained', handlePlayerExperienceGained);
     socket.on('player-kill', handlePlayerKill);
+    socket.on('pillar-destroyed', handlePillarDestroyed);
+    socket.on('player-essence-changed', handlePlayerEssenceChanged);
     socket.on('player-animation-state', handlePlayerAnimationState);
     socket.on('player-effect', handlePlayerEffect);
     socket.on('player-debuff', handlePlayerDebuff);
@@ -3748,6 +3849,11 @@ const hasMana = useCallback((amount: number) => {
       };
       
       const { player, controlSystem, towerSystem, pillarSystem } = setupPVPGame(engine, scene, camera as PerspectiveCamera, gl, damagePlayerWithMapping, damageTower, damagePillar, damageSummonedUnit, damageEnemy, selectedWeapons, cameraSystemRef);
+
+      // Initialize merchant system
+      const merchantPosition = new Vector3(16, 0, 8); // Same position as in Environment.tsx
+      const merchantSystem = new MerchantSystem(merchantPosition);
+      merchantSystemRef.current = merchantSystem;
 
       // Set control system reference for damage calculations (needed for weapon passives)
       setControlSystem(controlSystem);
@@ -4375,6 +4481,32 @@ const hasMana = useCallback((amount: number) => {
         const batcherStats = pvpStateBatcher.getStats();
       }
 
+      // Update merchant system and check player proximity
+      if (merchantSystemRef.current && playerEntity) {
+        const transform = playerEntity.getComponent(Transform);
+        if (transform) {
+          merchantSystemRef.current.update(deltaTime, transform.position);
+
+          const merchantState = merchantSystemRef.current.getMerchantState();
+          setIsMerchantNearby(merchantState.isPlayerNearby);
+          setIsMerchantVisible(merchantState.isPlayerInVisibilityRange);
+          setMerchantRotation(merchantState.rotation);
+
+          // Auto-show merchant UI when player gets close (but allow manual toggle)
+          if (merchantState.isPlayerNearby && !isMerchantNearbyRef.current) {
+            // Player just entered range - show UI
+            onMerchantUIUpdate?.(true);
+          } else if (!merchantState.isPlayerNearby && isMerchantNearbyRef.current) {
+            // Player just left range - hide UI
+            onMerchantUIUpdate?.(false);
+          }
+
+          // Update the refs for next comparison
+          isMerchantNearbyRef.current = merchantState.isPlayerNearby;
+          isMerchantVisibleRef.current = merchantState.isPlayerInVisibilityRange;
+        }
+      }
+
       // Throttle game state update to prevent infinite re-renders (every 100ms)
       const gameStateNow = Date.now();
       if (gameStateNow - lastGameStateUpdate.current > 100 && onGameStateUpdate && playerEntityRef.current !== null && engineRef.current && controlSystemRef.current) {
@@ -4461,6 +4593,8 @@ const hasMana = useCallback((amount: number) => {
         camera={camera as PerspectiveCamera}
         enableLargeTree={true}
         isPVP={true}
+        merchantRotation={merchantRotation}
+        showMerchant={isMerchantVisible}
       />
 
       {/* Lighting */}
@@ -4606,6 +4740,7 @@ const hasMana = useCallback((amount: number) => {
             weaponStateRef.current = newState;
             setWeaponState(newState);
           }}
+          purchasedItems={players.get(socket?.id || '')?.purchasedItems || []}
         />
       )}
 
@@ -4695,6 +4830,7 @@ const hasMana = useCallback((amount: number) => {
             onColossusStrikeComplete={() => {}}
             onDeathGraspComplete={() => {}}
             onWraithStrikeComplete={() => {}}
+            purchasedItems={player.purchasedItems || []}
           />
         );
       })}
@@ -5821,6 +5957,7 @@ const hasMana = useCallback((amount: number) => {
 
         </>
       )}
+
     </>
   );
 }

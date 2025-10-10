@@ -30,6 +30,9 @@ export class InputManager extends EventEmitter {
   private isPointerLocked = false;
   private canvas: HTMLCanvasElement | null = null;
 
+  // Flag to allow all keyboard input (used for chat)
+  private allowAllInput = false;
+
   // Double-tap detection for dash system
   private keyTimings = new Map<string, { 
     firstPressTime: number;
@@ -101,6 +104,10 @@ export class InputManager extends EventEmitter {
         buttons: new Set(this.mouseButtons),
       },
     };
+  }
+
+  public setAllowAllInput(allow: boolean): void {
+    this.allowAllInput = allow;
   }
 
   public checkDoubleTap(key: string): boolean {
@@ -261,8 +268,8 @@ export class InputManager extends EventEmitter {
       }
     }
 
-    // Prevent default for game keys
-    if (this.isGameKey(key)) {
+    // Prevent default for game keys (unless all input is allowed, e.g., for chat)
+    if (this.isGameKey(key) && !this.allowAllInput) {
       event.preventDefault();
     }
   }

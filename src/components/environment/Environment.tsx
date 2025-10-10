@@ -10,6 +10,7 @@ import DetailedTrees, { DetailedTree } from './DetailedTrees';
 import TreeCollision from './TreeCollision';
 import AtmosphericParticles from './AtmosphericParticles';
 import SimpleBorderEffects from './SimpleBorderEffects';
+import CustomSkeleton from './CustomSkeleton';
 
 import { generateMountains } from '@/utils/MountainGenerator';
 import { World } from '@/ecs/World';
@@ -26,6 +27,8 @@ interface EnvironmentProps {
   enableLargeTree?: boolean; // Enable large tree rendering
   isPVP?: boolean; // Enable PVP-specific pillar positioning
   pvpPillarPositions?: Array<[number, number, number]>; // PVP pillar positions
+  merchantRotation?: [number, number, number]; // Merchant rotation for interactions
+  showMerchant?: boolean; // Whether to render the merchant (for performance optimization)
 }
 
 /**
@@ -42,7 +45,9 @@ const Environment: React.FC<EnvironmentProps> = ({
   camera,
   enableLargeTree = false,
   isPVP = false,
-  pvpPillarPositions
+  pvpPillarPositions,
+  merchantRotation = [0, 0, 0],
+  showMerchant = false
 }) => {
   // Generate mountains once and memoize for performance
   const mountains = useMemo(() => generateMountains(), []);
@@ -69,6 +74,9 @@ const Environment: React.FC<EnvironmentProps> = ({
     { position: new Vector3(18, 0, 10), scale: 1.65, height: 3.0, trunkRadius: 0.275, trunkColor: new Color(0xA3773D) },
   ], []);
 
+  // Define merchant position near the tree
+  const merchantPosition: [number, number, number] = useMemo(() => [16, 0, 8], []);
+
   return (
     <group name="environment">
       {/* Custom sky with level-based colors */}
@@ -82,6 +90,8 @@ const Environment: React.FC<EnvironmentProps> = ({
 
       <DetailedTrees trees={treePositions} />
 
+      {/* Merchant positioned near the tree edge - only render when player is nearby for performance */}
+      {showMerchant && <CustomSkeleton position={merchantPosition} rotation={merchantRotation} />}
 
       {/* Mountain border around the map */}
       {enableMountains && <InstancedMountains mountains={mountains} />}

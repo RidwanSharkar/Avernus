@@ -20,6 +20,7 @@ interface HotkeyPanelProps {
   onWeaponSwitch?: (slot: 1 | 2 | 3) => void;
   skillPointData?: SkillPointData;
   onUnlockAbility?: (unlock: AbilityUnlock) => void;
+  purchasedItems?: string[];
 }
 
 interface WeaponData {
@@ -100,7 +101,7 @@ const RoundedSquareProgress: React.FC<{
   );
 };
 
-export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeapons, onWeaponSwitch, skillPointData, onUnlockAbility }: HotkeyPanelProps) {
+export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeapons, onWeaponSwitch, skillPointData, onUnlockAbility, purchasedItems = [] }: HotkeyPanelProps) {
   const [tooltipContent, setTooltipContent] = useState<{
     name: string;
     description: string;
@@ -147,8 +148,32 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
     };
     weapons.push(secondaryWeapon);
 
-    // Tertiary weapon - key 3 (if unlocked)
-    if (selectedWeapons.tertiary) {
+    // Purchased items - key 3 (takes precedence over tertiary weapon)
+    if (purchasedItems.length > 0) {
+      // Show the first purchased item in the 3 slot
+      const firstPurchasedItem = purchasedItems[0];
+      let itemName = 'Unknown Item';
+      let itemIcon = '🎁';
+
+      if (firstPurchasedItem === 'damage_boost') {
+        itemName = 'Damage Boost';
+        itemIcon = '💪';
+      } else if (firstPurchasedItem === 'ascendant_wings') {
+        itemName = 'Ascendant Wings';
+        itemIcon = '🕊️';
+      }
+
+      const purchasedItemSlot = {
+        name: itemName,
+        type: WeaponType.SWORD, // Use sword as placeholder since we need a WeaponType
+        key: '3' as const,
+        icon: itemIcon,
+        isPurchasedItem: true // Custom flag to identify this is a purchased item
+      };
+      weapons.push(purchasedItemSlot);
+    }
+    // Tertiary weapon - key 3 (only if no purchased items and tertiary weapon exists)
+    else if (selectedWeapons.tertiary) {
       const tertiaryWeapon = {
         name: selectedWeapons.tertiary === WeaponType.SWORD ? 'Sword' :
               selectedWeapons.tertiary === WeaponType.BOW ? 'Bow' :
@@ -331,22 +356,27 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
               const cooldownPercentage = weaponSwitchCooldown.max > 0 ? (weaponSwitchCooldown.current / weaponSwitchCooldown.max) * 100 : 0;
 
               const handleWeaponClick = useCallback(() => {
+                // Don't allow clicking on purchased items
+                if ((weapon as any).isPurchasedItem) return;
+
                 if (!isOnCooldown && onWeaponSwitch) {
                   const slot = weapon.key === '1' ? 1 : weapon.key === '2' ? 2 : 3;
                   onWeaponSwitch(slot as 1 | 2 | 3);
                 }
-              }, [isOnCooldown, onWeaponSwitch, weapon.key]);
+              }, [isOnCooldown, onWeaponSwitch, weapon.key, weapon]);
 
               return (
                 <div
                   key={weapon.key}
                   className={`relative w-12 h-12 rounded-lg border-2 transition-all duration-200 ${
-                    isCurrentWeapon
-                      ? 'border-yellow-400 bg-yellow-900 bg-opacity-50'
-                      : isOnCooldown
-                        ? 'border-red-500 bg-red-900 bg-opacity-30'
-                        : 'border-gray-400 bg-gray-900 bg-opacity-30 hover:bg-opacity-50'
-                  } cursor-pointer flex items-center justify-center`}
+                    (weapon as any).isPurchasedItem
+                      ? 'border-purple-400 bg-purple-900 bg-opacity-50'
+                      : isCurrentWeapon
+                        ? 'border-yellow-400 bg-yellow-900 bg-opacity-50'
+                        : isOnCooldown
+                          ? 'border-red-500 bg-red-900 bg-opacity-30'
+                          : 'border-gray-400 bg-gray-900 bg-opacity-30 hover:bg-opacity-50'
+                  } ${(weapon as any).isPurchasedItem ? 'cursor-default' : 'cursor-pointer'} flex items-center justify-center`}
                   onClick={handleWeaponClick}
                   onMouseEnter={(e) => handleWeaponHover(e, weapon)}
                   onMouseLeave={handleAbilityLeave}
@@ -358,11 +388,13 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
 
                   {/* Weapon icon */}
                   <div className={`text-2xl ${
-                    isCurrentWeapon 
-                      ? 'text-yellow-400' 
-                      : isOnCooldown 
-                        ? 'text-red-400' 
-                        : 'text-gray-300'
+                    (weapon as any).isPurchasedItem
+                      ? 'text-purple-400'
+                      : isCurrentWeapon
+                        ? 'text-yellow-400'
+                        : isOnCooldown
+                          ? 'text-red-400'
+                          : 'text-gray-300'
                   }`}>
                     {weapon.icon}
                   </div>
