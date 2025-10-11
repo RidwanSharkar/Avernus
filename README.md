@@ -14,14 +14,17 @@ GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
 - **Performance Optimizations**: Object pooling, state batching, and performance monitoring
 - **Scalable Backend**: Node.js server with automatic scaling and health monitoring
 
-![RunebladeModel](https://github.com/user-attachments/assets/0a7cd280-e4d1-4738-9697-eee6cbce97a0)
-![BONEWING CREATION](https://github.com/user-attachments/assets/dde85184-7ff0-4899-b287-e9c7116630c5)
+### 🎨 Custom Asset Creation
+![RunebladeAssetCreation](https://github.com/user-attachments/assets/c4cfd90d-bfb0-447d-8dac-4069bd0cc77b)
+![BoneWings](https://github.com/user-attachments/assets/89f7699b-3fd5-4c8f-834e-f31e7879c0be)
 
 ### ⚙️ Gameplay Systems
 - **5 Unique Weapon Classes**: Each with distinct playstyles and 4-5 unlockable abilities
 - **Dynamic Progression**: Level up to 5, unlock abilities, and master multiple weapon combinations
 - **Real-time Combat**: Precise hit detection, damage numbers, and visual feedback
 - **Strategic Depth**: Resource management, cooldowns, ability combos and timings
+
+---
 
 ## 🎮 How to Play
 
@@ -42,12 +45,19 @@ GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
 • The first player to destroy the opposing player's Tower wins.
 
 ### 🏆 Game Objectives
-• Defend your Tower from the enemy player's Summoned Units<br>
-• Defend your Inhibitors from the enemy Player<br>
-• Use your Summoned Units to damage the enemy Player's Tower<br>
-• Destroy the enemy Player's Inhibitors to upgrade your Summoned Units into ELITES<br>
-• Level up to gain combat bonuses and to invest Skill Points into additional weapon abilities<br>
-• Destroy the enemy Player's Tower to win the game
+• Defend your Tower from the enemy player's Summoned Units.<br>
+• Defend your Inhibitors from the enemy Player.<br>
+• Use your Summoned Units to damage the enemy Player's Tower.<br>
+• Destroy the enemy Player's Inhibitors to upgrade your Summoned Units into ELITES.<br>
+• Level up to gain combat bonuses and to invest Skill Points into additional weapon abilities.<br>
+• Destroy the enemy Player's Tower to win the game.
+
+### 📊 Leveling & Experience
+- **5 Levels** with increasing health (1000 + 150 per level). The Scythe and Runeblade increase their maximum mana pool per level, while the Greatsword, Sabres, and Bow instead gain increased critical strike chance and critical strike damage per level.
+- **EXP Requirements**: 50 → 100 → 200 → 400 total XP to level up. Enemy Player Kills reward 10 EXP, while the Enemy's Summoned Unit kills are worth 5 EXP each. Clearing the wave of Summoned Units before your opponent rewards an additional 10 EXP. 
+- **Combat Rewards**: Players and their summoned unit kills grant experience points.
+- **Skill Points**: 1 point per level + 2 starting points.
+- **4 Unlockable Abilities per Weapon**: {Q} unlocked by default, {E}, {R}, {F} active hotkeys and a passive ability choice {P}. Mix and match strategic ability choices across weapon slots.
 
 ---
 
@@ -134,18 +144,6 @@ GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
 ![runeblade2](https://github.com/user-attachments/assets/44b3d91a-21de-4b54-be95-73d676fec0c6)
 
 ---
-
-## 📊 Progression System
-
-### Leveling & Experience
-- **5 Levels** with increasing health (1000 + 150 per level). The Scythe and Runeblade increase their maximum mana pool per level, while the Greatsword, Sabres, and Bow instead gain increased critical strike chance and critical strike damage per level.
-- **EXP Requirements**: 50 → 100 → 200 → 400 total XP to level up. Enemy Player Kills reward 10 EXP, while the Enemy's Summoned Unit kills are worth 5 EXP each. Clearing the wave of Summoned Units before your opponent rewards an additional 10 EXP. 
-- **Combat Rewards**: Players and their summoned unit kills grant experience points.
-- **Skill Points**: 1 point per level + 2 starting points
-
-### Ability Unlocking
-- **4 Abilities per Weapon**: {Q} unlocked by default, {E}, {R}, {F} active hotkeys and a passive ability choice {P}
-- **Strategic Choices**: Mix and match abilities across weapon slots
 
 ## 🛠️ Technical Architecture
 
