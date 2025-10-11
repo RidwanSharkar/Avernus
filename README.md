@@ -14,15 +14,15 @@ GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
 - **Performance Optimizations**: Object pooling, state batching, and performance monitoring
 - **Scalable Backend**: Node.js server with automatic scaling and health monitoring
 
-### 🎨 Custom Asset Creation
-![RunebladeAssetCreation](https://github.com/user-attachments/assets/c4cfd90d-bfb0-447d-8dac-4069bd0cc77b)
-![BoneWings](https://github.com/user-attachments/assets/89f7699b-3fd5-4c8f-834e-f31e7879c0be)
-
 ### ⚙️ Gameplay Systems
 - **5 Unique Weapon Classes**: Each with distinct playstyles and 4-5 unlockable abilities
 - **Dynamic Progression**: Level up to 5, unlock abilities, and master multiple weapon combinations
 - **Real-time Combat**: Precise hit detection, damage numbers, and visual feedback
 - **Strategic Depth**: Resource management, cooldowns, ability combos and timings
+
+### 🎨 Custom Asset Creation
+![RunebladeAssetCreation](https://github.com/user-attachments/assets/c4cfd90d-bfb0-447d-8dac-4069bd0cc77b)
+![BoneWings](https://github.com/user-attachments/assets/89f7699b-3fd5-4c8f-834e-f31e7879c0be)
 
 ---
 
@@ -30,27 +30,27 @@ GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
 
 ### Quick Start
 1. **Choose 2 Weapons**: Select a primary and secondary weapons from 5 classes. Each weapon starts off with their 'Q' ability by default. 
-3. **Level Up**: Gain experience by eliminating enemy players and their summoned units. 
-4. **Unlock Abilities**: Spend skill points on new abilities (E, R, F keys)
+3. **Level Up**: Gain experience by eliminating enemy players and their summoned units.
+4. **Unlock Abilities**: Start with 2 skill points. Spend skill points every level on new abilities.
 5. **Master Combat**: Switch weapons mid-fight and combine abilities for devastating combos
 
 ### 📜 Game Format and Rules
-• Each player has a Tower and 3 Inhibitors.<br>
-• Each player's Tower summons 3 Units every 45 seconds.<br>
-• Player kills and Summoned Unit kills award experience points.<br>
-• Leveling up grants a Skill Point to unlock additional abilities.<br>
-• Players respawn upon 12.5 seconds after death.<br>
-• Only Summoned Units can damage the opposing player's Tower.<br>
-• Players can destroy the opposing player's Inhibitors to upgrade their Summoned Units into ELITES.<br>
-• The first player to destroy the opposing player's Tower wins.
+- Each player has a Tower and 3 Inhibitors.
+- Each player's Tower summons 3 Units every 45 seconds.
+- Player kills and Summoned Unit kills award experience points.
+- Leveling up grants a Skill Point to unlock additional abilities.
+- Players respawn upon 12.5 seconds after death.
+- Only Summoned Units can damage the opposing player's Tower.
+- Players can destroy the opposing player's Inhibitors to upgrade their Summoned Units into ELITES.
+- The first player to destroy the opposing player's Tower wins.
 
 ### 🏆 Game Objectives
-• Defend your Tower from the enemy player's Summoned Units.<br>
-• Defend your Inhibitors from the enemy Player.<br>
-• Use your Summoned Units to damage the enemy Player's Tower.<br>
-• Destroy the enemy Player's Inhibitors to upgrade your Summoned Units into ELITES.<br>
-• Level up to gain combat bonuses and to invest Skill Points into additional weapon abilities.<br>
-• Destroy the enemy Player's Tower to win the game.
+- Defend your Tower from the enemy player's Summoned Units.
+- Defend your Inhibitors from the enemy Player.
+- Use your Summoned Units to damage the enemy Player's Tower.
+- Destroy the enemy Player's Inhibitors to upgrade your Summoned Units into ELITES.
+- Level up to gain combat bonuses and to invest Skill Points into additional weapon abilities.
+- Destroy the enemy Player's Tower to win the game.
 
 ### 📊 Leveling & Experience
 - **5 Levels** with increasing health (1000 + 150 per level). The Scythe and Runeblade increase their maximum mana pool per level, while the Greatsword, Sabres, and Bow instead gain increased critical strike chance and critical strike damage per level.
