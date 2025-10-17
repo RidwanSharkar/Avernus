@@ -20,10 +20,6 @@ GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
 - **Real-time Combat**: Precise hit detection, damage numbers, and visual feedback
 - **Strategic Depth**: Resource management, cooldowns, ability combos and timings
 
-### 🎨 Custom Asset Creation
-![RunebladeAssetCreation](https://github.com/user-attachments/assets/c4cfd90d-bfb0-447d-8dac-4069bd0cc77b)
-![BoneWings](https://github.com/user-attachments/assets/89f7699b-3fd5-4c8f-834e-f31e7879c0be)
-
 ---
 
 ## 🎮 How to Play
@@ -158,8 +154,8 @@ GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
 
 **No external 3D models/assets used** - All models built from scratch using Three.js primitives and mathematical shapes, maintaining a consistent 'bone' theme throughout.
 
-### v0.5 Bone Wings Upgrade
-![BoneWingsUpgrade](https://github.com/user-attachments/assets/46d1397f-b87d-4f49-89d4-f90a4aba4cbb)
+![RunebladeAssetCreation](https://github.com/user-attachments/assets/c4cfd90d-bfb0-447d-8dac-4069bd0cc77b)
+![BoneWings](https://github.com/user-attachments/assets/89f7699b-3fd5-4c8f-834e-f31e7879c0be)
 
 ### Model Construction Techniques
 - **Primitive Geometry Assembly**: Weapons and units built by combining cylinders, spheres, boxes, and custom geometries
