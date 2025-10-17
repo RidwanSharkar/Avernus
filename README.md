@@ -503,25 +503,6 @@ private canActivateAbility(abilityType: string): boolean {
 }
 ```
 
-### Enemy AI State Management
-
-#### **Aggro & Behavior States**
-- **Dynamic Aggro System**: Players gain/lose aggro based on damage dealt and proximity
-- **Taunt Effects**: Temporary state overrides with duration tracking
-- **Movement States**: Patrolling → Chasing → Attacking state transitions
-
-```typescript
-// Enemy AI maintains  internal state
-updateEnemyAI(enemy) {
-  switch(enemy.state) {
-    case 'patrol': this.handlePatrolLogic();
-    case 'aggro': this.handleAggroLogic();
-    case 'taunt': this.handleTauntLogic();
-    case 'stunned': this.handleStunLogic();
-  }
-}
-```
-
 ### Player State Management
 
 #### **Weapon & Ability States**
