@@ -145,6 +145,94 @@ GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
 
 ---
 
+### ⚙️ Technical Specs
+- **Real-time Multiplayer**: Socket.io-powered networking with sub-60ms latency
+- **ECS Architecture**: Entity-Component-System for optimal performance and modularity
+- **Advanced 3D Rendering**: Three.js with WebGL, LOD management, and instanced rendering
+- **Spatial Audio**: Howler.js-powered 3D positional audio with 30+ unique sound effects
+- **Performance Optimizations**: Object pooling, state batching, and performance monitoring
+- **Scalable Backend**: Node.js server with automatic scaling and health monitoring
+- **In-Game Chat Functionality**: Real-time multiplayer text communication with player names
+
+## 🎨 Custom Model Creation & Visual Effects
+
+**No external 3D models/assets used** - All models built from scratch using Three.js primitives and mathematical shapes, maintaining a consistent 'bone' theme throughout.
+
+### v0.5 Bone Wings Upgrade
+![BoneWingsUpgrade](https://github.com/user-attachments/assets/46d1397f-b87d-4f49-89d4-f90a4aba4cbb)
+
+### Model Construction Techniques
+- **Primitive Geometry Assembly**: Weapons and units built by combining cylinders, spheres, boxes, and custom geometries
+- **Mathematical Shape Generation**: Three.js `Shape` class used to create complex 2D profiles extruded into 3D forms
+  - **Quadratic Curves**: `quadraticCurveTo()` method creates Bézier curves for smooth, organic weapon shapes
+
+    ```typescript
+    // Runeblade shape creation using quadratic curves
+    shape.lineTo(0, 0.08);
+    shape.lineTo(-0.2, 0.12);
+    shape.quadraticCurveTo(0.8, -0.15, -0.15, 0.12);  // Subtle curve along back
+    shape.quadraticCurveTo(1.8, -0, 1.75, 0.05);      // Gentle curve towards tip
+    shape.quadraticCurveTo(2.15, 0.05, 2.35, 0.225);   // Sharp point
+
+    // Lower edge with pronounced curves
+    shape.quadraticCurveTo(2.125, -0.125, 2.0, -0.25);  // Start curve from tip
+    shape.quadraticCurveTo(1.8, -0.45, 1.675, -0.55);   // Peak of the curve
+    shape.quadraticCurveTo(0.9, -0.35, 0.125, -0.325);  // Curve back towards guard
+    ```
+- **Procedural Detailing**: Bones, spikes, and organic structures generated algorithmically for visual consistency
+
+### Visual Effects System
+- **Emissive Materials**: Glowing effects achieved through Three.js emissive material properties and dynamic point lights
+- **Instanced Mesh Rendering**: High-performance particle systems for trails, auras, and environmental effects
+- **Material Shaders**: Custom material configurations for metallic, crystalline, and ethereal appearances
+  - **Projectile Trail Shaders**: 
+
+    ```glsl
+    // Entropic Bolt Fragment Shader
+    void main() {
+      float d = length(gl_PointCoord - vec2(0.5));
+      float strength = smoothstep(0.5, 0.1, d);
+      vec3 glowColor;
+      float emissiveMultiplier = 0.5;
+      if (uIsCryoflame) {
+        glowColor = mix(uColor, vec3(0.2, 0.4, 0.8), 0.4); // Cryoflame: deep navy blue
+        emissiveMultiplier = 2.0;
+      } else {
+        glowColor = mix(uColor, vec3(1.0, 0.6, 0.0), 0.4); // Normal: orange fire effect
+        emissiveMultiplier = 1.0;
+      }
+      gl_FragColor = vec4(glowColor * emissiveMultiplier, vOpacity * strength);
+    }
+    ```
+
+  - **Ground Shader**: Procedural texturing with normal mapping, ambient occlusion, and subtle animation
+
+    ```glsl
+    // Enhanced Ground Fragment Shader
+    void main() {
+      vec4 colorSample = texture2D(colorMap, vUv);
+      vec3 normalSample = texture2D(normalMap, vUv).rgb * 2.0 - 1.0;
+
+      float distanceFromCenter = length(vPosition.xz) / 29.0;
+      float ao = 1.0 - smoothstep(0.0, 1.0, distanceFromCenter) * 0.2;
+
+      float animation = sin(vPosition.x * 0.01 + time * 0.1) * sin(vPosition.z * 0.01 + time * 0.07) * 0.02 + 1.0;
+
+      vec3 finalColor = colorSample.rgb * animation * ao;
+
+      float rim = 1.0 - dot(vNormal, vec3(0.0, 1.0, 0.0));
+      rim = pow(rim, 3.0) * 0.1;
+      finalColor += accentColor * rim;
+
+      gl_FragColor = vec4(finalColor, 1.0);
+    }
+    ```
+- **Dynamic Lighting**: Real-time light positioning and intensity modulation for atmospheric effects
+
+### ECS Integration
+- **Component-Based Rendering**: Visual components (Renderer, HealthBar, Collider) integrated with ECS architecture
+- **System-Driven Animation**: Animation states managed through ECS components with React Three Fiber integration
+
 ## 🛠️ Technical Architecture
 
 ### Frontend Stack
@@ -169,6 +257,7 @@ GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
 - **Instanced Rendering**: Efficient crowd rendering for enemies
 - **Spatial Hashing**: Fast collision detection for hundreds of entities
 
+
 ## 🏗️ Entity Component System (ECS) Architecture
 
 ### Core ECS Classes
@@ -184,7 +273,7 @@ GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
 const player = world.createEntity();
 player.addComponent(new Transform(new Vector3(0, 0, 0)));
 player.addComponent(new Movement(3.75, 0.8)); // speed, friction
-player.addComponent(new Health(1000));
+player.addComponent(new Health(500));
 ```
 
 #### **Component** (`Component.ts`)
@@ -237,6 +326,67 @@ world.render(deltaTime);
 
 #### **Rendering Components**
 - **Renderer**: Visual representation with material and geometry management
+  - **Instanced Rendering**: High-performance crowd rendering with individual instance control
+
+    ```typescript
+    public setupInstancing(instancedMesh: InstancedMesh, instanceId: number): void {
+      this.isInstanced = true;
+      this.instancedMesh = instancedMesh;
+      this.instanceId = instanceId;
+    }
+
+    public updateInstanceMatrix(matrix: Matrix4): void {
+      if (this.isInstanced && this.instancedMesh && this.instanceId >= 0) {
+        this.instancedMesh.setMatrixAt(this.instanceId, matrix);
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+      }
+    }
+
+    public setInstanceVisible(visible: boolean): void {
+      if (this.isInstanced && this.instancedMesh && this.instanceId >= 0) {
+        const matrix = new Matrix4();
+        this.instancedMesh.getMatrixAt(this.instanceId, matrix);
+
+        if (!visible) {
+          matrix.scale(new Vector3(0, 0, 0)); // Hide by scaling to zero
+        }
+
+        this.instancedMesh.setMatrixAt(this.instanceId, matrix);
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+      }
+    }
+    ```
+
+  - **Dynamic Mesh Updates**: Runtime property synchronization for shadows and materials
+
+    ```typescript
+    public updateMesh(): void {
+      if (!this.mesh) return;
+
+      // Handle shadow properties for both Mesh and Group hierarchies
+      if (this.mesh instanceof Mesh) {
+        this.mesh.castShadow = this.castShadow;
+        this.mesh.receiveShadow = this.receiveShadow;
+      } else if (this.mesh instanceof Group) {
+        this.mesh.traverse((child) => {
+          if (child instanceof Mesh) {
+            child.castShadow = this.castShadow;
+            child.receiveShadow = this.receiveShadow;
+          }
+        });
+      }
+
+      this.mesh.frustumCulled = this.frustumCulled;
+      this.mesh.visible = this.visible;
+      this.mesh.renderOrder = this.renderOrder;
+
+      if (this.needsUpdate && this.geometry && this.material && this.mesh instanceof Mesh) {
+        this.mesh.geometry = this.geometry;
+        this.mesh.material = this.material;
+        this.needsUpdate = false;
+      }
+    }
+    ```
 - **HealthBar**: UI health display with dynamic positioning
 - **Collider**: Collision detection shapes and boundaries
 
@@ -296,7 +446,7 @@ world.emitEvent('enemy_killed', { enemyId, killerId });
 const events = world.getEvents('enemy_killed');
 ```
 
-### ECS Architecture vs. Eidolon
+### Custom ECS Architecture
 
 - **Modularity**: Components and systems are independent and reusable
 - **Performance**: Only relevant systems process relevant entities
@@ -305,4 +455,136 @@ const events = world.getEvents('enemy_killed');
 - **Memory Efficiency**: Object pooling prevents garbage collection spikes
 - **Type Safety**: Full TypeScript support with component type checking
 
+## 🧠 Complex State Management Architecture
+
+The game's architecture manages multiple interconnected state systems simultaneously to maintain smooth real-time gameplay across multiplayer environments. Here's how complex state synchronization keeps the game running:
+
+### Multiplayer State Synchronization
+
+#### **Client-Server State Reconciliation**
+- **Network Batching**: State updates batched per frame to reduce network overhead while maintaining real-time feel
+- **Authoritative Server**: Server maintains true game state, clients interpolate for smooth visuals
+- **Conflict Resolution**: Server-authoritative decisions for critical gameplay elements (damage, positioning, ability activation)
+
+```typescript
+// State batching prevents network spam while maintaining responsiveness
+private batchStateUpdate(updates: any[]): void {
+  if (this.stateBatch.length === 0) {
+    setTimeout(() => this.flushBatch(), 16); // ~60fps batching
+  }
+  this.stateBatch.push(...updates);
+}
+```
+
+#### **Entity State Propagation**
+- **Selective Broadcasting**: Only relevant state changes broadcast to reduce bandwidth (position updates every 50ms, health changes immediate)
+- **Delta Compression**: Only changed values transmitted, not full state snapshots
+- **Prediction & Reconciliation**: Client-side prediction with server reconciliation for responsive feel
+
+### Combat State Management
+
+#### **Damage Calculation Pipeline**
+```typescript
+// Damage flows through multiple systems with state validation
+1. DamageCalculator.calculateDamage() → base damage with crits
+2. CombatSystem.queueDamage() → validation and queuing
+3. DamageNumberManager.addDamageNumber() → visual feedback
+4. Network broadcast → synchronize across clients
+```
+
+#### **Ability State Coordination**
+- **Cooldown Tracking**: Per-weapon ability states with network synchronization
+- **Charge Management**: Real-time charge progress tracking across client/server
+- **State Dependencies**: Abilities check multiple state conditions (mana, cooldowns, weapon type)
+
+```typescript
+// Complex state checks prevent invalid ability usage
+private canActivateAbility(abilityType: string): boolean {
+  return this.checkManaCost() &&
+         this.checkCooldown(abilityType) &&
+         this.checkWeaponCompatibility() &&
+         this.checkPlayerState();
+}
+```
+
+### Enemy AI State Management
+
+#### **Aggro & Behavior States**
+- **Dynamic Aggro System**: Players gain/lose aggro based on damage dealt and proximity
+- **Taunt Effects**: Temporary state overrides with duration tracking
+- **Movement States**: Patrolling → Chasing → Attacking state transitions
+
+```typescript
+// Enemy AI maintains  internal state
+updateEnemyAI(enemy) {
+  switch(enemy.state) {
+    case 'patrol': this.handlePatrolLogic();
+    case 'aggro': this.handleAggroLogic();
+    case 'taunt': this.handleTauntLogic();
+    case 'stunned': this.handleStunLogic();
+  }
+}
+```
+
+### Player State Management
+
+#### **Weapon & Ability States**
+- **Dual Weapon System**: Primary/secondary weapon states with hotkey switching
+- **Subclass Management**: Weapon subclasses with unique ability sets
+- **Skill Point Progression**: Unlocked abilities tracked per weapon/slot combination
+
+#### **Health & Resource States**
+- **Multi-layered Health**: Base health + shield + regeneration mechanics
+- **Mana System**: Runeblade-specific resource with consumption/regeneration
+- **Debuff State Tracking**: Multiple concurrent effects (frozen, slowed, stunned, burning) with durations
+
+### Performance State Management
+
+#### **Object Pooling State**
+```typescript
+// Pooled objects maintain internal state for reuse
+class ProjectilePool {
+  private activeProjectiles: Map<string, ProjectileState>;
+  private availablePool: ProjectileState[];
+
+  getProjectile(): ProjectileState {
+    const projectile = this.availablePool.pop() || new ProjectileState();
+    projectile.reset(); // Clean state for reuse
+    return projectile;
+  }
+}
+```
+
+#### **LOD State Management**
+- **Distance-Based State**: Entities transition between detail levels automatically
+- **Culling States**: Frustum culling + occlusion culling state management
+- **Render State Batching**: Instanced meshes maintain individual state within optimized batches
+
+### Network State Reliability
+
+#### **Connection State Management**
+- **Automatic Reconnection**: Socket.io with exponential backoff reconnection
+- **State Synchronization**: Full state resync on reconnection to prevent desynchronization
+- **Latency Compensation**: Client-side prediction with server validation
+
+#### **Error Recovery States**
+- **Graceful Degradation**: System continues operating during network issues
+- **State Validation**: Server-side validation prevents invalid state transitions
+- **Rollback Mechanisms**: Critical state rollbacks when network conflicts detected
+
+### State Debugging & Monitoring
+
+#### **Performance State Tracking**
+- **FPS Monitoring**: Real-time performance metrics with automatic optimization triggers
+- **Memory State**: Object pool utilization tracking to prevent memory leaks
+- **Network State**: Latency, packet loss, and state synchronization monitoring
+
+```typescript
+// Performance monitoring maintains system health
+private monitorSystemHealth(): void {
+  if (this.fps < 30) this.enableLowPowerMode();
+  if (this.memoryUsage > 0.8) this.triggerGarbageCollection();
+  if (this.networkLatency > 100) this.reduceUpdateFrequency();
+}
+```
 
