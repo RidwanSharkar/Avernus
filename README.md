@@ -1,8 +1,8 @@
-# 🌋 AVERNUS 1.0
+# 🌋 AVERNUS
 
 A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time combat with strategic weapon switching, dozens of ability combinations and a progression system within a semi-MOBA format.
 
-GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw
+**GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw**
 
 ## 🪐 Key Features  
 
