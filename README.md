@@ -17,7 +17,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 - [🗡️ Weapon Classes & Abilities](#-weapon-classes-&-abilities)
   - [💎 Greatsword - {IMMORTAL}](#-greatsword---immortal)
   - [🏹 Bow - {VIPER}](#-bow---viper)
-  - [⚔️ Sabres - {ASSASSIN}](#-sabres---assassin)
+  - [⚔️ Sabres - {ASSASSIN}](#--sabres---assassin)
   - [🦋 Scythe - {WEAVER}](#-scythe---weaver)
   - [🔮 Runeblade - {TEMPLAR}](#-runeblade---templar)
 - [🎨 Custom Model Creation & Visual Effects](#-custom-model-creation-&-visual-effects)
