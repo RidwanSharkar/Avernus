@@ -4,37 +4,37 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 **GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw**
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [🪐 Key Features](#-key-features)
-  - [🔩 Technical Specs](#-technical-specs)
-  - [⚙️ Gameplay Systems](#-gameplay-systems)
-- [🎮 How to Play](#-how-to-play)
+- [Key Features](#-key-features)
+  - [Technical Specs](#-technical-specs)
+  - [Gameplay Systems](#-gameplay-systems)
+- [How to Play](#-how-to-play)
   - [Quick Start](#quick-start)
-  - [📜 Game Format and Rules](#-game-format-and-rules)
-  - [🏆 Game Objectives](#-game-objectives)
-  - [📊 Leveling & Experience](#-leveling-&-experience)
-- [🗡️ Weapon Classes & Abilities](#-weapon-classes-&-abilities)
-  - [💎 Greatsword - {IMMORTAL}](#-greatsword---immortal)
-  - [🏹 Bow - {VIPER}](#-bow---viper)
-  - [⚔️ Sabres - {ASSASSIN}](#sabres-assassin)
-  - [🦋 Scythe - {WEAVER}](#-scythe---weaver)
-  - [🔮 Runeblade - {TEMPLAR}](#-runeblade---templar)
-- [🎨 Custom Model Creation & Visual Effects](#-custom-model-creation-&-visual-effects)
+  - [Game Format and Rules](#-game-format-and-rules)
+  - [Game Objectives](#-game-objectives)
+  - [Leveling & Experience](#-leveling-&-experience)
+- [Weapon Classes & Abilities](#-weapon-classes-&-abilities)
+  - [Greatsword - {IMMORTAL}](#-greatsword---immortal)
+  - [Bow - {VIPER}](#-bow---viper)
+  - [Sabres - {ASSASSIN}](#sabres-assassin)
+  - [Scythe - {WEAVER}](#-scythe---weaver)
+  - [Runeblade - {TEMPLAR}](#-runeblade---templar)
+- [Custom Model Creation & Visual Effects](#-custom-model-creation-&-visual-effects)
   - [Model Construction Techniques](#model-construction-techniques)
   - [Visual Effects System](#visual-effects-system)
   - [ECS Integration](#ecs-integration)
-- [🛠️ Technical Architecture](#-technical-architecture)
+- [Technical Architecture](#-technical-architecture)
   - [Frontend Stack](#frontend-stack)
   - [Backend Stack](#backend-stack)
   - [Performance Features](#performance-features)
-- [🏗️ Entity Component System (ECS) Architecture](#-entity-component-system-ecs-architecture)
+- [Entity Component System (ECS) Architecture](#-entity-component-system-ecs-architecture)
   - [Core ECS Classes](#core-ecs-classes)
   - [Component Types](#component-types)
   - [System Architecture](#system-architecture)
   - [Performance Optimizations](#performance-optimizations)
   - [Custom ECS Architecture](#custom-ecs-architecture)
-- [🧠 Complex State Management Architecture](#-complex-state-management-architecture)
+- [Complex State Management Architecture](#-complex-state-management-architecture)
   - [Multiplayer State Synchronization](#multiplayer-state-synchronization)
   - [Combat State Management](#combat-state-management)
   - [Player State Management](#player-state-management)
@@ -132,6 +132,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 ---
 
+<a name="sabres-assassin"></a>
 ### ⚔️ Sabres - {ASSASSIN}
 **Playstyle**: Stealth-based close-quarters specialist with high-risk, high-reward damage
 - **🔪 Q - Backstab** (2s): {60 ENERGY} Strikes the target with both sabres, dealing 75 damage or 175 damage if attacking the target from behind. Refund 45 energy if the target is stunned.
