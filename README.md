@@ -13,14 +13,14 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
   - [Quick Start](#quick-start)
   - [Game Format and Rules](#-game-format-and-rules)
   - [Game Objectives](#-game-objectives)
-  - [Leveling & Experience](#-leveling-&-experience)
-- [Weapon Classes & Abilities](#-weapon-classes-&-abilities)
+  - [Leveling and Experience](#-leveling-and-experience)
+- [Weapon Classes and Abilities](#-weapon-classes-and-abilities)
   - [Greatsword - {IMMORTAL}](#-greatsword---immortal)
   - [Bow - {VIPER}](#-bow---viper)
   - [Sabres - {ASSASSIN}](#sabres-assassin)
   - [Scythe - {WEAVER}](#-scythe---weaver)
   - [Runeblade - {TEMPLAR}](#-runeblade---templar)
-- [Custom Model Creation & Visual Effects](#-custom-model-creation-&-visual-effects)
+- [Custom Model Creation and Visual Effects](#-custom-model-creation-and-visual-effects)
   - [Model Construction Techniques](#model-construction-techniques)
   - [Visual Effects System](#visual-effects-system)
   - [ECS Integration](#ecs-integration)
@@ -40,9 +40,9 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
   - [Player State Management](#player-state-management)
   - [Performance State Management](#performance-state-management)
   - [Network State Reliability](#network-state-reliability)
-  - [State Debugging & Monitoring](#state-debugging-&-monitoring)
+  - [State Debugging and Monitoring](#state-debugging-and-monitoring)
 
-## 🪐 Key Features
+## Key Features
 
 ### 🔩 Technical Specs
 - **Real-time Multiplayer**: Socket.io-powered networking with sub-60ms latency
@@ -61,7 +61,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 ---
 
-## 🎮 How to Play
+## How to Play
 
 ### Quick Start
 1. **Choose 2 Weapons**: Select a primary and secondary weapons from 5 classes. Each weapon starts off with their 'Q' ability by default. 
@@ -96,7 +96,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 ---
 
-## 🗡️ Weapon Classes & Abilities
+## Weapon Classes and Abilities
 
 ### 💎 Greatsword - {IMMORTAL}
 **Playstyle**: Versatile offensive figher with distance-closing and defensive capabilities
@@ -181,7 +181,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 ---
 
-## 🎨 Custom Model Creation & Visual Effects
+## Custom Model Creation and Visual Effects
 
 **No external 3D models/assets used** - All models built from scratch using Three.js primitives and mathematical shapes, maintaining a consistent 'bone' theme throughout.
 
@@ -260,7 +260,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 - **Component-Based Rendering**: Visual components (Renderer, HealthBar, Collider) integrated with ECS architecture
 - **System-Driven Animation**: Animation states managed through ECS components with React Three Fiber integration
 
-## 🛠️ Technical Architecture
+## Technical Architecture
 
 ### Frontend Stack
 - **Framework**: Next.js 14 with React 18
@@ -285,7 +285,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 - **Spatial Hashing**: Fast collision detection for hundreds of entities
 
 
-## 🏗️ Entity Component System (ECS) Architecture
+## Entity Component System (ECS) Architecture
 
 ### Core ECS Classes
 
@@ -482,7 +482,7 @@ const events = world.getEvents('enemy_killed');
 - **Memory Efficiency**: Object pooling prevents garbage collection spikes
 - **Type Safety**: Full TypeScript support with component type checking
 
-## 🧠 Complex State Management Architecture
+## Complex State Management Architecture
 
 The game's architecture manages multiple interconnected state systems simultaneously to maintain smooth real-time gameplay across multiplayer environments. Here's how complex state synchronization keeps the game running:
 
