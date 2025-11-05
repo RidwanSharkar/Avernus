@@ -4,6 +4,10 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 
 **GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw**
 
+<img width="722" height="439" alt="landscape" src="https://github.com/user-attachments/assets/531931f9-d4f7-41e8-88dc-fbf2c8f5ad01" />
+
+![combat](https://github.com/user-attachments/assets/b8f97db3-615d-4cf2-adc6-26038123c796)
+
 ## Table of Contents
 
 - [Key Features](#key-features)
