@@ -15,12 +15,11 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
   - [🏆 Game Objectives](#-game-objectives)
   - [📊 Leveling & Experience](#-leveling-&-experience)
 - [🗡️ Weapon Classes & Abilities](#-weapon-classes-&-abilities)
-  - [💎 Greatsword - {IMMORTAL}](#-greatsword---immortal)
-  - [🏹 Bow - {VIPER}](#-bow---viper)
-  - [⚔️ Sabres - {ASSASSIN}](#-sabres---assassin)
-  - [🦋 Scythe - {WEAVER}](#-scythe---weaver)
-  - [🔮 Runeblade - {TEMPLAR}](#-runeblade---templar)
-- [⚙️ Extended Technical Specs](#-extended-technical-specs)
+  - [💎 Greatsword - {IMMORTAL}](#--greatsword---immortal)
+  - [🏹 Bow - {VIPER}](#--bow---viper)
+  - [⚔️ Sabres - {ASSASSIN}](#--sabres---assassin)
+  - [🦋 Scythe - {WEAVER}](#--scythe---weaver)
+  - [🔮 Runeblade - {TEMPLAR}](#--runeblade---templar)
 - [🎨 Custom Model Creation & Visual Effects](#-custom-model-creation-&-visual-effects)
   - [Model Construction Techniques](#model-construction-techniques)
   - [Visual Effects System](#visual-effects-system)
@@ -52,6 +51,7 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 - **Spatial Audio**: Howler.js-powered 3D positional audio with 30+ unique sound effects
 - **Performance Optimizations**: Object pooling, state batching, and performance monitoring
 - **Scalable Backend**: Node.js server with automatic scaling and health monitoring
+- **In-Game Chat Functionality**: Real-time multiplayer text communication with player names
 
 ### ⚙️ Gameplay Systems
 - **5 Unique Weapon Classes**: Each with distinct playstyles and 4-5 unlockable abilities
@@ -179,15 +179,6 @@ A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time 
 ![runeblade2](https://github.com/user-attachments/assets/44b3d91a-21de-4b54-be95-73d676fec0c6)
 
 ---
-
-### ⚙️ Extended Technical Specs
-- **Real-time Multiplayer**: Socket.io-powered networking with sub-60ms latency
-- **ECS Architecture**: Entity-Component-System for optimal performance and modularity
-- **Advanced 3D Rendering**: Three.js with WebGL, LOD management, and instanced rendering
-- **Spatial Audio**: Howler.js-powered 3D positional audio with 30+ unique sound effects
-- **Performance Optimizations**: Object pooling, state batching, and performance monitoring
-- **Scalable Backend**: Node.js server with automatic scaling and health monitoring
-- **In-Game Chat Functionality**: Real-time multiplayer text communication with player names
 
 ## 🎨 Custom Model Creation & Visual Effects
 
