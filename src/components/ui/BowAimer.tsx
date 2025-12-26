@@ -50,8 +50,8 @@ const BowAimer = memo(function BowAimer({
   // Calculate vertical offset based on camera pitch and zoom
   // verticalAim: -1 (looking up) to 1 (looking down)
   // We combine: base offset + pitch-based movement + zoom adjustment
-  const compensationOffset = -29.5; // Base offset - negative moves it up from center
-  const aimRange = 35; // How much the aimer moves based on vertical aim (percentage)
+  const compensationOffset = -28.5; // Base offset - negative moves it up from center
+  const aimRange = 25; // How much the aimer moves based on vertical aim (percentage)
   const verticalOffset = compensationOffset + (verticalAim * aimRange) + zoomAdjustment;
   
   return (
