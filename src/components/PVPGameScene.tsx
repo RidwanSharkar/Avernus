@@ -380,8 +380,8 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
   // Track server summoned unit to local ECS entity mapping
   const serverSummonedUnitEntities = useRef<Map<string, number>>(new Map());
 
-  // Track stealth states for players
-  const playerStealthStates = useRef<Map<string, boolean>>(new Map());
+  // Track stealth states for players - using useState to trigger re-renders when stealth changes
+  const [playerStealthStates, setPlayerStealthStates] = useState<Map<string, boolean>>(new Map());
 
   // Track active Sabre Reaper Mist effects
   const [activeMistEffects, setActiveMistEffects] = useState<Array<{
@@ -3456,9 +3456,12 @@ const hasMana = useCallback((amount: number) => {
 
       const { playerId, isInvisible } = data;
 
-      // Update stealth state for the player
-      const previousState = playerStealthStates.current.get(playerId);
-      playerStealthStates.current.set(playerId, isInvisible);
+      // Update stealth state for the player - use setState to trigger re-render
+      setPlayerStealthStates(prev => {
+        const updated = new Map(prev);
+        updated.set(playerId, isInvisible);
+        return updated;
+      });
 
       // Update tower system stealth state so towers don't target invisible players
       if (towerSystemRef.current) {
@@ -4965,7 +4968,7 @@ const hasMana = useCallback((amount: number) => {
         if (player.id === socket?.id) return null; // Don't render our own player twice
 
         // Check if player is invisible due to stealth
-        const isPlayerInvisible = playerStealthStates.current.get(player.id) || false;
+        const isPlayerInvisible = playerStealthStates.get(player.id) || false;
 
         // Check if player is dead
         const deathState = playerDeathStates.get(player.id);
@@ -5125,7 +5128,7 @@ const hasMana = useCallback((amount: number) => {
         if (player.id === socket?.id) return null; // Don't show health bar for local player
 
         // Check if player is invisible (stealth mode) - don't show health bar
-        const isInvisible = playerStealthStates.current.get(player.id);
+        const isInvisible = playerStealthStates.get(player.id);
         if (isInvisible) return null;
 
         // Use shield values from the synchronized player data
