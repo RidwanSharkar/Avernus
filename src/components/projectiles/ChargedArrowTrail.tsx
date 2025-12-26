@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Line, Vector3, BufferGeometry, LineBasicMaterial, AdditiveBlending, BufferAttribute } from '@/utils/three-exports';
 
@@ -64,6 +64,14 @@ function ChargedArrowTrail({
       linewidth: 3
     });
   }, [opacity]);
+
+  // Cleanup geometry and material on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      trailGeometry.dispose();
+      trailMaterial.dispose();
+    };
+  }, [trailGeometry, trailMaterial]);
 
   useFrame(() => {
     if (!arrowHeadRef.current || !trailRef.current) return;

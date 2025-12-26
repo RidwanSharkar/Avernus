@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber';
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { Shape, ExtrudeGeometry, Group, MeshStandardMaterial, SphereGeometry, DoubleSide } from 'three';
 import { WeaponType, WeaponSubclass } from './weapons';
 
@@ -139,6 +139,20 @@ export default function ArchmageCrest({
     centerCore: new SphereGeometry(0.12, 12, 12),
     energyWisp: new SphereGeometry(0.04, 6, 6)
   }), [bladeShape, bladeExtrudeSettings]);
+
+  // Cleanup geometries and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      // Dispose geometries
+      geometries.blade.dispose();
+      geometries.centerCore.dispose();
+      geometries.energyWisp.dispose();
+      // Dispose materials
+      materials.blade.dispose();
+      materials.bladeCore.dispose();
+      materials.bladeGlow.dispose();
+    };
+  }, [geometries, materials]);
 
   // Animation - disabled for static appearance
   useFrame((state) => {

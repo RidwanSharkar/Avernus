@@ -480,6 +480,12 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     });
 
     addEventHandler('player-health-updated', (data) => {
+      // Skip health updates for the local player - local Health component is authoritative
+      // This prevents health bar flickering from race conditions between local and server state
+      if (data.playerId === newSocket.id) {
+        return;
+      }
+
       // Throttle player health updates to prevent infinite re-renders
       const now = Date.now();
       const lastUpdate = lastPlayerHealthUpdate.current[data.playerId] || 0;

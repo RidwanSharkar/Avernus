@@ -86,6 +86,16 @@ export default function AscendantBoneWings({ isLeftWing, parentRef, isDashing }:
   const featherGeometry = useMemo(() => new ExtrudeGeometry(featherShape, extrudeSettings), [featherShape, extrudeSettings]);
   const redMarkingGeometry = useMemo(() => new ExtrudeGeometry(redMarkingShape, extrudeSettings), [redMarkingShape, extrudeSettings]);
 
+  // Cleanup geometries and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      featherGeometry.dispose();
+      redMarkingGeometry.dispose();
+      materials.feather.dispose();
+      materials.redMarking.dispose();
+    };
+  }, [featherGeometry, redMarkingGeometry, materials]);
+
   // Wing segment definitions - creating layered angel wing structure with better spacing
   const wingSegments: WingSegment[] = useMemo(() => [
     // Primary feathers (outermost, longest) - increased spacing

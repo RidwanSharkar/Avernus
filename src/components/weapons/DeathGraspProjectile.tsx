@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, MeshBasicMaterial, Color, AdditiveBlending, SphereGeometry } from '@/utils/three-exports';
 import AnimatedDeathGrasp from './AnimatedDeathGrasp';
@@ -143,6 +143,20 @@ export default function DeathGraspProjectile({
 
     return streams;
   }, [startPosition, adjustedDirection, range]);
+
+  // Cleanup geometries and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      geometries.particle.dispose();
+      geometries.impact.dispose();
+      geometries.core.dispose();
+      materials.spiral1.dispose();
+      materials.spiral2.dispose();
+      materials.spiral3.dispose();
+      materials.impact.dispose();
+      materials.core.dispose();
+    };
+  }, [geometries, materials]);
 
   useFrame((_, delta) => {
     timeRef.current = Math.min(timeRef.current + delta, duration);

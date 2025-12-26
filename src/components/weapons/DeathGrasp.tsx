@@ -74,6 +74,21 @@ export default function DeathGrasp({
     })
   }), []);
 
+  // Cleanup geometries and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      geometries.particle.dispose();
+      geometries.tentacle.dispose();
+      geometries.impact.dispose();
+      geometries.core.dispose();
+      materials.spiral1.dispose();
+      materials.spiral2.dispose();
+      materials.spiral3.dispose();
+      materials.impact.dispose();
+      materials.core.dispose();
+    };
+  }, [geometries, materials]);
+
   // Pre-calculate 3 spiraling particle streams
   const spiralStreams = useMemo(() => {
     const direction = targetPosition.clone().sub(startPosition);

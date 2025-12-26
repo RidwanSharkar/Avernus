@@ -104,6 +104,8 @@ class GameRoom {
       subclass: subclass,
       health: maxHealth, // Start with full health
       maxHealth: maxHealth,
+      shield: 0, // Initialize shield
+      maxShield: 250, // Default max shield
       level: 1, // Start at level 1
       essence: 50, // Start with 50 essence
       movementDirection: { x: 0, y: 0, z: 0 },

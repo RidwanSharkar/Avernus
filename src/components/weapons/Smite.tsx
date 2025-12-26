@@ -1,4 +1,4 @@
-import { useRef, useMemo, memo } from 'react';
+import { useRef, useMemo, memo, useEffect } from 'react';
 import { Group, Vector3, CylinderGeometry, TorusGeometry, SphereGeometry, MeshStandardMaterial, Euler } from '@/utils/three-exports';
 import { useFrame } from '@react-three/fiber';
 import { WeaponType } from '../dragon/weapons';
@@ -164,6 +164,32 @@ const SmiteComponent = memo(function Smite({
       )
     }))
   ), []);
+
+  // Cleanup geometries and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      // Dispose geometries
+      cylinderGeometries.core.dispose();
+      cylinderGeometries.inner.dispose();
+      cylinderGeometries.outer.dispose();
+      cylinderGeometries.glow1.dispose();
+      cylinderGeometries.glow2.dispose();
+      cylinderGeometries.outerGlow.dispose();
+      cylinderGeometries.torus.dispose();
+      cylinderGeometries.skyTorus.dispose();
+      cylinderGeometries.sphere.dispose();
+      // Dispose materials
+      materials.core.dispose();
+      materials.inner.dispose();
+      materials.outer.dispose();
+      materials.glow1.dispose();
+      materials.glow2.dispose();
+      materials.outerGlow.dispose();
+      materials.spiral.dispose();
+      materials.skySpiral.dispose();
+      materials.particle.dispose();
+    };
+  }, [cylinderGeometries, materials]);
 
   // Function to perform damage in a radius around the impact location
   const performSmiteDamage = () => {

@@ -1,4 +1,4 @@
-import { useRef, useMemo, memo } from 'react';
+import { useRef, useMemo, memo, useEffect } from 'react';
 import { Group, Vector3, SphereGeometry, MeshStandardMaterial, MeshBasicMaterial, Color, AdditiveBlending, RingGeometry } from '@/utils/three-exports';
 import { useFrame } from '@react-three/fiber';
 import { WeaponType } from '../dragon/weapons';
@@ -175,6 +175,17 @@ const ColossusStrikeComponent = memo(function ColossusStrike({
       transparent: true
     })
   }), []);
+
+  // Cleanup geometries and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      geometries.bolt.dispose();
+      geometries.impact.dispose();
+      materials.coreBolt.dispose();
+      materials.secondaryBolt.dispose();
+      materials.impact.dispose();
+    };
+  }, [geometries, materials]);
 
   // Perform damage detection using dynamic damage based on rage consumed
   const performColossusStrikeDamage = () => {

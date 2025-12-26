@@ -95,6 +95,22 @@ export default function AnimatedDeathGrasp({
     })
   }), []);
 
+  // Cleanup geometries and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      geometries.particle.dispose();
+      geometries.impact.dispose();
+      geometries.core.dispose();
+      geometries.chain.dispose();
+      materials.spiral1.dispose();
+      materials.spiral2.dispose();
+      materials.spiral3.dispose();
+      materials.impact.dispose();
+      materials.core.dispose();
+      materials.chain.dispose();
+    };
+  }, [geometries, materials]);
+
   // Pre-calculate spiraling particle streams for forward phase
   const forwardSpiralStreams = useMemo(() => {
     const segments = Math.ceil(maxRange * 4); // More segments for smoother spirals

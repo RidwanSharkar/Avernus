@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, ConeGeometry, MeshBasicMaterial, RingGeometry, AdditiveBlending, DoubleSide } from 'three';
 import { Enemy } from '@/contexts/MultiplayerContext';
@@ -24,21 +24,8 @@ const ARROW_DAMAGE = 75;
 const WARNING_RING_SEGMENTS = 6;
 const ARROW_COUNT = 3; // 3 arrows per Cloudkill cast
 
-// Reusable geometries and materials
-const arrowGeometry = new ConeGeometry(0.1, 0.8, 8); // Arrow shape
-const arrowMaterial = new MeshBasicMaterial({ color: "#00ff00" }); // Green arrows
-
 // Trail effect constants
-const TRAIL_SEGMENTS = 20; 
-
-// Warning indicators scaled for arrows
-const warningRingGeometry = new RingGeometry((DAMAGE_RADIUS - 0.2), DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
-const pulsingRingGeometry = new RingGeometry((DAMAGE_RADIUS - 0.4), (DAMAGE_RADIUS - 0.2), WARNING_RING_SEGMENTS);
-const outerGlowGeometry = new RingGeometry((DAMAGE_RADIUS - 0.1), DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
-
-// Reusable vectors to avoid allocations
-const tempPlayerGroundPos = new Vector3();
-const tempTargetGroundPos = new Vector3();
+const TRAIL_SEGMENTS = 20;
 
 
 
@@ -116,6 +103,29 @@ export default function CloudkillArrow({
   localSocketId
 }: CloudkillArrowProps) {
   const arrowGroupRef = useRef<Group>(null);
+
+  // Create geometries and materials with useMemo for proper disposal
+  const geometries = useMemo(() => ({
+    arrow: new ConeGeometry(0.1, 0.8, 8),
+    warningRing: new RingGeometry((DAMAGE_RADIUS - 0.2), DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
+    pulsingRing: new RingGeometry((DAMAGE_RADIUS - 0.4), (DAMAGE_RADIUS - 0.2), WARNING_RING_SEGMENTS),
+    outerGlow: new RingGeometry((DAMAGE_RADIUS - 0.1), DAMAGE_RADIUS, WARNING_RING_SEGMENTS)
+  }), []);
+
+  const materials = useMemo(() => ({
+    arrow: new MeshBasicMaterial({ color: "#00ff00" })
+  }), []);
+
+  // Cleanup geometries and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      geometries.arrow.dispose();
+      geometries.warningRing.dispose();
+      geometries.pulsingRing.dispose();
+      geometries.outerGlow.dispose();
+      materials.arrow.dispose();
+    };
+  }, [geometries, materials]);
 
   // State for tracking current target position
   const [currentTargetPosition, setCurrentTargetPosition] = useState(initialTargetPosition);
@@ -310,9 +320,8 @@ export default function CloudkillArrow({
       {/* Warning indicators */}
       {showWarning && (
         <group position={[originalIndicatedPosition.current.x, 0.1, originalIndicatedPosition.current.z]}>
-          {/* Warning rings using shared geometries */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <primitive object={warningRingGeometry} />
+          {/* Warning rings using component geometries */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={geometries.warningRing}>
             <meshBasicMaterial color="#00aa00" transparent opacity={0.5} side={DoubleSide} />
           </mesh>
 
@@ -320,8 +329,8 @@ export default function CloudkillArrow({
           <mesh
             rotation={[-Math.PI / 2, 0, 0]}
             scale={getPulsingScale()}
+            geometry={geometries.pulsingRing}
           >
-            <primitive object={pulsingRingGeometry} />
             <meshBasicMaterial
               color="#00ff00"
               transparent
@@ -333,8 +342,8 @@ export default function CloudkillArrow({
           {/* Rotating outer glow ring */}
           <mesh
             rotation={[-Math.PI / 2, Date.now() * 0.004, 0]}
+            geometry={geometries.outerGlow}
           >
-            <primitive object={outerGlowGeometry} />
             <meshBasicMaterial
               color="#00cc00"
               transparent
@@ -375,9 +384,7 @@ export default function CloudkillArrow({
       {/* Arrow projectile */}
       {state.showArrow && (
         <group ref={arrowGroupRef} position={startPos}>
-          <mesh rotation={[Math.PI, 0, 0]}> {/* Point downwards */}
-            <primitive object={arrowGeometry} />
-            <primitive object={arrowMaterial} />
+          <mesh rotation={[Math.PI, 0, 0]} geometry={geometries.arrow} material={materials.arrow}>
             <pointLight color="#00ff00" intensity={3} distance={6} />
           </mesh>
         </group>

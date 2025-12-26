@@ -366,9 +366,25 @@ function handlePlayerEvents(socket, gameRooms) {
       return;
     }
     
-    // Apply damage to target player
+    // Apply damage to target player, accounting for shields first
     const previousHealth = targetPlayer.health;
-    targetPlayer.health = Math.max(0, targetPlayer.health - damage);
+    const previousShield = targetPlayer.shield || 0;
+    
+    let remainingDamage = damage;
+    let newShield = previousShield;
+    let newHealth = previousHealth;
+
+    if (previousShield > 0) {
+      const shieldAbsorbed = Math.min(previousShield, remainingDamage);
+      newShield -= shieldAbsorbed;
+      remainingDamage -= shieldAbsorbed;
+      targetPlayer.shield = newShield;
+    }
+
+    if (remainingDamage > 0) {
+      newHealth = Math.max(0, previousHealth - remainingDamage);
+      targetPlayer.health = newHealth;
+    }
     
     // Simple kill detection: Player died if they had health > 0 before and health <= 0 after
     let wasActuallyKilled = previousHealth > 0 && targetPlayer.health <= 0;
@@ -382,6 +398,8 @@ function handlePlayerEvents(socket, gameRooms) {
       isCritical: isCritical,
       newHealth: targetPlayer.health,
       maxHealth: targetPlayer.maxHealth,
+      newShield: targetPlayer.shield,
+      maxShield: targetPlayer.maxShield,
       wasKilled: wasActuallyKilled,
       timestamp: Date.now()
     });
@@ -411,12 +429,11 @@ function handlePlayerEvents(socket, gameRooms) {
       });
     }
     
-    // Also broadcast health update specifically
-    room.io.to(roomId).emit('player-health-updated', {
-      playerId: targetPlayerId,
-      health: targetPlayer.health,
-      maxHealth: targetPlayer.maxHealth
-    });
+    // NOTE: Removed redundant player-health-updated broadcast here
+    // The health change is already communicated via player-damaged event with newHealth field
+    // Having duplicate broadcasts caused race conditions and health bar flickering
+    // Remote players receive health updates via player-damaged event handling
+    // and periodic sync via player-update broadcasts
   });
 
   // Handle PVP healing effects

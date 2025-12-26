@@ -18,8 +18,42 @@ import { Shield } from '@/ecs/components/Shield';
 import { Renderer } from '@/ecs/components/Renderer';
 import { Collider, CollisionLayer, ColliderType } from '@/ecs/components/Collider';
 import { Tower } from '@/ecs/components/Tower';
-import { Pillar } from '@/ecs/components/Pillar';
+import { Pillar as PillarComponent } from '@/ecs/components/Pillar';
 import { SummonedUnit } from '@/ecs/components/SummonedUnit';
+
+// Server data interfaces (match MultiplayerContext interfaces)
+interface ServerPillar {
+  id: string;
+  ownerId: string;
+  pillarIndex: number;
+  position: { x: number; y: number; z: number };
+  health: number;
+  maxHealth: number;
+  isDead?: boolean;
+}
+
+interface ServerTower {
+  id: string;
+  ownerId: string;
+  towerIndex: number;
+  position: { x: number; y: number; z: number };
+  health: number;
+  maxHealth: number;
+  isDead?: boolean;
+}
+
+interface ServerSummonedUnit {
+  unitId: string;
+  ownerId: string;
+  position: { x: number; y: number; z: number };
+  health: number;
+  maxHealth: number;
+  isDead: boolean;
+  isActive: boolean;
+  isElite?: boolean;
+  currentTarget?: string | null;
+  targetPosition?: { x: number; y: number; z: number } | null;
+}
 import { Entity } from '@/ecs/Entity';
 import { InterpolationBuffer } from '@/ecs/components/Interpolation';
 import { RenderSystem } from '@/systems/RenderSystem';
@@ -377,7 +411,7 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
     if (!engineRef.current) return;
 
     const world = engineRef.current.getWorld();
-    const currentUnits = Array.from(summonedUnits.values());
+    const currentUnits = Array.from(summonedUnits.values()) as ServerSummonedUnit[];
     const currentEntityIds = new Set(serverSummonedUnitEntities.current.values());
 
     // Remove entities for units that no longer exist on server
@@ -481,7 +515,7 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
     if (!engineRef.current) return;
 
     const world = engineRef.current.getWorld();
-    const currentTowers = Array.from(towers.values());
+    const currentTowers = Array.from(towers.values()) as ServerTower[];
 
     // Remove entities for towers that no longer exist on server
     for (const [towerId, entityId] of Array.from(serverTowerEntities.current.entries())) {
@@ -584,7 +618,7 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
   const syncPillarsToECS = useCallback(() => {
     if (!engineRef.current) return;
     const world = engineRef.current.getWorld();
-    const currentPillars = Array.from(pillars.values());
+    const currentPillars = Array.from(pillars.values()) as ServerPillar[];
 
     // Remove entities for pillars that no longer exist on server
     for (const [pillarId, entityId] of Array.from(serverPillarEntities.current.entries())) {
@@ -612,7 +646,7 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
         entity.addComponent(transform);
 
         // Add Pillar component
-        const pillarComponent = world.createComponent(Pillar);
+        const pillarComponent = world.createComponent(PillarComponent);
         pillarComponent.ownerId = pillar.ownerId;
         pillarComponent.pillarIndex = pillar.pillarIndex;
         pillarComponent.isActive = !pillar.isDead;
@@ -659,7 +693,7 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
         }
 
         // Update pillar component
-        const pillarComponent = entity.getComponent(Pillar);
+        const pillarComponent = entity.getComponent(PillarComponent);
         if (pillarComponent) {
           pillarComponent.isActive = !pillar.isDead;
           pillarComponent.isDead = pillar.isDead || false;
@@ -672,6 +706,88 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
   useEffect(() => {
     syncPillarsToECS();
   }, [pillars, engineRef.current]);
+
+  // Refs to track latest values without triggering effect restarts
+  const playersRef = useRef(players);
+  const towersRef = useRef(towers);
+  const pillarsRef = useRef(pillars);
+  const summonedUnitsRef = useRef(summonedUnits);
+  const activeMistEffectsRef = useRef(activeMistEffects);
+  const deathEffectsRef = useRef(deathEffects);
+
+  // Update refs when values change
+  useEffect(() => {
+    playersRef.current = players;
+    towersRef.current = towers;
+    pillarsRef.current = pillars;
+    summonedUnitsRef.current = summonedUnits;
+    activeMistEffectsRef.current = activeMistEffects;
+    deathEffectsRef.current = deathEffects;
+  }, [players, towers, pillars, summonedUnits, activeMistEffects, deathEffects]);
+
+  // Memory monitoring and leak detection (runs continuously without restarting)
+  useEffect(() => {
+    console.log('🔍 Memory monitor started');
+    const memoryMonitorInterval = setInterval(() => {
+      try {
+        // Check if performance.memory is available (Chrome only)
+        const performanceMemory = (performance as any).memory;
+        const usedJSHeapSize = performanceMemory?.usedJSHeapSize;
+        const usedMB = usedJSHeapSize ? Math.round(usedJSHeapSize / (1024 * 1024)) : null;
+
+        // Collect live object counts using refs
+        const liveObjectCounts = {
+          players: playersRef.current.size,
+          towers: towersRef.current.size,
+          pillars: pillarsRef.current.size,
+          summonedUnits: summonedUnitsRef.current.size,
+          pvpReanimateEffects: 0, // Will be counted from state
+          pvpSmiteEffects: 0,
+          pvpColossusStrikeEffects: 0,
+          pvpWindShearEffects: 0,
+          pvpDeathGraspEffects: 0,
+          pvpFrozenEffects: 0,
+          pvpStunnedEffects: 0,
+          activeMistEffects: activeMistEffectsRef.current.length,
+          deathEffects: deathEffectsRef.current.size,
+          serverPlayerEntities: serverPlayerEntities.current.size,
+          serverTowerEntities: serverTowerEntities.current.size,
+          serverPillarEntities: serverPillarEntities.current.size,
+          serverSummonedUnitEntities: serverSummonedUnitEntities.current.size,
+        };
+
+        // Get WebGL memory info
+        const webglInfo = gl.info;
+        const webglMemory = {
+          geometries: webglInfo.memory?.geometries || 0,
+          textures: webglInfo.memory?.textures || 0,
+          programs: webglInfo.programs?.length || 0,
+        };
+
+        // Log memory pressure warning if usage is high
+        if (usedMB && usedMB > 150) {
+          console.warn(`⚠️ Memory pressure: ${usedMB}MB`, liveObjectCounts);
+        }
+
+        // Log live object counts every 10 seconds for debugging
+        console.log('📊 Live object counts', liveObjectCounts);
+        console.log('🎛️ WebGL memory', webglMemory);
+
+        // Alert on potential geometry leaks
+        if (webglMemory.geometries > 200) {
+          console.warn(`⚠️ Geometry Count: ${webglMemory.geometries}`);
+        }
+      } catch (error) {
+        console.error('❌ Memory monitor error:', error);
+      }
+
+    }, 10000); // Check every 10 seconds
+
+    return () => {
+      console.log('🛑 Memory monitor stopped');
+      clearInterval(memoryMonitorInterval);
+    };
+  }, [gl]); // Only restart if gl changes (which should be rare)
 
   // Experience system state
   const [playerExperience, setPlayerExperience] = useState(0);
@@ -1411,7 +1527,7 @@ const [maxMana, setMaxMana] = useState(150);
   // Function to handle player respawn
   const handlePlayerRespawn = useCallback((playerId: string) => {
     // Find the player's tower
-    const playerTower = Array.from(towers.values()).find(tower => tower.ownerId === playerId);
+    const playerTower = (Array.from(towers.values()) as ServerTower[]).find(tower => tower.ownerId === playerId);
     if (!playerTower) {
       // console.warn(`⚠️ No tower found for player ${playerId}, cannot respawn`);
       return;
@@ -1442,6 +1558,46 @@ const [maxMana, setMaxMana] = useState(150);
             health.revive(); // Restore full health and clear death flag
             health.setInvulnerable(2.0); // Give player 2 seconds of invulnerability after respawn
             updatePlayerHealth(health.currentHealth, health.maxHealth);
+
+            // Get shield component for immediate UI update
+            const shield = playerEntity.getComponent(Shield);
+            if (shield) {
+              shield.restoreShield(); // Restore shield to full on respawn
+            }
+
+            // Immediately update game state to ensure health bar reflects respawned values
+            if (onGameStateUpdate && controlSystemRef.current) {
+              const gameState = {
+                playerHealth: health.currentHealth,
+                maxHealth: health.maxHealth,
+                playerShield: shield ? shield.currentShield : 0,
+                maxShield: shield ? shield.maxShield : 0,
+                currentWeapon: controlSystemRef.current.getCurrentWeapon(),
+                currentSubclass: controlSystemRef.current.getCurrentSubclass(),
+                mana: (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) ? currentMana : 0,
+                maxMana: (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) ? maxMana : 0
+              };
+              onGameStateUpdate(gameState);
+            }
+
+            // Update local player's entry in players Map
+            const localPlayerId = socket?.id;
+            if (localPlayerId) {
+              setPlayers(prevPlayers => {
+                const newPlayers = new Map(prevPlayers);
+                const player = newPlayers.get(localPlayerId);
+                if (player) {
+                  newPlayers.set(localPlayerId, {
+                    ...player,
+                    health: health.currentHealth,
+                    maxHealth: health.maxHealth,
+                    shield: shield ? shield.currentShield : 0,
+                    maxShield: shield ? shield.maxShield : 0
+                  });
+                }
+                return newPlayers;
+              });
+            }
           }
         }
       }
@@ -2943,6 +3099,25 @@ const hasMana = useCallback((amount: number) => {
     const handlePlayerDamaged = (data: any) => {
       let targetActuallyDied = false;
 
+      // Update the players Map for the damaged player (for remote player health bar display)
+      // Skip local player - local Health component is authoritative
+      if (data.targetPlayerId !== socket?.id && data.newHealth !== undefined) {
+        setPlayers(prevPlayers => {
+          const newPlayers = new Map(prevPlayers);
+          const player = newPlayers.get(data.targetPlayerId);
+          if (player) {
+            newPlayers.set(data.targetPlayerId, {
+              ...player,
+              health: data.newHealth,
+              maxHealth: data.maxHealth ?? player.maxHealth,
+              shield: data.newShield !== undefined ? data.newShield : player.shield,
+              maxShield: data.maxShield ?? player.maxShield
+            });
+          }
+          return newPlayers;
+        });
+      }
+
       // If we are the target, apply damage to our player
       if (data.targetPlayerId === socket?.id && playerEntity && socket?.id) {
         // Check if player is already in death state - if so, ignore damage
@@ -2987,8 +3162,43 @@ const hasMana = useCallback((amount: number) => {
           }
 
           // Broadcast shield changes to other players
-          if (shield) {
-            updatePlayerShield(shield.currentShield, shield.maxShield);
+          if (shield && socket?.id) {
+            updatePlayerShield(socket.id, shield.currentShield, shield.maxShield);
+          }
+
+          // Immediately update game state to ensure health bar reflects current values
+          // This bypasses the 100ms throttle to provide instant visual feedback after damage
+          if (onGameStateUpdate && controlSystemRef.current) {
+            const gameState = {
+              playerHealth: health.currentHealth,
+              maxHealth: health.maxHealth,
+              playerShield: shield ? shield.currentShield : 0,
+              maxShield: shield ? shield.maxShield : 0,
+              currentWeapon: controlSystemRef.current.getCurrentWeapon(),
+              currentSubclass: controlSystemRef.current.getCurrentSubclass(),
+              mana: (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) ? currentMana : 0,
+              maxMana: (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) ? maxMana : 0
+            };
+            onGameStateUpdate(gameState);
+          }
+
+          // Also update the local player's entry in the players Map for consistency
+          const localPlayerId = socket?.id;
+          if (localPlayerId) {
+            setPlayers(prevPlayers => {
+              const newPlayers = new Map(prevPlayers);
+              const player = newPlayers.get(localPlayerId);
+              if (player) {
+                newPlayers.set(localPlayerId, {
+                  ...player,
+                  health: health.currentHealth,
+                  maxHealth: health.maxHealth,
+                  shield: shield ? shield.currentShield : 0,
+                  maxShield: shield ? shield.maxShield : 0
+                });
+              }
+              return newPlayers;
+            });
           }
 
           // Check if player just died
@@ -3303,6 +3513,12 @@ const hasMana = useCallback((amount: number) => {
       }
 
       const { playerId, shield, maxShield } = data;
+
+      // Skip shield updates for the local player - local Shield component is authoritative
+      // This prevents shield bar flickering from race conditions between local and server state
+      if (playerId === socket?.id) {
+        return;
+      }
 
       // Update the player's shield in the players state
       setPlayers(prevPlayers => {
@@ -4836,7 +5052,7 @@ const hasMana = useCallback((amount: number) => {
       })}
 
       {/* Towers */}
-      {Array.from(towers.values()).map(tower => {
+      {(Array.from(towers.values()) as ServerTower[]).map((tower) => {
         // Get the actual ECS entity ID for this tower
         const entityId = serverTowerEntities.current.get(tower.id);
         if (!entityId) return null; // Skip if entity doesn't exist yet
@@ -4858,13 +5074,13 @@ const hasMana = useCallback((amount: number) => {
       })}
 
       {/* Render Pillars */}
-      {Array.from(pillars.values()).map(pillar => {
+      {(Array.from(pillars.values()) as ServerPillar[]).map((pillar) => {
         // Get the actual ECS entity ID for this pillar
         const entityId = serverPillarEntities.current.get(pillar.id);
         if (!entityId) return null; // Skip if entity doesn't exist yet
 
         // Get tower index for consistent player coloring
-        const tower = Array.from(towers.values()).find(t => t.ownerId === pillar.ownerId);
+        const tower = (Array.from(towers.values()) as ServerTower[]).find((t) => t.ownerId === pillar.ownerId);
         const playerIndex = tower ? tower.towerIndex : 0;
 
         return (
@@ -4885,7 +5101,7 @@ const hasMana = useCallback((amount: number) => {
       })}
 
       {/* Server-Authoritative Summoned Units */}
-      {engineRef.current && Array.from(summonedUnits.values()).map((unit) => {
+      {engineRef.current && (Array.from(summonedUnits.values()) as ServerSummonedUnit[]).map((unit) => {
         // Filter out dead or inactive units
         if (!unit.isActive || unit.isDead) return null;
 
