@@ -412,7 +412,7 @@ export default function GameUI({
             max={getMaxManaForWeapon(WeaponType.SCYTHE, level)}
             gradient="linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)"
             glowColor="#3b82f6"
-            icon="✦"
+            icon="☯︎"
           />
         );
       case WeaponType.SWORD:
@@ -422,7 +422,7 @@ export default function GameUI({
             max={maxRage}
             gradient="linear-gradient(90deg, #c2410c 0%, #ea580c 50%, #fb923c 100%)"
             glowColor="#ea580c"
-            icon="⚔"
+            icon="ꗈ"
           />
         );
       case WeaponType.BOW:
@@ -433,7 +433,7 @@ export default function GameUI({
             max={maxEnergy}
             gradient="linear-gradient(90deg, #a16207 0%, #ca8a04 50%, #facc15 100%)"
             glowColor="#ca8a04"
-            icon="⚡"
+            icon="𖥂"
           />
         );
       case WeaponType.RUNEBLADE:
@@ -443,7 +443,7 @@ export default function GameUI({
             max={getMaxManaForWeapon(WeaponType.RUNEBLADE, level)}
             gradient="linear-gradient(90deg, #6b21a8 0%, #9333ea 50%, #c084fc 100%)"
             glowColor="#9333ea"
-            icon="◈"
+            icon="☯︎"
           />
         );
       default:
@@ -504,13 +504,13 @@ export default function GameUI({
           <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-indigo-500/30 rounded-br-lg" />
 
           {/* Shield Bar */}
-          <div className="mb-3">
+          <div className="mb-2">
             <ResourceBar
               current={playerShield}
               max={maxShield}
               gradient="linear-gradient(90deg, #0e7490 0%, #06b6d4 50%, #22d3ee 100%)"
               glowColor="#06b6d4"
-              icon="🛡"
+              icon=""
             />
           </div>
           
@@ -521,7 +521,7 @@ export default function GameUI({
               max={maxHealth}
               gradient="linear-gradient(90deg, #991b1b 0%, #dc2626 50%, #f87171 100%)"
               glowColor="#dc2626"
-              icon="❤"
+              icon=""
             />
           </div>
           
@@ -531,7 +531,7 @@ export default function GameUI({
           {/* Skill Points Display */}
           {skillPointData && skillPointData.skillPoints > 0 && (
             <div 
-              className="mt-4 py-2 px-4 rounded-lg text-center"
+              className="mt-4 py-1 px-4 rounded-lg text-center"
               style={{
                 background: 'linear-gradient(90deg, rgba(250,204,21,0.1) 0%, rgba(250,204,21,0.2) 50%, rgba(250,204,21,0.1) 100%)',
                 border: '1px solid rgba(250,204,21,0.3)',
@@ -539,7 +539,7 @@ export default function GameUI({
               }}
             >
               <span className="text-yellow-300 text-xs font-bold tracking-wide uppercase">
-                ✨ {skillPointData.skillPoints} Ability Point{skillPointData.skillPoints > 1 ? 's' : ''} Available
+               {skillPointData.skillPoints} Ability Point{skillPointData.skillPoints > 1 ? 's' : ''} Available
               </span>
             </div>
           )}
