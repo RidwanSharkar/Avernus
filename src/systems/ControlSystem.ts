@@ -955,7 +955,7 @@ export class ControlSystem extends System {
     
     // Apply downward angle compensation to account for restricted camera bounds
     // Since camera can't look down much due to bounds, we add a fixed downward angle
-    const compensationAngle = Math.PI / 6; // 30 degrees downward compensation
+    const compensationAngle = Math.PI / 7; // 30 degrees downward compensation
     
     // Create a rotation matrix to apply the downward angle around the camera's right axis
     const cameraRight = new Vector3();
@@ -1007,7 +1007,7 @@ export class ControlSystem extends System {
     direction.normalize();
 
     // Apply downward angle compensation (same as bow projectiles)
-    const compensationAngle = Math.PI / 6; // 30 degrees downward compensation
+    const compensationAngle = Math.PI / 7; // 30 degrees downward compensation
     const cameraRight = new Vector3();
     cameraRight.crossVectors(direction, new Vector3(0, 1, 0)).normalize();
 
@@ -1079,7 +1079,7 @@ export class ControlSystem extends System {
     direction.normalize();
 
     // Apply angle compensation (same as bow projectiles)
-    const compensationAngle = Math.PI / 6; // 30 degrees downward compensation
+    const compensationAngle = Math.PI / 7; // 30 degrees downward compensation
     const cameraRight = new Vector3();
     cameraRight.crossVectors(direction, new Vector3(0, 1, 0)).normalize();
 
@@ -1579,7 +1579,7 @@ export class ControlSystem extends System {
     direction.normalize();
     
     // Apply same downward angle compensation as other projectiles
-    const compensationAngle = Math.PI / 6; // 30 degrees downward compensation
+    const compensationAngle = Math.PI / 7; // 30 degrees downward compensation
     const cameraRight = new Vector3();
     cameraRight.crossVectors(direction, new Vector3(0, 1, 0)).normalize();
     
@@ -4514,7 +4514,7 @@ export class ControlSystem extends System {
     direction.normalize();
     
     // Apply same downward angle compensation as other projectiles
-    const compensationAngle = Math.PI / 6; // 30 degrees downward compensation
+    const compensationAngle = Math.PI / 7; // 30 degrees downward compensation
     const cameraRight = new Vector3();
     cameraRight.crossVectors(direction, new Vector3(0, 1, 0)).normalize();
     
