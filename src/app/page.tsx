@@ -10,6 +10,7 @@ import GameUI from '../components/ui/GameUI';
 import { getGlobalRuneCounts, getCriticalChance, getCriticalDamageMultiplier } from '../core/DamageCalculator';
 import ExperienceBar from '../components/ui/ExperienceBar';
 import EssenceDisplay from '../components/ui/EssenceDisplay';
+import ControlsPanel from '../components/ui/ControlsPanel';
 import { MultiplayerProvider, useMultiplayer } from '../contexts/MultiplayerContext';
 import RoomJoin from '../components/ui/RoomJoin';
 import MerchantUI from '../components/ui/MerchantUI';
@@ -727,19 +728,17 @@ function HomeContent() {
         {/* UI Overlay - Only show during gameplay */}
         {gameMode !== 'menu' && (
           <>
-            <div className="absolute top-4 left-4 text-white font-mono text-sm">
-              <div>WASD - Double Tap Dash</div>
-              <div>Right Click - Camera </div>
-              <div>Left Click - Attack </div>
-              <div>Space - Jump</div>
+            {/* Controls Panel */}
+            <div className="absolute top-4 left-4">
+              <ControlsPanel />
             </div>
             
             {/* Performance Stats */}
-            <div className="absolute top-4 right-4 text-white font-mono text-sm">
+            <div className="absolute top-2 right-4 text-white font-mono text-xs">
               <div id="fps-counter">FPS: --</div>
 
               {gameMode === 'pvp' && (
-                <div className="mt-2 text-red-400">
+                <div className="mt-0.5 text-red-400">
                   <div>PVP Mode</div>
                 </div>
               )}

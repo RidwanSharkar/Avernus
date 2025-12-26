@@ -48,7 +48,7 @@ export default function ChatUI({ isVisible = true }: ChatUIProps) {
     <>
       {/* Chat Messages Display */}
       <div className="fixed bottom-28 right-4 z-50 max-w-xs">
-        <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-lg border border-gray-600 p-2.5 max-h-24 overflow-y-auto">
+        <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-lg border border-gray-600 p-2 max-h-24 overflow-y-auto">
           {chatMessages.length > 0 ? (
             <div className="space-y-0.125">
               {chatMessages.map((message) => (

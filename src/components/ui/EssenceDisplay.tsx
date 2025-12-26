@@ -11,20 +11,17 @@ interface EssenceDisplayProps {
 export default function EssenceDisplay({ essence, playerId, isLocalPlayer = false }: EssenceDisplayProps) {
   return (
     <div className="fixed bottom-14 right-4 z-40">
-      <div className="bg-black bg-opacity-70 backdrop-blur-sm rounded-lg p-1 border border-purple-600">
-        <div className="flex items-center space-x-0.5">
+      <div className="bg-black bg-opacity-70 backdrop-blur-sm rounded-lg p-2 border border-purple-600">
+        <div className="flex items-center space-x-1">
           {/* Essence icon/symbol */}
-          <div className="text-purple-400 text-lg"> </div>
+          <div className="text-purple-400 text-xs"> ⚡</div>
 
           {/* Essence amount */}
           <div className={`text-xs font-bold ${isLocalPlayer ? 'text-purple-400' : 'text-purple-300'}`}>
             {essence}
           </div>
 
-          {/* Essence label */}
-          <div className="text-xs text-gray-400">
-            Essence
-          </div>
+
         </div>
       </div>
     </div>

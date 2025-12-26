@@ -422,7 +422,7 @@ export default function GameUI({
             max={maxRage}
             gradient="linear-gradient(90deg, #c2410c 0%, #ea580c 50%, #fb923c 100%)"
             glowColor="#ea580c"
-            icon="ꗈ"
+            icon="𖤍" // ࿈
           />
         );
       case WeaponType.BOW:
@@ -479,12 +479,12 @@ export default function GameUI({
       <div 
         className="fixed bottom-28 left-1/2 z-50" 
         style={{ 
-          transform: 'translateX(-50%) scale(0.8)',
+          transform: 'translateX(-50%) scale(0.9)',
           transformOrigin: 'center bottom'
         }}
       >
         <div 
-          className="relative min-w-[340px] p-3 rounded-2xl"
+          className="relative min-w-[340px] p-2.5 rounded-2xl"
           style={{
             background: 'linear-gradient(180deg, rgba(15,15,25,0.95) 0%, rgba(10,10,20,0.98) 100%)',
             backdropFilter: 'blur(20px)',
@@ -504,24 +504,24 @@ export default function GameUI({
           <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-indigo-500/30 rounded-br-lg" />
 
           {/* Shield Bar */}
-          <div className="mb-2">
+          <div className="mb-1.5">
             <ResourceBar
               current={playerShield}
               max={maxShield}
               gradient="linear-gradient(90deg, #0e7490 0%, #06b6d4 50%, #22d3ee 100%)"
               glowColor="#06b6d4"
-              icon=""
+              icon="⛨"
             />
           </div>
           
           {/* HP Bar */}
-          <div className="mb-3">
+          <div className="mb-1.5">
             <ResourceBar
               current={playerHealth}
               max={maxHealth}
               gradient="linear-gradient(90deg, #991b1b 0%, #dc2626 50%, #f87171 100%)"
               glowColor="#dc2626"
-              icon=""
+              icon="✙" //✚
             />
           </div>
           
@@ -531,7 +531,7 @@ export default function GameUI({
           {/* Skill Points Display */}
           {skillPointData && skillPointData.skillPoints > 0 && (
             <div 
-              className="mt-4 py-1 px-4 rounded-lg text-center"
+              className="mt-2 py-1 px-4 rounded-lg text-center"
               style={{
                 background: 'linear-gradient(90deg, rgba(250,204,21,0.1) 0%, rgba(250,204,21,0.2) 50%, rgba(250,204,21,0.1) 100%)',
                 border: '1px solid rgba(250,204,21,0.3)',
