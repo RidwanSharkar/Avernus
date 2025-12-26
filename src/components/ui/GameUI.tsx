@@ -17,8 +17,8 @@ interface GameUIProps {
   maxEnergy?: number;
   rage?: number;
   maxRage?: number;
-  level?: number; // Player level for mana scaling
-  controlSystem?: any; // Reference to control system for ability cooldowns
+  level?: number;
+  controlSystem?: any;
   selectedWeapons?: {
     primary: WeaponType;
     secondary: WeaponType;
@@ -34,37 +34,92 @@ interface GameUIProps {
   criticalDamageMultiplier?: number;
 }
 
-
 interface ResourceBarProps {
   current: number;
   max: number;
-  color: string;
-  backgroundColor?: string;
+  gradient: string;
+  glowColor: string;
+  icon?: string;
+  label?: string;
 }
 
-function ResourceBar({ current, max, color, backgroundColor = '#333'}: ResourceBarProps) {
+function ResourceBar({ current, max, gradient, glowColor, icon, label }: ResourceBarProps) {
   const percentage = Math.max(0, Math.min(100, (current / max) * 100));
+  const isLow = percentage < 30;
   
   return (
-    <div className="w-full">
+    <div className="relative w-full group">
+      {/* Outer container with subtle glow */}
       <div 
-        className="w-full h-6 rounded-lg border-2 border-gray-600 overflow-hidden relative"
-        style={{ backgroundColor }}
+        className="relative w-full h-7 rounded-full overflow-hidden"
+        style={{
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(20,20,30,0.9) 100%)',
+          boxShadow: `inset 0 2px 4px rgba(0,0,0,0.6), 0 0 20px ${glowColor}15, 0 1px 0 rgba(255,255,255,0.05)`
+        }}
       >
-        <div
-          className="h-full transition-all duration-300 ease-out rounded-sm"
+        {/* Inner track */}
+        <div 
+          className="absolute inset-[2px] rounded-full overflow-hidden"
           style={{
-            width: `${percentage}%`,
-            backgroundColor: color,
-            boxShadow: `0 0 10px ${color}40`
+            background: 'linear-gradient(180deg, rgba(15,15,25,0.95) 0%, rgba(25,25,40,0.9) 100%)',
+            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)'
           }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm text-white font-medium drop-shadow-lg">
-            {Math.round(current)}/{max}
-          </span>
+        >
+          {/* Fill bar container - use transform for smooth animation */}
+          <div
+            className="h-full w-full rounded-full relative"
+            style={{
+              transform: `scaleX(${percentage / 100})`,
+              transformOrigin: 'left center',
+              transition: 'transform 0.15s ease-out',
+              background: gradient,
+              boxShadow: `0 0 15px ${glowColor}60, inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 0 rgba(0,0,0,0.3)`
+            }}
+          >
+            {/* Highlight at top of bar */}
+            <div 
+              className="absolute inset-x-0 top-0 h-[40%] rounded-t-full pointer-events-none"
+              style={{
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
+              }}
+            />
+            
+            {/* Pulse effect when low */}
+            {isLow && (
+              <div 
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  background: 'rgba(255,0,0,0.25)',
+                  animation: 'lowHealthPulse 1s ease-in-out infinite'
+                }}
+              />
+            )}
+          </div>
+        </div>
+        
+        {/* Value display */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+          <div className="flex items-center gap-1.5">
+            {icon && <span className="text-xs opacity-80">{icon}</span>}
+            <span 
+              className="text-xs font-bold tracking-wide"
+              style={{
+                color: '#fff',
+                textShadow: '0 1px 2px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.5)'
+              }}
+            >
+              {Math.round(current)}<span className="opacity-50 mx-0.5">/</span>{max}
+            </span>
+          </div>
         </div>
       </div>
+      
+      {/* Label (if provided) */}
+      {label && (
+        <div className="absolute -left-1 top-1/2 -translate-y-1/2 -translate-x-full pr-2">
+          <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{label}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -72,14 +127,12 @@ function ResourceBar({ current, max, color, backgroundColor = '#333'}: ResourceB
 // Mana scaling based on player level
 function getMaxManaForWeapon(weaponType: WeaponType, level: number): number {
   if (weaponType === WeaponType.RUNEBLADE) {
-    // Runeblade scaling: Level 1: 150, Level 2: 175, Level 3: 200, Level 4: 225, Level 5: 250
     const runebladeMana = [0, 150, 175, 200, 225, 250];
     return runebladeMana[level] || 150;
   } else if (weaponType === WeaponType.SCYTHE) {
-    // Scythe scaling: Level 1: 250, Level 2: 275, Level 3: 300, Level 4: 325, Level 5: 350
     return 250 + (level - 1) * 25;
   }
-  return 200; // Default for other weapons
+  return 200;
 }
 
 export default function GameUI({
@@ -94,7 +147,7 @@ export default function GameUI({
   maxEnergy = 100,
   rage = 0,
   maxRage = 100,
-  level = 1, // Default to level 1
+  level = 1,
   controlSystem,
   selectedWeapons,
   onWeaponSwitch,
@@ -139,25 +192,22 @@ export default function GameUI({
     }
   }, [controlSystem, onUnlockAbility]);
 
-  // Continuous regeneration for all weapons (resources regenerate even when not using that weapon)
+  // Continuous regeneration for all weapons
   useEffect(() => {
     const interval = setInterval(() => {
       setWeaponResources(prev => {
         const updated = { ...prev };
 
-        // Mana regeneration for Scythe (10 mana per second = 5 every 500ms)
         const scytheMaxMana = getMaxManaForWeapon(WeaponType.SCYTHE, level);
         if (updated[WeaponType.SCYTHE].mana < scytheMaxMana) {
           updated[WeaponType.SCYTHE].mana = Math.min(scytheMaxMana, updated[WeaponType.SCYTHE].mana + 4);
         }
 
-        // Mana regeneration for Runeblade (4 mana per second = 2 every 500ms)
         const runebladeMaxMana = getMaxManaForWeapon(WeaponType.RUNEBLADE, level);
         if (updated[WeaponType.RUNEBLADE].mana < runebladeMaxMana) {
           updated[WeaponType.RUNEBLADE].mana = Math.min(runebladeMaxMana, updated[WeaponType.RUNEBLADE].mana + 2);
         }
 
-        // Energy regeneration for Bow and Sabres (14 energy per second = 7 every 500ms)
         if (updated[WeaponType.BOW].energy < maxEnergy) {
           updated[WeaponType.BOW].energy = Math.min(maxEnergy, updated[WeaponType.BOW].energy + 6);
         }
@@ -177,23 +227,21 @@ export default function GameUI({
     setWeaponResources(prev => {
       const updated = { ...prev };
       
-      // Update Scythe mana capacity
       const scytheMaxMana = getMaxManaForWeapon(WeaponType.SCYTHE, level);
       if (updated[WeaponType.SCYTHE].mana < scytheMaxMana) {
-        updated[WeaponType.SCYTHE].mana = scytheMaxMana; // Fill to new max capacity
+        updated[WeaponType.SCYTHE].mana = scytheMaxMana;
       }
       
-      // Update Runeblade mana capacity
       const runebladeMaxMana = getMaxManaForWeapon(WeaponType.RUNEBLADE, level);
       if (updated[WeaponType.RUNEBLADE].mana < runebladeMaxMana) {
-        updated[WeaponType.RUNEBLADE].mana = runebladeMaxMana; // Fill to new max capacity
+        updated[WeaponType.RUNEBLADE].mana = runebladeMaxMana;
       }
       
       return updated;
     });
   }, [level]);
 
-  // Rage decay for Sword (5 rage per second after 5 seconds of no damage)
+  // Rage decay for Sword
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
@@ -201,33 +249,29 @@ export default function GameUI({
       setWeaponResources(prev => {
         const updated = { ...prev };
 
-        // Only decay rage for Sword weapon
         const swordData = updated[WeaponType.SWORD];
         const timeSinceLastDamage = now - swordData.lastSwordDamageTime;
 
-        // If it's been more than 6 seconds since last sword damage, decay rage
         if (timeSinceLastDamage > 8000 && swordData.rage > 0) {
           swordData.rage = Math.max(0, swordData.rage - 2);
         }
 
         return updated;
       });
-    }, 1000); // Check every second
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Function to consume mana (for Crossentropy bolt and Runeblade abilities)
+  // Function to consume mana
   const consumeMana = (amount: number): boolean => {
     if (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) {
-      // Apply Runeblade Arcane Mastery passive (-10% mana cost)
       let actualCost = amount;
       if (currentWeapon === WeaponType.RUNEBLADE && controlSystem) {
-        // Check if Runeblade passive is unlocked
         const weaponSlot = selectedWeapons?.primary === WeaponType.RUNEBLADE ? 'primary' : 'secondary';
         if (weaponSlot && controlSystem.isPassiveAbilityUnlocked &&
             controlSystem.isPassiveAbilityUnlocked('P', WeaponType.RUNEBLADE, weaponSlot)) {
-          actualCost = Math.floor(amount * 0.9); // 10% reduction
+          actualCost = Math.floor(amount * 0.9);
         }
       }
 
@@ -239,15 +283,14 @@ export default function GameUI({
             mana: Math.max(0, prev[currentWeapon].mana - actualCost)
           }
         }));
-        return true; // Successfully consumed mana
+        return true;
       } else {
-        return false; // Not enough mana
+        return false;
       }
     }
-    return false; // Wrong weapon type
+    return false;
   };
 
-  // Function to add mana (for Particle Beam refund when hitting frozen enemies)
   const addMana = (amount: number) => {
     if (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) {
       const maxMana = getMaxManaForWeapon(currentWeapon, level);
@@ -261,12 +304,10 @@ export default function GameUI({
     }
   };
 
-  // Function to check if Runeblade has enough mana for abilities
   const hasRunebladeMana = (amount: number) => {
     return currentWeapon === WeaponType.RUNEBLADE && currentMana >= amount;
   };
 
-  // Function to consume energy (for bow and sabres abilities)
   const consumeEnergy = (amount: number) => {
     if (currentWeapon === WeaponType.BOW || currentWeapon === WeaponType.SABRES) {
       setWeaponResources(prev => ({
@@ -279,7 +320,6 @@ export default function GameUI({
     }
   };
 
-  // Function to gain energy (for sabres abilities like backstab refund)
   const gainEnergy = (amount: number) => {
     if (currentWeapon === WeaponType.BOW || currentWeapon === WeaponType.SABRES) {
       setWeaponResources(prev => ({
@@ -292,7 +332,6 @@ export default function GameUI({
     }
   };
 
-  // Function to gain rage (for sword attacks)
   const gainRage = (amount: number) => {
     if (currentWeapon === WeaponType.SWORD) {
       setWeaponResources(prev => ({
@@ -300,13 +339,12 @@ export default function GameUI({
         [currentWeapon]: {
           ...prev[currentWeapon],
           rage: Math.min(maxRage, prev[currentWeapon].rage + amount),
-          lastSwordDamageTime: Date.now() // Update last damage time when gaining rage
+          lastSwordDamageTime: Date.now()
         }
       }));
     }
   };
 
-  // Function to consume rage 
   const consumeRage = (amount: number) => {
     if (currentWeapon === WeaponType.SWORD) {
       setWeaponResources(prev => ({
@@ -319,7 +357,6 @@ export default function GameUI({
     }
   };
 
-  // Function to consume all rage 
   const consumeAllRage = () => {
     if (currentWeapon === WeaponType.SWORD) {
       setWeaponResources(prev => ({
@@ -332,9 +369,7 @@ export default function GameUI({
     }
   };
 
-
-
-  // Expose functions globally for other components to use
+  // Expose functions globally
   useEffect(() => {
     (window as any).gameUI = {
       consumeMana,
@@ -352,23 +387,19 @@ export default function GameUI({
       canCastCrossentropyBolt: () => currentMana >= 40,
       canCastReanimate: () => currentMana >= 20,
       canCastFrostNova: () => currentMana >= 25,
-      // Runeblade mana abilities
       canCastSmite: () => currentMana >= 45,
       canCastDeathGrasp: () => currentMana >= 25,
       canCastWraithStrike: () => currentMana >= 30,
       canCastCorruptedAura: () => currentMana >= 8,
-      // Bow energy abilities
       canCastBarrage: () => currentEnergy >= 40,
       canCastCobraShot: () => currentEnergy >= 40,
       canCastViperSting: () => currentEnergy >= 60,
       canCastCloudkill: () => currentEnergy >= 40,
-      // Sword rage abilities
       canCastWindShear: () => currentRage >= 10,
-      // Sabres energy abilities
       canCastBackstab: () => currentEnergy >= 60,
       canCastSkyfall: () => currentEnergy >= 40,
       canCastSunder: () => currentEnergy >= 35,
-      canCastStealth: () => true // No energy cost for Stealth
+      canCastStealth: () => true
     };
   }, [currentMana, currentEnergy, currentRage, currentWeapon, addMana]);
 
@@ -378,9 +409,10 @@ export default function GameUI({
         return (
           <ResourceBar
             current={currentMana}
-            max={getMaxManaForWeapon(WeaponType.SCYTHE, level)} // Dynamic Scythe mana based on level
-            color="#4A90E2"
-            backgroundColor="#1a2332"
+            max={getMaxManaForWeapon(WeaponType.SCYTHE, level)}
+            gradient="linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)"
+            glowColor="#3b82f6"
+            icon="✦"
           />
         );
       case WeaponType.SWORD:
@@ -388,8 +420,9 @@ export default function GameUI({
           <ResourceBar
             current={currentRage}
             max={maxRage}
-            color="#FF6B35"
-            backgroundColor="#332318"
+            gradient="linear-gradient(90deg, #c2410c 0%, #ea580c 50%, #fb923c 100%)"
+            glowColor="#ea580c"
+            icon="⚔"
           />
         );
       case WeaponType.BOW:
@@ -398,17 +431,19 @@ export default function GameUI({
           <ResourceBar
             current={currentEnergy}
             max={maxEnergy}
-            color="#FFD700"
-            backgroundColor="#332b18"
+            gradient="linear-gradient(90deg, #a16207 0%, #ca8a04 50%, #facc15 100%)"
+            glowColor="#ca8a04"
+            icon="⚡"
           />
         );
       case WeaponType.RUNEBLADE:
         return (
           <ResourceBar
             current={currentMana}
-            max={getMaxManaForWeapon(WeaponType.RUNEBLADE, level)} // Dynamic Runeblade mana based on level
-            color="#9B59B6" // Purple color for mana
-            backgroundColor="#2a1a33"
+            max={getMaxManaForWeapon(WeaponType.RUNEBLADE, level)}
+            gradient="linear-gradient(90deg, #6b21a8 0%, #9333ea 50%, #c084fc 100%)"
+            glowColor="#9333ea"
+            icon="◈"
           />
         );
       default:
@@ -418,8 +453,20 @@ export default function GameUI({
 
   return (
     <>
-      {/* Rune Counter - positioned in right corner */}
-      <div className="fixed bottom-4 right-4 z-50">
+      {/* CSS for animations */}
+      <style>{`
+        @keyframes lowHealthPulse {
+          0%, 100% { opacity: 0.25; }
+          50% { opacity: 0.5; }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-2px); }
+        }
+      `}</style>
+
+      {/* Rune Counter */}
+      <div className="fixed bottom-6 right-4 z-50">
         <RuneCounter
           criticalRuneCount={criticalRuneCount}
           critDamageRuneCount={critDamageRuneCount}
@@ -428,57 +475,78 @@ export default function GameUI({
         />
       </div>
 
-      {/* Main UI Panel - positioned above the hotkey panel */}
-      <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 z-50">
-        <div className="bg-black bg-opacity-60 backdrop-blur-sm rounded-lg p-4 border border-gray-600 min-w-80">
-          {/* Shield Bar - Thinner bar above health */}
-          <div className="w-full mb-2">
-            <div 
-              className="w-full h-3 rounded-lg border border-blue-500 overflow-hidden relative"
-              style={{ backgroundColor: '#1a2332' }}
-            >
-              <div
-                className="h-full transition-all duration-300 ease-out rounded-sm"
-                style={{
-                  width: `${Math.max(0, Math.min(100, (playerShield / maxShield) * 100))}%`,
-                  backgroundColor: '#4A90E2',
-                  boxShadow: '0 0 8px #4A90E240'
-                }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs text-white font-medium drop-shadow-lg">
-                  {Math.round(playerShield)}/{maxShield}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {/* HP Bar */}
-          <div className="mb-2">
+      {/* Main UI Panel */}
+      <div 
+        className="fixed bottom-28 left-1/2 z-50" 
+        style={{ 
+          transform: 'translateX(-50%) scale(0.8)',
+          transformOrigin: 'center bottom'
+        }}
+      >
+        <div 
+          className="relative min-w-[340px] p-3 rounded-2xl"
+          style={{
+            background: 'linear-gradient(180deg, rgba(15,15,25,0.95) 0%, rgba(10,10,20,0.98) 100%)',
+            backdropFilter: 'blur(20px)',
+            boxShadow: `
+              0 0 0 1px rgba(255,255,255,0.05),
+              0 4px 30px rgba(0,0,0,0.5),
+              0 0 60px rgba(99,102,241,0.1),
+              inset 0 1px 0 rgba(255,255,255,0.05)
+            `,
+            border: '1px solid rgba(255,255,255,0.08)'
+          }}
+        >
+          {/* Decorative corner accents */}
+          <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-indigo-500/30 rounded-tl-lg" />
+          <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-indigo-500/30 rounded-tr-lg" />
+          <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-indigo-500/30 rounded-bl-lg" />
+          <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-indigo-500/30 rounded-br-lg" />
+
+          {/* Shield Bar */}
+          <div className="mb-3">
             <ResourceBar
-              current={playerHealth}
-              max={maxHealth}
-              color="#DC2626"
-              backgroundColor="#331a1a"
+              current={playerShield}
+              max={maxShield}
+              gradient="linear-gradient(90deg, #0e7490 0%, #06b6d4 50%, #22d3ee 100%)"
+              glowColor="#06b6d4"
+              icon="🛡"
             />
           </div>
           
-          {/* Resource Bar (weapon-specific) */}
+          {/* HP Bar */}
+          <div className="mb-3">
+            <ResourceBar
+              current={playerHealth}
+              max={maxHealth}
+              gradient="linear-gradient(90deg, #991b1b 0%, #dc2626 50%, #f87171 100%)"
+              glowColor="#dc2626"
+              icon="❤"
+            />
+          </div>
+          
+          {/* Resource Bar */}
           {getResourceBar()}
 
           {/* Skill Points Display */}
           {skillPointData && skillPointData.skillPoints > 0 && (
-            <div className="mt-2 text-center">
-              <div className="text-yellow-400 text-xs font-medium drop-shadow-lg">
-                Ability Points: {skillPointData.skillPoints}
-              </div>
+            <div 
+              className="mt-4 py-2 px-4 rounded-lg text-center"
+              style={{
+                background: 'linear-gradient(90deg, rgba(250,204,21,0.1) 0%, rgba(250,204,21,0.2) 50%, rgba(250,204,21,0.1) 100%)',
+                border: '1px solid rgba(250,204,21,0.3)',
+                animation: 'float 2s ease-in-out infinite'
+              }}
+            >
+              <span className="text-yellow-300 text-xs font-bold tracking-wide uppercase">
+                ✨ {skillPointData.skillPoints} Ability Point{skillPointData.skillPoints > 1 ? 's' : ''} Available
+              </span>
             </div>
           )}
-
         </div>
       </div>
       
-      {/* Hotkey Panel - positioned below the main UI */}
+      {/* Hotkey Panel */}
       <HotkeyPanel
         currentWeapon={currentWeapon}
         controlSystem={controlSystem}

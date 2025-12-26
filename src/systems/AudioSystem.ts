@@ -136,7 +136,7 @@ export class AudioSystem extends System {
       console.log('🎵 Starting background music streaming...');
       this.backgroundAudioElement = new Audio('/audio/sfx/ui/Avernus.mp3');
       this.backgroundAudioElement.loop = true;
-      this.backgroundAudioElement.volume = 0.35 * this.sfxVolume * this.masterVolume;
+      this.backgroundAudioElement.volume = 0.725 * this.sfxVolume * this.masterVolume;
       this.backgroundAudioElement.preload = 'none'; // Stream instead of preload
 
       // Add event listeners
