@@ -107,7 +107,7 @@ const ScytheAimer = memo(function ScytheAimer({
   
   // Calculate vertical offset based on camera pitch and zoom (same as BowAimer)
   // verticalAim: -1 (looking up) to 1 (looking down)
-  const compensationOffset = -28.5; // Base offset - negative moves it up from center
+  const compensationOffset = -27.25; // Base offset - negative moves it up from center
   const aimRange = 16; // How much the aimer moves based on vertical aim (percentage)
   const verticalOffset = compensationOffset + (verticalAim * aimRange) + zoomAdjustment;
   

@@ -224,6 +224,11 @@ class GameRoom {
     const z = Math.cos(angle) * (baseRadius + towerOffset);
     const y = 0; // Ground level
     
+    // Determine tower side based on Z position
+    // Player 0: angle = 0, z = positive (South)
+    // Player 1: angle = π, z = negative (North)
+    const side = z >= 0 ? 'South' : 'North';
+    
     const towerId = `tower_${playerId}`;
     const tower = {
       id: towerId,
@@ -231,6 +236,7 @@ class GameRoom {
       ownerName: playerName,
       towerIndex: playerIndex,
       position: { x, y, z },
+      side: side, // Add side information
       health: 10000,
       maxHealth: 10000,
       isDead: false,

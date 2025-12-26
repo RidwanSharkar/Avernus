@@ -52,6 +52,7 @@ interface Tower {
   ownerId: string;
   towerIndex: number;
   position: { x: number; y: number; z: number };
+  side?: 'North' | 'South'; // Tower side indicator
   health: number;
   maxHealth: number;
   isDead?: boolean;

@@ -83,90 +83,114 @@ function Tooltip({ content, visible, x, y }: TooltipProps) {
 }
 
 /**
- * Circular cooldown progress indicator with number display
+ * Rounded rectangle cooldown overlay with sweep animation
+ * Matches the rounded-xl shape of hotkey slots
  */
-const CooldownRing: React.FC<{
-  size: number;
+const CooldownOverlay: React.FC<{
   percentage: number;
   cooldownTime?: number;
-  isActive?: boolean;
   color?: string;
   showNumber?: boolean;
-}> = ({ size, percentage, cooldownTime, isActive, color = '#ef4444', showNumber = true }) => {
-  const strokeWidth = 2;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (circumference * percentage) / 100;
-
+}> = ({ percentage, cooldownTime, color = '#ef4444', showNumber = true }) => {
+  // Convert percentage to angle (0-360 degrees)
+  const angle = (percentage / 100) * 360;
+  
   return (
     <>
-      {/* Ring SVG */}
-      <svg
-        width={size}
-        height={size}
-        className="absolute pointer-events-none"
-        style={{ 
-          zIndex: 19,
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%) translateX(-0px) rotate(-90deg)'
-        }}
+      {/* Clock-wipe sweep effect using conic gradient */}
+      <div
+        className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden"
+        style={{ zIndex: 16 }}
       >
-        {/* Background ring (dark) */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="rgba(0,0,0,0.4)"
-          strokeWidth={strokeWidth + 1}
-          fill="none"
+        {/* Sweep overlay - shows remaining cooldown as darkened area */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `conic-gradient(from 0deg, transparent ${angle}deg, rgba(0,0,0,0.6) ${angle}deg)`,
+            transition: 'background 0.1s linear'
+          }}
         />
-        {/* Progress ring */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={isActive ? '#facc15' : color}
-          strokeWidth={strokeWidth}
+      </div>
+
+      {/* Animated border glow that follows the sweep */}
+      <svg
+        className="absolute inset-0 pointer-events-none"
+        width="100%"
+        height="100%"
+        viewBox="0 0 56 56"
+        style={{ zIndex: 17 }}
+      >
+        {/* Background border (subtle) */}
+        <rect
+          x="2"
+          y="2"
+          width="52"
+          height="52"
+          rx="12"
+          ry="12"
           fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth="3"
+        />
+        {/* Animated progress border */}
+        <rect
+          x="2"
+          y="2"
+          width="52"
+          height="52"
+          rx="12"
+          ry="12"
+          fill="none"
+          stroke={color}
+          strokeWidth="5"
+          strokeDasharray={`${(percentage / 100) * 208} 208`}
           strokeLinecap="round"
           style={{
-            transition: 'stroke-dashoffset 0.1s ease-out',
-            filter: `drop-shadow(0 0 8px ${isActive ? '#facc15' : color})`
+            filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}50)`,
+            transition: 'stroke-dasharray 0.1s linear'
           }}
         />
       </svg>
-      
-      {/* Cooldown number overlay */}
+
+      {/* Cooldown number */}
       {showNumber && cooldownTime !== undefined && cooldownTime > 0 && (
         <div 
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          style={{ 
-            zIndex: 25,
-            transform: 'translateX(-2px)'
-          }}
+          style={{ zIndex: 25 }}
         >
-          <div
-            className="flex items-center justify-center rounded-md px-1"
-            style={{
-              background: 'rgba(0,0,0,0.7)',
-              minWidth: '24px'
+          <span 
+            className="font-bold tabular-nums cooldown-number"
+            style={{ 
+              fontSize: cooldownTime >= 10 ? '16px' : '20px',
+              color: '#fff',
+              textShadow: `0 0 12px ${color}, 0 0 24px ${color}80, 0 2px 4px rgba(0,0,0,0.9)`,
+              letterSpacing: '-0.02em'
             }}
           >
-            <span 
-              className="text-white font-bold"
-              style={{ 
-                fontSize: cooldownTime >= 10 ? '12px' : '14px',
-                textShadow: `0 0 8px ${color}, 0 2px 4px rgba(0,0,0,0.8)`
-              }}
-            >
-              {Math.ceil(cooldownTime)}
-            </span>
-          </div>
+            {Math.ceil(cooldownTime)}
+          </span>
         </div>
       )}
+
+      {/* Corner accent glows */}
+      <div 
+        className="absolute top-0 left-0 w-3 h-3 pointer-events-none"
+        style={{
+          background: `radial-gradient(circle at 100% 100%, ${color}40 0%, transparent 70%)`,
+          zIndex: 18,
+          opacity: percentage > 0 ? 1 : 0,
+          transition: 'opacity 0.2s'
+        }}
+      />
+      <div 
+        className="absolute bottom-0 right-0 w-3 h-3 pointer-events-none"
+        style={{
+          background: `radial-gradient(circle at 0% 0%, ${color}40 0%, transparent 70%)`,
+          zIndex: 18,
+          opacity: percentage > 50 ? 1 : 0,
+          transition: 'opacity 0.2s'
+        }}
+      />
     </>
   );
 };
@@ -454,6 +478,14 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
           0%, 100% { opacity: 1; }
           50% { opacity: 0.6; }
         }
+        @keyframes cooldownPulse {
+          0%, 100% { filter: brightness(1); }
+          50% { filter: brightness(1.2); }
+        }
+        @keyframes cooldownNumberPop {
+          0%, 100% { transform: scale(1); }
+          10% { transform: scale(1.15); }
+        }
         .hotkey-slot {
           transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -463,10 +495,13 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
         .hotkey-slot:active {
           transform: translateY(0px) scale(0.98);
         }
+        .cooldown-number {
+          animation: cooldownNumberPop 1s ease-in-out infinite;
+        }
       `}</style>
 
       <div 
-        className="fixed bottom-6 left-1/2 z-40" 
+        className="fixed bottom-4 left-1/2 z-40" 
         style={{ 
           transform: 'translateX(-50%) scale(0.85)',
           transformOrigin: 'center bottom'
@@ -544,20 +579,11 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
 
                   {/* Cooldown overlay */}
                   {isOnCooldown && !isCurrentWeapon && (
-                    <>
-                      {/* Darkened background */}
-                      <div 
-                        className="absolute inset-0 rounded-xl pointer-events-none"
-                        style={{ background: 'rgba(0,0,0,0.5)', zIndex: 15 }}
-                      />
-                      {/* Ring with number */}
-                      <CooldownRing 
-                        size={56} 
-                        percentage={100 - cooldownPercentage} 
-                        cooldownTime={weaponSwitchCooldown.current}
-                        color="#ef4444" 
-                      />
-                    </>
+                    <CooldownOverlay 
+                      percentage={100 - cooldownPercentage} 
+                      cooldownTime={weaponSwitchCooldown.current}
+                      color="#ef4444" 
+                    />
                   )}
 
                   {/* Active indicator glow */}
@@ -575,7 +601,7 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
 
             {/* Separator */}
             <div 
-              className="w-[2px] h-10 mx-1 rounded-full"
+              className="w-[2px] h-12 mx-1 rounded-full"
               style={{
                 background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.2), transparent)'
               }}
@@ -671,22 +697,13 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
                     }
                   </div>
 
-                  {/* Cooldown ring and overlay */}
+                  {/* Cooldown overlay */}
                   {isOnCooldown && !isUnassigned && !isLocked && (
-                    <>
-                      {/* Darkened background */}
-                      <div 
-                        className="absolute inset-0 rounded-xl pointer-events-none"
-                        style={{ background: 'rgba(0,0,0,0.45)', zIndex: 15 }}
-                      />
-                      {/* Ring with number */}
-                      <CooldownRing 
-                        size={56} 
-                        percentage={100 - cooldownPercentage} 
-                        cooldownTime={currentCooldown}
-                        color="#ef4444"
-                      />
-                    </>
+                    <CooldownOverlay 
+                      percentage={100 - cooldownPercentage} 
+                      cooldownTime={currentCooldown}
+                      color="#ef4444"
+                    />
                   )}
 
                   {/* Charging progress bar */}

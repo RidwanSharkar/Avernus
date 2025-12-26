@@ -37,6 +37,7 @@ interface ServerTower {
   ownerId: string;
   towerIndex: number;
   position: { x: number; y: number; z: number };
+  side?: 'North' | 'South'; // Tower side indicator
   health: number;
   maxHealth: number;
   isDead?: boolean;
@@ -149,6 +150,13 @@ interface PVPGameSceneProps {
   onEssenceUpdate?: (essence: number) => void;
   onScoreboardUpdate?: (playerKills: Map<string, number>, players: Map<string, any>) => void;
   onMerchantUIUpdate?: (isVisible: boolean) => void;
+  onTowerInfoUpdate?: (towerInfo: {
+    side: 'North' | 'South' | null;
+    health: number;
+    maxHealth: number;
+    towerPosition: { x: number; y: number; z: number } | null;
+    playerPosition: { x: number; y: number; z: number } | null;
+  }) => void;
   selectedWeapons?: {
     primary: WeaponType;
     secondary: WeaponType;
@@ -157,7 +165,7 @@ interface PVPGameSceneProps {
   skillPointData?: SkillPointData;
 }
 
-export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, onCameraUpdate, onGameStateUpdate, onControlSystemUpdate, onExperienceUpdate, onEssenceUpdate, onScoreboardUpdate, onMerchantUIUpdate, selectedWeapons, skillPointData }: PVPGameSceneProps = {}) {
+export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, onCameraUpdate, onGameStateUpdate, onControlSystemUpdate, onExperienceUpdate, onEssenceUpdate, onScoreboardUpdate, onMerchantUIUpdate, onTowerInfoUpdate, selectedWeapons, skillPointData }: PVPGameSceneProps = {}) {
   const { scene, camera, gl, size } = useThree();
   const {
     players,
@@ -4006,6 +4014,47 @@ const hasMana = useCallback((amount: number) => {
         }
       }
     });
+    
+    // Update tower info for UI (detect local player's tower)
+    if (onTowerInfoUpdate && socket) {
+      const localPlayerId = socket.id;
+      const playerTower = Array.from(towers.values()).find(t => t.ownerId === localPlayerId);
+      
+      // Get player position from the local player entity
+      let playerPos: { x: number; y: number; z: number } | null = null;
+      if (playerEntityRef.current !== null && engineRef.current) {
+        const playerEntity = engineRef.current.getWorld().getEntity(playerEntityRef.current);
+        if (playerEntity) {
+          const transform = playerEntity.getComponent(Transform);
+          if (transform) {
+            playerPos = {
+              x: transform.position.x,
+              y: transform.position.y,
+              z: transform.position.z
+            };
+          }
+        }
+      }
+      
+      if (playerTower) {
+        onTowerInfoUpdate({
+          side: playerTower.side || null,
+          health: playerTower.health,
+          maxHealth: playerTower.maxHealth,
+          towerPosition: playerTower.position,
+          playerPosition: playerPos
+        });
+      } else {
+        // No tower found for player yet
+        onTowerInfoUpdate({
+          side: null,
+          health: 0,
+          maxHealth: 0,
+          towerPosition: null,
+          playerPosition: playerPos
+        });
+      }
+    }
     
     // Clean up local entities for towers that no longer exist
     const currentTowerIds = new Set(towers.keys());

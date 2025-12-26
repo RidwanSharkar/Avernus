@@ -47,13 +47,13 @@ export default function ChatUI({ isVisible = true }: ChatUIProps) {
   return (
     <>
       {/* Chat Messages Display */}
-      <div className="fixed bottom-28 right-4 z-50 max-w-xs">
+      <div className="fixed bottom-14 right-4 z-50 max-w-xs">
         <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-lg border border-gray-600 p-2 max-h-24 overflow-y-auto">
           {chatMessages.length > 0 ? (
             <div className="space-y-0.125">
               {chatMessages.map((message) => (
                 <div key={message.id} className="text-sm">
-                  <span className="text-blue-400 font-medium">{message.playerName}:</span>
+                  <span className="text-blue-400 font-small">{message.playerName}:</span>
                   <span className="text-white ml-1">{message.message}</span>
                 </div>
               ))}

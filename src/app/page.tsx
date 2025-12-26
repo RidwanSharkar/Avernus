@@ -143,6 +143,21 @@ function HomeContent() {
   const [showMerchantUI, setShowMerchantUI] = useState(false);
   const [showRulesPanel, setShowRulesPanel] = useState(false);
   
+  // Tower info state for PVP mode
+  const [towerInfo, setTowerInfo] = useState<{
+    side: 'North' | 'South' | null;
+    health: number;
+    maxHealth: number;
+    towerPosition: { x: number; y: number; z: number } | null;
+    playerPosition: { x: number; y: number; z: number } | null;
+  }>({
+    side: null,
+    health: 0,
+    maxHealth: 0,
+    towerPosition: null,
+    playerPosition: null
+  });
+  
   // Bow aimer state - tracks charging state, visibility, vertical aim, and zoom for the aimer UI
   const [bowAimerState, setBowAimerState] = useState({
     isCharging: false,
@@ -485,6 +500,16 @@ function HomeContent() {
     setPlayerEssence(essence);
   };
 
+  const handleTowerInfoUpdate = (info: { 
+    side: 'North' | 'South' | null; 
+    health: number; 
+    maxHealth: number;
+    towerPosition: { x: number; y: number; z: number } | null;
+    playerPosition: { x: number; y: number; z: number } | null;
+  }) => {
+    setTowerInfo(info);
+  };
+
   // Initialize tempSelectedWeapons and weapon positions when selectedWeapons changes
   useEffect(() => {
     if (selectedWeapons) {
@@ -810,7 +835,9 @@ function HomeContent() {
               onExperienceUpdate={handleExperienceUpdate}
               onEssenceUpdate={handleEssenceUpdate}
               onMerchantUIUpdate={setShowMerchantUI}
+              onTowerInfoUpdate={handleTowerInfoUpdate}
               selectedWeapons={selectedWeapons}
+              skillPointData={skillPointData}
             />
           )}
         </Canvas>
@@ -890,6 +917,11 @@ function HomeContent() {
                 critDamageRuneCount={getGlobalRuneCounts().critDamageRunes}
                 criticalChance={getCriticalChance()}
                 criticalDamageMultiplier={getCriticalDamageMultiplier()}
+                towerSide={towerInfo.side}
+                towerHealth={towerInfo.health}
+                towerMaxHealth={towerInfo.maxHealth}
+                towerPosition={towerInfo.towerPosition}
+                playerPosition={towerInfo.playerPosition}
               />
             </div>
 
@@ -902,13 +934,7 @@ function HomeContent() {
               />
             )}
 
-            {/* Essence Display - Only show in PVP mode */}
-            {gameMode === 'pvp' && (
-              <EssenceDisplay
-                essence={playerEssence}
-                isLocalPlayer={true}
-              />
-            )}
+
 
             {/* Merchant UI - Only show in PVP mode */}
             {gameMode === 'pvp' && (

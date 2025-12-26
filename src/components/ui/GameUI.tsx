@@ -4,6 +4,7 @@ import HotkeyPanel from './HotkeyPanel';
 import { SkillPointData, AbilityUnlock } from '@/utils/SkillPointSystem';
 import { RuneCounter } from './RuneCounter';
 import ChatUI from './ChatUI';
+import { TowerSideIndicator } from './TowerSideIndicator';
 
 interface GameUIProps {
   currentWeapon: WeaponType;
@@ -32,6 +33,12 @@ interface GameUIProps {
   critDamageRuneCount?: number;
   criticalChance?: number;
   criticalDamageMultiplier?: number;
+  // Tower info for PVP mode
+  towerSide?: 'North' | 'South' | null;
+  towerHealth?: number;
+  towerMaxHealth?: number;
+  towerPosition?: { x: number; y: number; z: number } | null;
+  playerPosition?: { x: number; y: number; z: number } | null;
 }
 
 interface ResourceBarProps {
@@ -157,7 +164,12 @@ export default function GameUI({
   criticalRuneCount = 0,
   critDamageRuneCount = 0,
   criticalChance = 0,
-  criticalDamageMultiplier = 2.0
+  criticalDamageMultiplier = 2.0,
+  towerSide = null,
+  towerHealth = 0,
+  towerMaxHealth = 0,
+  towerPosition = null,
+  playerPosition = null
 }: GameUIProps) {
   // Store resources per weapon type to persist across switches
   const [weaponResources, setWeaponResources] = useState<{
@@ -463,10 +475,35 @@ export default function GameUI({
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-2px); }
         }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+        @keyframes fade-in {
+          0% { opacity: 0; transform: translateY(-10px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
       `}</style>
 
+      {/* Tower Side Indicator (PVP only) */}
+      {towerSide && (
+        <TowerSideIndicator
+          side={towerSide === 'North' ? 'Red' : 'Blue'}
+          towerHealth={towerHealth}
+          towerMaxHealth={towerMaxHealth}
+          towerPosition={towerPosition}
+          playerPosition={playerPosition}
+        />
+      )}
+
       {/* Rune Counter */}
-      <div className="fixed bottom-6 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-50">
         <RuneCounter
           criticalRuneCount={criticalRuneCount}
           critDamageRuneCount={critDamageRuneCount}
@@ -484,7 +521,7 @@ export default function GameUI({
         }}
       >
         <div 
-          className="relative min-w-[340px] p-2.5 rounded-2xl"
+          className="relative min-w-[310px] p-3 rounded-2xl"
           style={{
             background: 'linear-gradient(180deg, rgba(15,15,25,0.95) 0%, rgba(10,10,20,0.98) 100%)',
             backdropFilter: 'blur(20px)',
