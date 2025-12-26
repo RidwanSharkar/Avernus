@@ -22,21 +22,30 @@ const BowAimer = memo(function BowAimer({
 }: BowAimerProps) {
   if (!isVisible) return null;
 
+  // Perfect shot timing constants (same as EtherBow)
+  const perfectShotMinThreshold = 0.8; // 80% charge
+  const perfectShotMaxThreshold = 0.98; // 98% charge
+  const isPerfectShotWindow = isCharging && chargeProgress >= perfectShotMinThreshold && chargeProgress <= perfectShotMaxThreshold;
+
   // Calculate opacity based on charging state - more visible now
-  const baseOpacity = isCharging ? 1.0 : 0.75;
-  const glowIntensity = isCharging ? chargeProgress * 1.2 : 0.3;
+  const baseOpacity = isPerfectShotWindow ? 1.0 : (isCharging ? 1.0 : 0.75);
+  const glowIntensity = isPerfectShotWindow 
+    ? 2.0 + Math.sin(Date.now() * 0.02) * 1.0 // Pulsing effect during perfect shot window
+    : (isCharging ? chargeProgress * 1.2 : 0.3);
   
-  // Color changes from cyan to gold as charge increases
-  const chargeColor = isCharging 
-    ? `rgb(${Math.floor(0 + chargeProgress * 255)}, ${Math.floor(255 - chargeProgress * 55)}, ${Math.floor(255 - chargeProgress * 255)})`
-    : '#00ffff';
+  // Color changes from cyan to gold as charge increases, or flashes white during perfect shot
+  const chargeColor = isPerfectShotWindow
+    ? '#ffffff' // Flash white during perfect shot window
+    : (isCharging 
+      ? `rgb(${Math.floor(0 + chargeProgress * 255)}, ${Math.floor(255 - chargeProgress * 55)}, ${Math.floor(255 - chargeProgress * 255)})`
+      : '#00ffff');
   
   // Calculate zoom adjustment
   // When zoomed in (distance = 2), we need to move the aimer UP (closer perspective)
   // When zoomed out (distance = 12.5), we need to move the aimer DOWN (farther perspective)
   // Normalize: (distance - 8) / (12.5 - 2) gives us a normalized zoom value
   const normalizedZoom = (cameraDistance - 8) / 10.5;
-  const zoomAdjustment = normalizedZoom * 9; // Range: ~-6% UP (zoomed in) to +4% DOWN (zoomed out)
+  const zoomAdjustment = normalizedZoom * 8; // Range: ~-6% UP (zoomed in) to +4% DOWN (zoomed out)
   
   // Calculate vertical offset based on camera pitch and zoom
   // verticalAim: -1 (looking up) to 1 (looking down)
@@ -53,11 +62,25 @@ const BowAimer = memo(function BowAimer({
         zIndex: 9999,
         // Position based on vertical camera aim + compensation angle
         transform: `translateY(${verticalOffset}%)`,
-        transition: 'transform 0.05s ease-out'
+        transition: 'transform 0.05s ease-out',
+        background: 'transparent',
+        overflow: 'visible'
       }}
     >
       {/* Main crosshair container - scaled down by 20% */}
-      <div className="relative" style={{ width: '48px', height: '48px' }}>
+      <div 
+        className="relative" 
+        style={{ 
+          width: '48px', 
+          height: '48px', 
+          overflow: 'visible',
+          background: 'transparent',
+          border: 'none',
+          outline: 'none',
+          boxShadow: 'none',
+          isolation: 'isolate'
+        }}
+      >
         {/* Outer glow ring - appears when charging */}
         {isCharging && (
           <div 
@@ -168,7 +191,9 @@ const BowAimer = memo(function BowAimer({
             height="8" 
             viewBox="0 0 14 10"
             style={{
-              filter: `drop-shadow(0 0 ${3 + glowIntensity * 5}px ${chargeColor})`
+              filter: `drop-shadow(0 0 ${3 + glowIntensity * 5}px ${chargeColor})`,
+              background: 'transparent',
+              overflow: 'visible'
             }}
           >
             <path 
@@ -185,14 +210,17 @@ const BowAimer = memo(function BowAimer({
         {/* Charge progress arc - only visible when charging */}
         {isCharging && chargeProgress > 0.05 && (
           <svg 
-            className="absolute"
             width="45" 
             height="45"
             style={{
+              position: 'absolute',
               left: '50%',
               top: '50%',
               transform: 'translate(-50%, -50%) rotate(-90deg)',
-              opacity: 0.9
+              opacity: 0.9,
+              background: 'transparent',
+              overflow: 'visible',
+              border: 'none'
             }}
           >
             <circle
