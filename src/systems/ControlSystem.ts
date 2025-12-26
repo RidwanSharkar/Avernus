@@ -2009,6 +2009,33 @@ export class ControlSystem extends System {
     return this.chargeProgress;
   }
 
+  /**
+   * Get the camera's vertical aim angle (pitch).
+   * Returns a normalized value from -1 (looking up) to 1 (looking down).
+   * This is used for the bow aimer to show where arrows will land.
+   */
+  public getCameraVerticalAim(): number {
+    const direction = new Vector3();
+    this.camera.getWorldDirection(direction);
+    // The y-component of the normalized direction tells us the pitch
+    // Negative y = looking up, Positive y = looking down
+    // We return -direction.y to make positive = up, negative = down in screen space
+    return -direction.y;
+  }
+
+  /**
+   * Get the camera's zoom distance.
+   * Returns the current distance from camera to player (2 to 12.5).
+   * This is used for the bow aimer to adjust for zoom level.
+   */
+  public getCameraDistance(): number {
+    const cameraSystem = (window as any).cameraSystem;
+    if (cameraSystem && typeof cameraSystem.getDistance === 'function') {
+      return cameraSystem.getDistance();
+    }
+    return 8; // Default distance if camera system not available
+  }
+
   public isViperStingChargingActive(): boolean {
     return this.isViperStingCharging;
   }

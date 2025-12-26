@@ -7,6 +7,7 @@ import { Camera } from '../utils/three-exports';
 import type { DamageNumberData } from '../components/DamageNumbers';
 import DamageNumbers from '../components/DamageNumbers';
 import GameUI from '../components/ui/GameUI';
+import BowAimer from '../components/ui/BowAimer';
 import { getGlobalRuneCounts, getCriticalChance, getCriticalDamageMultiplier } from '../core/DamageCalculator';
 import ExperienceBar from '../components/ui/ExperienceBar';
 import EssenceDisplay from '../components/ui/EssenceDisplay';
@@ -140,6 +141,15 @@ function HomeContent() {
   const [playerEssence, setPlayerEssence] = useState(50); // Start with 50 essence
   const [showMerchantUI, setShowMerchantUI] = useState(false);
   const [showRulesPanel, setShowRulesPanel] = useState(false);
+  
+  // Bow aimer state - tracks charging state, visibility, vertical aim, and zoom for the aimer UI
+  const [bowAimerState, setBowAimerState] = useState({
+    isCharging: false,
+    chargeProgress: 0,
+    isBowEquipped: false,
+    verticalAim: 0, // -1 (looking up) to 1 (looking down)
+    cameraDistance: 8 // 2 (zoomed in) to 12.5 (zoomed out)
+  });
 
   // Local weapon selection state
   const [tempSelectedWeapons, setTempSelectedWeapons] = useState<WeaponType[]>([]);
@@ -377,6 +387,36 @@ function HomeContent() {
       controlSystem.setSkillPointData(skillPointData);
     }
   }, [controlSystem, skillPointData]);
+
+  // Poll control system for bow charging state (for the aimer UI)
+  useEffect(() => {
+    if (!controlSystem || gameMode === 'menu') return;
+
+    const pollBowState = () => {
+      const currentWeapon = controlSystem.getCurrentWeapon?.();
+      const isBowEquipped = currentWeapon === WeaponType.BOW;
+      const isCharging = isBowEquipped ? (controlSystem.isWeaponCharging?.() || false) : false;
+      const chargeProgress = isBowEquipped ? (controlSystem.getChargeProgress?.() || 0) : 0;
+      const verticalAim = isBowEquipped ? (controlSystem.getCameraVerticalAim?.() || 0) : 0;
+      const cameraDistance = isBowEquipped ? (controlSystem.getCameraDistance?.() || 8) : 8;
+      
+      setBowAimerState(prev => {
+        // Only update if values changed to prevent unnecessary re-renders
+        if (prev.isCharging !== isCharging || 
+            prev.chargeProgress !== chargeProgress || 
+            prev.isBowEquipped !== isBowEquipped ||
+            Math.abs(prev.verticalAim - verticalAim) > 0.001 ||
+            Math.abs(prev.cameraDistance - cameraDistance) > 0.01) {
+          return { isCharging, chargeProgress, isBowEquipped, verticalAim, cameraDistance };
+        }
+        return prev;
+      });
+    };
+
+    // Poll at 60fps for smooth aimer updates
+    const intervalId = setInterval(pollBowState, 16);
+    return () => clearInterval(intervalId);
+  }, [controlSystem, gameMode]);
 
   const handleExperienceUpdate = (experience: number, level: number) => {
     // Check if this is a level up before updating state
@@ -728,6 +768,15 @@ function HomeContent() {
         {/* UI Overlay - Only show during gameplay */}
         {gameMode !== 'menu' && (
           <>
+            {/* Bow Aimer - Only show when bow is equipped */}
+            <BowAimer
+              isVisible={bowAimerState.isBowEquipped}
+              isCharging={bowAimerState.isCharging}
+              chargeProgress={bowAimerState.chargeProgress}
+              verticalAim={bowAimerState.verticalAim}
+              cameraDistance={bowAimerState.cameraDistance}
+            />
+            
             {/* Controls Panel */}
             <div className="absolute top-4 left-4">
               <ControlsPanel />
