@@ -468,7 +468,7 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
       <div 
         className="fixed bottom-6 left-1/2 z-40" 
         style={{ 
-          transform: 'translateX(-50%) scale(0.8)',
+          transform: 'translateX(-50%) scale(0.85)',
           transformOrigin: 'center bottom'
         }}
       >
