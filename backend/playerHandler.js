@@ -7,6 +7,7 @@ function handlePlayerEvents(socket, gameRooms) {
     
     const room = gameRooms.get(roomId);
     const playerId = socket.id;
+    const player = room.getPlayer(playerId);
     
     // Update player state
     if (position && rotation) {
@@ -22,13 +23,18 @@ function handlePlayerEvents(socket, gameRooms) {
     }
     
     // Broadcast updated position to other players in the room
+    // Use authoritative server values for health and shield to prevent flickering
     socket.to(roomId).emit('player-moved', {
       playerId,
       position,
       rotation,
       weapon,
-      health,
-      movementDirection
+      health: player ? player.health : health,
+      shield: player ? player.shield : undefined,
+      maxHealth: player ? player.maxHealth : undefined,
+      maxShield: player ? player.maxShield : undefined,
+      movementDirection,
+      timestamp: Date.now()
     });
   });
 
@@ -203,14 +209,15 @@ function handlePlayerEvents(socket, gameRooms) {
     if (!gameRooms.has(roomId)) return;
 
     const room = gameRooms.get(roomId);
-    room.updatePlayerHealth(socket.id, health);
-
-    // Broadcast health change to other players
-    socket.to(roomId).emit('player-health-updated', {
-      playerId: socket.id,
-      health,
-      maxHealth
-    });
+    if (room.updatePlayerHealth(socket.id, health)) {
+      // Broadcast health change to other players
+      socket.to(roomId).emit('player-health-updated', {
+        playerId: socket.id,
+        health,
+        maxHealth,
+        timestamp: Date.now()
+      });
+    }
   });
 
   // Handle player shield changes
@@ -220,14 +227,15 @@ function handlePlayerEvents(socket, gameRooms) {
     if (!gameRooms.has(roomId)) return;
 
     const room = gameRooms.get(roomId);
-    room.updatePlayerShield(socket.id, shield, maxShield);
-
-    // Broadcast shield change to other players
-    socket.to(roomId).emit('player-shield-changed', {
-      playerId: socket.id,
-      shield,
-      maxShield
-    });
+    if (room.updatePlayerShield(socket.id, shield, maxShield)) {
+      // Broadcast shield change to other players
+      socket.to(roomId).emit('player-shield-changed', {
+        playerId: socket.id,
+        shield,
+        maxShield,
+        timestamp: Date.now()
+      });
+    }
   });
 
   // Handle player level changes (for tertiary weapon unlocks)

@@ -36,6 +36,14 @@ export default function PlayerHealthBar({
     shieldBackground: null
   });
   const [visible, setVisible] = useState(false);
+  
+  // Internal state for smoothing health/shield changes
+  const lerpState = useRef({
+    currentHealth: health,
+    currentShield: shield,
+    lastHealth: health,
+    lastShield: shield
+  });
 
   // Health bar dimensions
   const barWidth = 2.0;
@@ -124,8 +132,27 @@ export default function PlayerHealthBar({
     };
   }, []);
 
-  useFrame(() => {
+  useFrame((state, delta) => {
     if (!groupRef.current || !camera) return;
+
+    // Smoothly interpolate health and shield values to prevent flashing from stale syncs
+    const lerpSpeed = 10; // Speed of smoothing
+    
+    // Check for large jumps that should NOT be lerped (e.g. respawn or massive heal)
+    const healthDiff = health - lerpState.current.currentHealth;
+    const shieldDiff = shield - lerpState.current.currentShield;
+    
+    if (Math.abs(healthDiff) > maxHealth * 0.5) {
+      lerpState.current.currentHealth = health;
+    } else {
+      lerpState.current.currentHealth += (health - lerpState.current.currentHealth) * Math.min(1, delta * lerpSpeed);
+    }
+    
+    if (Math.abs(shieldDiff) > maxShield * 0.5) {
+      lerpState.current.currentShield = shield;
+    } else {
+      lerpState.current.currentShield += (shield - lerpState.current.currentShield) * Math.min(1, delta * lerpSpeed);
+    }
 
     // Calculate distance to camera
     const worldPosition = position.clone().add(barOffset);
@@ -151,9 +178,9 @@ export default function PlayerHealthBar({
     // Make health bar face the camera
     groupRef.current.lookAt(camera.position);
 
-    // Update health bar scale and color
+    // Update health bar scale and color using lerped value
     if (meshRefs.current.healthBar) {
-      const healthPercentage = Math.max(0, Math.min(1, health / maxHealth));
+      const healthPercentage = Math.max(0, Math.min(1, lerpState.current.currentHealth / maxHealth));
       meshRefs.current.healthBar.scale.x = healthPercentage;
       
       // Position health bar to align left when scaling
@@ -170,9 +197,9 @@ export default function PlayerHealthBar({
       }
     }
 
-    // Update shield bar scale
+    // Update shield bar scale using lerped value
     if (meshRefs.current.shieldBar && maxShield > 0) {
-      const shieldPercentage = Math.max(0, Math.min(1, shield / maxShield));
+      const shieldPercentage = Math.max(0, Math.min(1, lerpState.current.currentShield / maxShield));
       meshRefs.current.shieldBar.scale.x = shieldPercentage;
       
       // Position shield bar to align left when scaling

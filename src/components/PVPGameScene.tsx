@@ -167,6 +167,7 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
     setPillars,
     summonedUnits,
     gameStarted,
+    gameMode,
     isInRoom,
     currentRoomId,
     updatePlayerPosition,
@@ -1580,6 +1581,12 @@ const [maxMana, setMaxMana] = useState(150);
               
               // Prevent game loop from sending stale health after respawn
               lastGameStateUpdate.current = Date.now();
+              
+              // Store the authoritative health value so the game loop can detect stale reads
+              authoritativeHealthRef.current = {
+                health: health.currentHealth,
+                timestamp: Date.now()
+              };
             }
 
             // Update local player's entry in players Map
@@ -1732,6 +1739,11 @@ const [maxMana, setMaxMana] = useState(150);
   const lastDamageNumbersUpdate = useRef(0);
   const lastCameraUpdate = useRef(0);
   const lastGameStateUpdate = useRef(0);
+  
+  // Track the authoritative health value to prevent stale game loop updates from causing flashes
+  // This ref stores the health value that was set by the most recent damage/heal event
+  // The game loop should NOT update health if its read value differs from this authoritative value
+  const authoritativeHealthRef = useRef<{ health: number; timestamp: number } | null>(null);
 
   // Track previous weapon state for change detection
   const prevWeaponRef = useRef<{ weapon: WeaponType; subclass: WeaponSubclass }>({
@@ -2182,8 +2194,37 @@ const hasMana = useCallback((amount: number) => {
       }
 
       // Play enemy sound effects at 50% volume
+      // Use sourceWeapon from animationData if available to ensure correct sound for current weapon
       const position = new Vector3(data.position.x, data.position.y, data.position.z);
+      const sourceWeapon = data.animationData?.sourceWeapon;
+      
       if (window.audioSystem) {
+        // CRITICAL FIX: Only play sounds if the attack type matches the source weapon
+        // This prevents sounds from secondary weapons playing when primary weapon is used
+        const isValidSound = (() => {
+          // If sourceWeapon is provided, verify attack type matches weapon type
+          if (sourceWeapon) {
+            if (sourceWeapon === WeaponType.BOW) {
+              return data.attackType.includes('arrow') || data.attackType.includes('viper_sting') || 
+                     data.attackType.includes('cobra_shot') || data.attackType.includes('barrage');
+            } else if (sourceWeapon === WeaponType.SCYTHE) {
+              return data.attackType.includes('bolt') || data.attackType === 'scythe_swing';
+            } else if (sourceWeapon === WeaponType.SWORD) {
+              return data.attackType.includes('sword');
+            } else if (sourceWeapon === WeaponType.SABRES) {
+              return data.attackType.includes('sabres');
+            } else if (sourceWeapon === WeaponType.RUNEBLADE) {
+              return data.attackType.includes('runeblade');
+            }
+          }
+          // If no sourceWeapon provided (backward compatibility), allow all sounds
+          return true;
+        })();
+        
+        if (!isValidSound) {
+          return; // Skip playing sound if attack type doesn't match source weapon
+        }
+        
         switch (data.attackType) {
           case 'viper_sting_projectile':
             window.audioSystem.playEnemyViperStingReleaseSound(position);
@@ -3116,7 +3157,8 @@ const hasMana = useCallback((amount: number) => {
               health: data.newHealth,
               maxHealth: data.maxHealth ?? player.maxHealth,
               shield: data.newShield !== undefined ? data.newShield : player.shield,
-              maxShield: data.maxShield ?? player.maxShield
+              maxShield: data.maxShield ?? player.maxShield,
+              lastHealthTimestamp: data.timestamp || Date.now()
             });
           }
           return newPlayers;
@@ -3192,6 +3234,12 @@ const hasMana = useCallback((amount: number) => {
             // This race condition occurs when the game loop reads health BEFORE damage
             // is applied but its state update is processed by React AFTER.
             lastGameStateUpdate.current = Date.now();
+            
+            // Store the authoritative health value so the game loop can detect stale reads
+            authoritativeHealthRef.current = {
+              health: health.currentHealth,
+              timestamp: Date.now()
+            };
           }
 
           // Also update the local player's entry in the players Map for consistency
@@ -3508,10 +3556,26 @@ const hasMana = useCallback((amount: number) => {
         const newPlayers = new Map(prevPlayers);
         const player = newPlayers.get(playerId);
         if (player) {
+          // Check if this update is stale compared to a recent damage event
+          if (player.lastHealthTimestamp && data.timestamp && data.timestamp < player.lastHealthTimestamp) {
+            return prevPlayers;
+          }
+
+          // In PVP mode, also ignore shield increases that aren't clearly respawns
+          if (gameMode === 'pvp' && shield > (player.shield || 0)) {
+            const diff = shield - (player.shield || 0);
+            const isRegen = diff < 15;
+            const isRespawn = shield >= (maxShield || player.maxShield || 250) - 5;
+            if (!isRegen && !isRespawn) {
+              return prevPlayers;
+            }
+          }
+
           newPlayers.set(playerId, {
             ...player,
             shield: shield,
-            maxShield: maxShield ?? player.maxShield
+            maxShield: maxShield ?? player.maxShield,
+            lastHealthTimestamp: data.timestamp || Date.now()
           });
         }
         return newPlayers;
@@ -4320,6 +4384,9 @@ const hasMana = useCallback((amount: number) => {
         // Add projectile config data for special effects (like Cryoflame)
         animationData.projectileConfig = config;
 
+        // CRITICAL: Include the current weapon type to ensure correct sound playback on remote clients
+        animationData.sourceWeapon = controlSystem.getCurrentWeapon();
+
         broadcastPlayerAttack(projectileType, position, direction, animationData);
       });
 
@@ -4715,25 +4782,42 @@ const hasMana = useCallback((amount: number) => {
           const healthComponent = actualPlayerEntity.getComponent(Health);
           const shieldComponent = actualPlayerEntity.getComponent(Shield);
           if (healthComponent) {
-            const gameState = {
-              playerHealth: healthComponent.currentHealth,
-              maxHealth: healthComponent.maxHealth,
-              playerShield: shieldComponent ? shieldComponent.currentShield : 0,
-              maxShield: shieldComponent ? shieldComponent.maxShield : 0,
-              currentWeapon: controlSystemRef.current.getCurrentWeapon(),
-              currentSubclass: controlSystemRef.current.getCurrentSubclass(),
-              // Add mana information for weapons that use mana
-              mana: (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) ? currentMana : 0,
-              maxMana: (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) ? maxMana : 0
-            };
-            onGameStateUpdate(gameState);
+            // CRITICAL FIX: Check if this health read is stale compared to a recent damage event
+            // If we recently processed a damage event (within 200ms) and the health we're about
+            // to send differs from the authoritative value, skip this update to prevent flashing
+            const authHealth = authoritativeHealthRef.current;
+            if (authHealth && 
+                gameStateNow - authHealth.timestamp < 200 && 
+                healthComponent.currentHealth !== authHealth.health) {
+              // The health component hasn't updated yet but we already sent the correct value
+              // via the damage handler - skip this potentially stale update
+              lastGameStateUpdate.current = gameStateNow;
+            } else {
+              const gameState = {
+                playerHealth: healthComponent.currentHealth,
+                maxHealth: healthComponent.maxHealth,
+                playerShield: shieldComponent ? shieldComponent.currentShield : 0,
+                maxShield: shieldComponent ? shieldComponent.maxShield : 0,
+                currentWeapon: controlSystemRef.current.getCurrentWeapon(),
+                currentSubclass: controlSystemRef.current.getCurrentSubclass(),
+                // Add mana information for weapons that use mana
+                mana: (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) ? currentMana : 0,
+                maxMana: (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) ? maxMana : 0
+              };
+              onGameStateUpdate(gameState);
 
-            // Update multiplayer health and shield
-            updatePlayerHealth(healthComponent.currentHealth, healthComponent.maxHealth);
-            if (shieldComponent) {
-              updatePlayerShield(socket?.id || '', shieldComponent.currentShield, shieldComponent.maxShield);
+              // Update multiplayer health and shield
+              updatePlayerHealth(healthComponent.currentHealth, healthComponent.maxHealth);
+              if (shieldComponent) {
+                updatePlayerShield(socket?.id || '', shieldComponent.currentShield, shieldComponent.maxShield);
+              }
+              lastGameStateUpdate.current = gameStateNow;
+              
+              // Clear the authoritative ref once we've successfully synced
+              if (authHealth && healthComponent.currentHealth === authHealth.health) {
+                authoritativeHealthRef.current = null;
+              }
             }
-            lastGameStateUpdate.current = gameStateNow;
           }
         }
       }
@@ -4870,7 +4954,8 @@ const hasMana = useCallback((amount: number) => {
             camera.getWorldDirection(direction);
             direction.normalize();
             broadcastPlayerAttack('scythe_swing', playerPosition, direction, {
-              isSpinning: true
+              isSpinning: true,
+              sourceWeapon: WeaponType.SCYTHE
             });
           }}
           onSwordSwingComplete={() => {
@@ -4879,7 +4964,8 @@ const hasMana = useCallback((amount: number) => {
             camera.getWorldDirection(direction);
             direction.normalize();
             broadcastPlayerAttack('sword_swing', playerPosition, direction, {
-              comboStep: weaponState.swordComboStep
+              comboStep: weaponState.swordComboStep,
+              sourceWeapon: WeaponType.SWORD
             });
           }}
           onSabresSwingComplete={() => {
@@ -4887,7 +4973,9 @@ const hasMana = useCallback((amount: number) => {
             const direction = new Vector3();
             camera.getWorldDirection(direction);
             direction.normalize();
-            broadcastPlayerAttack('sabres_swing', playerPosition, direction);
+            broadcastPlayerAttack('sabres_swing', playerPosition, direction, {
+              sourceWeapon: WeaponType.SABRES
+            });
           }}
           onRunebladeSwingComplete={() => {
             controlSystemRef.current?.onSwordSwingComplete(); // Reuse Sword swing complete for combo advancement
@@ -4895,7 +4983,8 @@ const hasMana = useCallback((amount: number) => {
             camera.getWorldDirection(direction);
             direction.normalize();
             broadcastPlayerAttack('runeblade_swing', playerPosition, direction, {
-              comboStep: weaponState.swordComboStep
+              comboStep: weaponState.swordComboStep,
+              sourceWeapon: WeaponType.RUNEBLADE
             });
           }}
           onChargeComplete={() => {

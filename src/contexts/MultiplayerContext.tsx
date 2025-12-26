@@ -33,6 +33,8 @@ export interface Player {
   essence?: number;
   // Purchased items
   purchasedItems?: string[];
+  // Timestamp of last authoritative health/shield update to prevent flickering
+  lastHealthTimestamp?: number;
 }
 
 export interface Enemy {
@@ -177,7 +179,7 @@ interface MultiplayerContextType {
   updatePlayerPosition: (position: { x: number; y: number; z: number }, rotation: { x: number; y: number; z: number }, movementDirection?: { x: number; y: number; z: number }) => void;
   updatePlayerWeapon: (weapon: WeaponType, subclass?: WeaponSubclass) => void;
   updatePlayerHealth: (health: number, maxHealth?: number) => void;
-  broadcastPlayerAttack: (attackType: string, position: { x: number; y: number; z: number }, direction: { x: number; y: number; z: number }, animationData?: { comboStep?: 1 | 2 | 3; chargeProgress?: number; isSpinning?: boolean; isPerfectShot?: boolean; damage?: number; targetId?: number; hitPosition?: { x: number; y: number; z: number }; isSwordCharging?: boolean }) => void;
+  broadcastPlayerAttack: (attackType: string, position: { x: number; y: number; z: number }, direction: { x: number; y: number; z: number }, animationData?: { comboStep?: 1 | 2 | 3; chargeProgress?: number; isSpinning?: boolean; isPerfectShot?: boolean; damage?: number; targetId?: number; hitPosition?: { x: number; y: number; z: number }; isSwordCharging?: boolean; sourceWeapon?: WeaponType; projectileConfig?: any }) => void;
   broadcastPlayerAbility: (abilityType: string, position: { x: number; y: number; z: number }, direction?: { x: number; y: number; z: number }, target?: string, extraData?: any) => void;
   broadcastPlayerEffect: (effect: any) => void;
   broadcastPlayerDamage: (targetPlayerId: string, damage: number, damageType?: string, isCritical?: boolean) => void;
@@ -280,6 +282,11 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
   const lastPlayerHealthUpdate = useRef<{ [playerId: string]: number }>({});
   const lastEnemyMoveUpdate = useRef<{ [enemyId: string]: number }>({});
   const lastEnemyDamageUpdate = useRef<{ [enemyId: string]: number }>({});
+  
+  // Track the latest authoritative health update timestamp per player (damage events)
+  // This ref is used to filter out stale periodic health syncs that arrive after damage events
+  // Using a ref instead of state ensures immediate visibility across all event handlers
+  const lastAuthoritativeHealthTimestamp = useRef<{ [playerId: string]: number }>({});
 
   // Initialize socket connection
   useEffect(() => {
@@ -479,10 +486,29 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
       });
     });
 
+    // Track damage events to filter out stale health updates
+    // This handler ONLY updates the authoritative timestamp ref - actual health updates
+    // are handled by PVPGameScene's handlePlayerDamaged for full damage processing
+    addEventHandler('player-damaged', (data) => {
+      if (data.targetPlayerId && data.timestamp) {
+        // Update the ref immediately (synchronous, not subject to React batching)
+        lastAuthoritativeHealthTimestamp.current[data.targetPlayerId] = data.timestamp;
+      }
+    });
+
     addEventHandler('player-health-updated', (data) => {
       // Skip health updates for the local player - local Health component is authoritative
       // This prevents health bar flickering from race conditions between local and server state
       if (data.playerId === newSocket.id) {
+        return;
+      }
+
+      // CRITICAL FIX: Check the ref-based authoritative timestamp BEFORE any React state access
+      // This ensures we catch stale updates even if React hasn't processed the damage event's
+      // state update yet (which would update player.lastHealthTimestamp in state)
+      const lastDamageTimestamp = lastAuthoritativeHealthTimestamp.current[data.playerId];
+      if (lastDamageTimestamp && data.timestamp && data.timestamp < lastDamageTimestamp) {
+        // This health update is older than the last damage event - ignore it
         return;
       }
 
@@ -499,10 +525,26 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
           const updated = new Map(prev);
           const player = updated.get(data.playerId);
           if (player) {
+            // Double-check with state-based timestamp as a fallback
+            if (player.lastHealthTimestamp && data.timestamp && data.timestamp < player.lastHealthTimestamp) {
+              return prev;
+            }
+            
+            // In PVP, also ignore health increases that aren't clearly heals or respawns
+            if (gameMode === 'pvp' && data.health > player.health) {
+              const diff = data.health - player.health;
+              const isRegen = diff < 15;
+              const isRespawn = data.health >= (data.maxHealth || player.maxHealth) - 5;
+              if (!isRegen && !isRespawn) {
+                return prev;
+              }
+            }
+
             updated.set(data.playerId, {
               ...player,
               health: data.health,
-              maxHealth: data.maxHealth
+              maxHealth: data.maxHealth || player.maxHealth,
+              lastHealthTimestamp: data.timestamp || Date.now()
             });
           }
           return updated;
@@ -886,7 +928,7 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     }
   }, [socket, currentRoomId]);
 
-  const broadcastPlayerAttack = useCallback((attackType: string, position: { x: number; y: number; z: number }, direction: { x: number; y: number; z: number }, animationData?: { comboStep?: 1 | 2 | 3; chargeProgress?: number; isSpinning?: boolean; isPerfectShot?: boolean; damage?: number; targetId?: number; hitPosition?: { x: number; y: number; z: number }; isSwordCharging?: boolean }) => {
+  const broadcastPlayerAttack = useCallback((attackType: string, position: { x: number; y: number; z: number }, direction: { x: number; y: number; z: number }, animationData?: { comboStep?: 1 | 2 | 3; chargeProgress?: number; isSpinning?: boolean; isPerfectShot?: boolean; damage?: number; targetId?: number; hitPosition?: { x: number; y: number; z: number }; isSwordCharging?: boolean; sourceWeapon?: WeaponType; projectileConfig?: any }) => {
     if (socket && currentRoomId) {
       socket.emit('player-attack', {
         roomId: currentRoomId,

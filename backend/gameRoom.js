@@ -90,6 +90,11 @@ class GameRoom {
 
   // Player management
   addPlayer(playerId, playerName, weapon = 'scythe', subclass, gameMode = 'multiplayer') {
+    // Set game mode for the room based on the first player who joins or the requested mode
+    if (this.players.size === 0) {
+      this.gameMode = gameMode;
+    }
+
     // In PVP mode, players start with fixed health. In multiplayer, health scales with kill count
     const baseHealth = 200;
     const maxHealth = gameMode === 'pvp' ? baseHealth : baseHealth + this.killCount;
@@ -1267,18 +1272,49 @@ class GameRoom {
   updatePlayerHealth(playerId, health) {
     const player = this.players.get(playerId);
     if (player) {
+      // In PVP mode, health changes are server-authoritative for damage and healing.
+      // Periodic syncs from clients can be stale and cause flickering if they
+      // overwrite a more recent damage event with an older (higher) health value.
+      if (this.gameMode === 'pvp' && health > player.health) {
+        const diff = health - player.health;
+        // Only allow small increases (regeneration, up to 15 HP) 
+        // or significant jumps that look like a full respawn/heal
+        const isRegen = diff < 15;
+        const isRespawn = health >= player.maxHealth - 5;
+        
+        if (!isRegen && !isRespawn) {
+          // Ignore potentially stale health increase
+          return false;
+        }
+      }
+      
       player.health = Math.max(0, Math.min(player.maxHealth, health));
+      return true;
     }
+    return false;
   }
 
   updatePlayerShield(playerId, shield, maxShield) {
     const player = this.players.get(playerId);
     if (player) {
+      // Apply similar logic to shield updates in PVP to prevent flickering
+      if (this.gameMode === 'pvp' && shield > (player.shield || 0)) {
+        const diff = shield - (player.shield || 0);
+        const isRegen = diff < 15;
+        const isRespawn = shield >= (maxShield || player.maxShield || 250) - 5;
+        
+        if (!isRegen && !isRespawn) {
+          return false;
+        }
+      }
+      
       player.shield = Math.max(0, Math.min(maxShield || player.maxShield || 250, shield));
       if (maxShield !== undefined) {
         player.maxShield = maxShield;
       }
+      return true;
     }
+    return false;
   }
 
   // Enemy management
