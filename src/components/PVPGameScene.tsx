@@ -205,7 +205,6 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
   const reanimateRef = useRef<ReanimateRef>(null);
   const isInitialized = useRef(false);
   const lastAnimationBroadcast = useRef(0);
-  const lastMeleeSoundTime = useRef(new Map<string, number>());
   const realTimePlayerPositionRef = useRef<Vector3>(new Vector3(0, 0.5, 0));
   // Real-time position refs for enemy players to enable ghost trail updates
   const enemyPlayerPositionRefs = useRef<Map<string, { current: Vector3 }>>(new Map());
@@ -1578,6 +1577,9 @@ const [maxMana, setMaxMana] = useState(150);
                 maxMana: (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) ? maxMana : 0
               };
               onGameStateUpdate(gameState);
+              
+              // Prevent game loop from sending stale health after respawn
+              lastGameStateUpdate.current = Date.now();
             }
 
             // Update local player's entry in players Map
@@ -2219,6 +2221,9 @@ const hasMana = useCallback((amount: number) => {
             break;
           case 'sabres_swing':
             window.audioSystem.playEnemySabresSwingSound(position);
+            break;
+          case 'scythe_swing':
+            window.audioSystem.playEnemyEntropicBoltSound(position);
             break;
         }
       }
@@ -3180,6 +3185,13 @@ const hasMana = useCallback((amount: number) => {
               maxMana: (currentWeapon === WeaponType.SCYTHE || currentWeapon === WeaponType.RUNEBLADE) ? maxMana : 0
             };
             onGameStateUpdate(gameState);
+            
+            // CRITICAL FIX: Update the throttle timestamp to prevent the game loop from
+            // sending a stale health update that could cause the health bar to briefly
+            // flash to a higher value before settling to the correct (damaged) value.
+            // This race condition occurs when the game loop reads health BEFORE damage
+            // is applied but its state update is processed by React AFTER.
+            lastGameStateUpdate.current = Date.now();
           }
 
           // Also update the local player's entry in the players Map for consistency
@@ -3301,54 +3313,22 @@ const hasMana = useCallback((amount: number) => {
 
           updated.set(data.playerId, newState);
 
-          // Play enemy animation sound effects at 25% volume
+          // NOTE: Melee attack sounds (isSwinging) are handled by handlePlayerAttack
+          // to avoid duplicate sounds and ensure correct weapon type is used based on attackType.
+          // Only handle charging sounds here since those are for charge start transitions.
+          
           const position = new Vector3(data.position?.x || 0, data.position?.y || 0, data.position?.z || 0);
           if (window.audioSystem && data.animationState) {
-            // Handle melee attack sounds - prevent duplicate sounds within 100ms
-            if (data.animationState.isSwinging) {
-              const now = Date.now();
-              const lastSoundTime = lastMeleeSoundTime.current.get(data.playerId) || 0;
-              if (now - lastSoundTime > 50) { // 100ms cooldown to prevent double sounds
-                lastMeleeSoundTime.current.set(data.playerId, now);
-
-                // Get the player's weapon type to determine which sound to play
-                const player = players.get(data.playerId);
-                const weaponType = player?.weapon || WeaponType.BOW;
-
-                switch (weaponType) {
-                  case WeaponType.SWORD:
-                    // Use swordComboStep if available, otherwise default to 1
-                    const swordComboStep = data.animationState.swordComboStep || 1;
-                    window.audioSystem.playEnemySwordSwingSound(swordComboStep, position);
-                    break;
-                  case WeaponType.SABRES:
-                    window.audioSystem.playEnemySabresSwingSound(position);
-                    break;
-                  case WeaponType.SCYTHE:
-                    // Scythe melee attacks use entropic bolt sound
-                    window.audioSystem.playEnemyEntropicBoltSound(position);
-                    break;
-                case WeaponType.RUNEBLADE:
-                  // Use swordComboStep if available, otherwise default to 1
-                  const runebladeComboStep = data.animationState.swordComboStep || 1;
-                  window.audioSystem.playEnemySwordSwingSound(runebladeComboStep, position);
-                  break;
-                }
-              }
-            }
-
             // Handle charging sounds - only play when charging starts (transitions from false to true)
             if (data.animationState.isCharging && !currentState.isCharging) {
               const player = players.get(data.playerId);
-              const weaponType = player?.weapon || WeaponType.BOW;
+              const weaponType = player?.weapon;
 
-              switch (weaponType) {
-                case WeaponType.BOW:
-                  window.audioSystem.playEnemyBowDrawSound(position);
-                  break;
-                case WeaponType.SWORD:
-                  window.audioSystem.playEnemySwordChargeSound(position);
-                  break;
+              // Only play charging sound if we know the weapon type
+              if (weaponType === WeaponType.BOW) {
+                window.audioSystem.playEnemyBowDrawSound(position);
+              } else if (weaponType === WeaponType.SWORD) {
+                window.audioSystem.playEnemySwordChargeSound(position);
               }
             }
           }
