@@ -36,12 +36,12 @@ const BowAimer = memo(function BowAimer({
   // When zoomed out (distance = 12.5), we need to move the aimer DOWN (farther perspective)
   // Normalize: (distance - 8) / (12.5 - 2) gives us a normalized zoom value
   const normalizedZoom = (cameraDistance - 8) / 10.5;
-  const zoomAdjustment = normalizedZoom * 10; // Range: ~-6% UP (zoomed in) to +4% DOWN (zoomed out)
+  const zoomAdjustment = normalizedZoom * 9; // Range: ~-6% UP (zoomed in) to +4% DOWN (zoomed out)
   
   // Calculate vertical offset based on camera pitch and zoom
   // verticalAim: -1 (looking up) to 1 (looking down)
   // We combine: base offset + pitch-based movement + zoom adjustment
-  const compensationOffset = -30; // Base offset - negative moves it up from center
+  const compensationOffset = -29.5; // Base offset - negative moves it up from center
   const aimRange = 35; // How much the aimer moves based on vertical aim (percentage)
   const verticalOffset = compensationOffset + (verticalAim * aimRange) + zoomAdjustment;
   
