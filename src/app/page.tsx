@@ -8,6 +8,7 @@ import type { DamageNumberData } from '../components/DamageNumbers';
 import DamageNumbers from '../components/DamageNumbers';
 import GameUI from '../components/ui/GameUI';
 import BowAimer from '../components/ui/BowAimer';
+import ScytheAimer from '../components/ui/ScytheAimer';
 import { getGlobalRuneCounts, getCriticalChance, getCriticalDamageMultiplier } from '../core/DamageCalculator';
 import ExperienceBar from '../components/ui/ExperienceBar';
 import EssenceDisplay from '../components/ui/EssenceDisplay';
@@ -147,6 +148,15 @@ function HomeContent() {
     isCharging: false,
     chargeProgress: 0,
     isBowEquipped: false,
+    verticalAim: 0, // -1 (looking up) to 1 (looking down)
+    cameraDistance: 8 // 2 (zoomed in) to 12.5 (zoomed out)
+  });
+
+  // Scythe aimer state - tracks firing state, visibility, vertical aim, and zoom for the aimer UI
+  const [scytheAimerState, setScytheAimerState] = useState({
+    isFiring: false,
+    isScytheEquipped: false,
+    hasCryoflame: false,
     verticalAim: 0, // -1 (looking up) to 1 (looking down)
     cameraDistance: 8 // 2 (zoomed in) to 12.5 (zoomed out)
   });
@@ -417,6 +427,46 @@ function HomeContent() {
     const intervalId = setInterval(pollBowState, 16);
     return () => clearInterval(intervalId);
   }, [controlSystem, gameMode]);
+
+  // Poll control system for scythe firing state (for the aimer UI)
+  useEffect(() => {
+    if (!controlSystem || gameMode === 'menu') return;
+
+    const pollScytheState = () => {
+      const currentWeapon = controlSystem.getCurrentWeapon?.();
+      const isScytheEquipped = currentWeapon === WeaponType.SCYTHE;
+      // For scythe, "charging" means actively firing Entropic bolts
+      const isFiring = isScytheEquipped ? (controlSystem.isWeaponCharging?.() || false) : false;
+      const verticalAim = isScytheEquipped ? (controlSystem.getCameraVerticalAim?.() || 0) : 0;
+      const cameraDistance = isScytheEquipped ? (controlSystem.getCameraDistance?.() || 8) : 8;
+      
+      // Check if Cryoflame (passive 'P') ability is unlocked for scythe
+      // Need to check which slot the scythe is in (primary or secondary)
+      let hasCryoflame = false;
+      if (isScytheEquipped && selectedWeapons) {
+        const weaponSlot = selectedWeapons.primary === WeaponType.SCYTHE ? 'primary' : 'secondary';
+        const key = `${WeaponType.SCYTHE}_${weaponSlot}`;
+        const unlockedForWeapon = skillPointData.unlockedAbilities[key] || new Set();
+        hasCryoflame = unlockedForWeapon.has('P');
+      }
+      
+      setScytheAimerState(prev => {
+        // Only update if values changed to prevent unnecessary re-renders
+        if (prev.isFiring !== isFiring || 
+            prev.isScytheEquipped !== isScytheEquipped ||
+            prev.hasCryoflame !== hasCryoflame ||
+            Math.abs(prev.verticalAim - verticalAim) > 0.001 ||
+            Math.abs(prev.cameraDistance - cameraDistance) > 0.01) {
+          return { isFiring, isScytheEquipped, hasCryoflame, verticalAim, cameraDistance };
+        }
+        return prev;
+      });
+    };
+
+    // Poll at 60fps for smooth aimer updates
+    const intervalId = setInterval(pollScytheState, 16);
+    return () => clearInterval(intervalId);
+  }, [controlSystem, gameMode, skillPointData, selectedWeapons]);
 
   const handleExperienceUpdate = (experience: number, level: number) => {
     // Check if this is a level up before updating state
@@ -775,6 +825,15 @@ function HomeContent() {
               chargeProgress={bowAimerState.chargeProgress}
               verticalAim={bowAimerState.verticalAim}
               cameraDistance={bowAimerState.cameraDistance}
+            />
+
+            {/* Scythe Aimer - Only show when scythe is equipped */}
+            <ScytheAimer
+              isVisible={scytheAimerState.isScytheEquipped}
+              isFiring={scytheAimerState.isFiring}
+              hasCryoflame={scytheAimerState.hasCryoflame}
+              verticalAim={scytheAimerState.verticalAim}
+              cameraDistance={scytheAimerState.cameraDistance}
             />
             
             {/* Controls Panel */}
