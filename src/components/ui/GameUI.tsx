@@ -56,50 +56,50 @@ interface ResourceBarProps {
 function ResourceBar({ current, max, gradient, glowColor, icon, label }: ResourceBarProps) {
   const percentage = Math.max(0, Math.min(100, (current / max) * 100));
   const isLow = percentage < 30;
-  
+
   return (
     <div className="relative w-full group">
-      {/* Outer container with subtle glow */}
-      <div 
-        className="relative w-full h-7 rounded-full overflow-hidden"
+      {/* Outer container with techno border */}
+      <div
+        className="relative w-full h-8 border border-gray-600/50 rounded-sm overflow-hidden"
         style={{
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(20,20,30,0.9) 100%)',
-          boxShadow: `inset 0 2px 4px rgba(0,0,0,0.6), 0 0 20px ${glowColor}15, 0 1px 0 rgba(255,255,255,0.05)`
+          background: 'linear-gradient(135deg, rgba(10,10,15,0.95) 0%, rgba(20,20,30,0.9) 100%)',
+          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.8), 0 0 20px ${glowColor}20, 0 1px 0 rgba(255,255,255,0.05)`
         }}
       >
-        {/* Inner track */}
-        <div 
-          className="absolute inset-[2px] rounded-full overflow-hidden"
+        {/* Inner track with sharp corners */}
+        <div
+          className="absolute inset-[1px] rounded-[2px] overflow-hidden"
           style={{
-            background: 'linear-gradient(180deg, rgba(15,15,25,0.95) 0%, rgba(25,25,40,0.9) 100%)',
-            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)'
+            background: 'linear-gradient(135deg, rgba(5,5,10,0.98) 0%, rgba(15,15,25,0.95) 100%)',
+            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.9), inset 0 -1px 0 rgba(255,255,255,0.05)'
           }}
         >
           {/* Fill bar container - use transform for smooth animation */}
           <div
-            className="h-full w-full rounded-full relative"
+            className="h-full w-full rounded-[1px] relative"
             style={{
               transform: `scaleX(${percentage / 100})`,
               transformOrigin: 'left center',
               transition: 'transform 0.15s ease-out',
               background: gradient,
-              boxShadow: `0 0 15px ${glowColor}60, inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 0 rgba(0,0,0,0.3)`
+              boxShadow: `0 0 12px ${glowColor}50, inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.4)`
             }}
           >
-            {/* Highlight at top of bar */}
-            <div 
-              className="absolute inset-x-0 top-0 h-[40%] rounded-t-full pointer-events-none"
+            {/* Highlight at top */}
+            <div
+              className="absolute inset-x-0 top-0 h-[35%] rounded-[1px] pointer-events-none"
               style={{
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%)'
               }}
             />
-            
+
             {/* Pulse effect when low */}
             {isLow && (
-              <div 
-                className="absolute inset-0 rounded-full pointer-events-none"
+              <div
+                className="absolute inset-0 rounded-[1px] pointer-events-none"
                 style={{
-                  background: 'rgba(255,0,0,0.25)',
+                  background: 'rgba(255,0,0,0.3)',
                   animation: 'lowHealthPulse 1s ease-in-out infinite'
                 }}
               />
@@ -507,7 +507,7 @@ export default function GameUI({
       )}
 
       {/* Rune Counter */}
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-5 right-5 z-50">
         <RuneCounter
           criticalRuneCount={criticalRuneCount}
           critDamageRuneCount={critDamageRuneCount}
@@ -515,6 +515,40 @@ export default function GameUI({
           criticalDamageMultiplier={criticalDamageMultiplier}
         />
       </div>
+
+      {/* Skill Points Notification */}
+      {skillPointData && skillPointData.skillPoints > 0 && (
+        <div 
+          className="fixed bottom-20 left-1/2 z-50 animate-fade-in" 
+          style={{ 
+            transform: 'translateX(-50%) scale(0.85)',
+            transformOrigin: 'center bottom'
+          }}
+        >
+          <div
+            className="px-4 py-1.5 rounded-2xl"
+            style={{
+              background: 'linear-gradient(180deg, rgba(15,15,25,0.95) 0%, rgba(10,10,20,0.98) 100%)',
+              backdropFilter: 'blur(20px)',
+              boxShadow: `
+                0 0 0 1px rgba(255,255,255,0.05),
+                0 4px 16px rgba(0,0,0,0.4),
+                0 0 40px rgba(250,204,21,0.12),
+                inset 0 1px 0 rgba(255,255,255,0.05)
+              `,
+              border: '1px solid rgba(255,255,255,0.08)',
+              animation: 'float 2s ease-in-out infinite'
+            }}
+          >
+            <span 
+              className="text-xs font-bold tracking-wide uppercase"
+              style={{ color: '#facc15' }}
+            >
+              {skillPointData.skillPoints} Ability Point{skillPointData.skillPoints > 1 ? 's' : ''} Available
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Main UI Panel */}
       <div 
@@ -568,22 +602,6 @@ export default function GameUI({
           
           {/* Resource Bar */}
           {getResourceBar()}
-
-          {/* Skill Points Display */}
-          {skillPointData && skillPointData.skillPoints > 0 && (
-            <div 
-              className="mt-2 py-1 px-4 rounded-lg text-center"
-              style={{
-                background: 'linear-gradient(90deg, rgba(250,204,21,0.1) 0%, rgba(250,204,21,0.2) 50%, rgba(250,204,21,0.1) 100%)',
-                border: '1px solid rgba(250,204,21,0.3)',
-                animation: 'float 2s ease-in-out infinite'
-              }}
-            >
-              <span className="text-yellow-300 text-xs font-bold tracking-wide uppercase">
-               {skillPointData.skillPoints} Ability Point{skillPointData.skillPoints > 1 ? 's' : ''} Available
-              </span>
-            </div>
-          )}
         </div>
       </div>
       

@@ -501,14 +501,14 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
       `}</style>
 
       <div 
-        className="fixed bottom-4 left-1/2 z-40" 
+        className="fixed bottom-5 left-1/2 z-40" 
         style={{ 
           transform: 'translateX(-50%) scale(0.85)',
           transformOrigin: 'center bottom'
         }}
       >
         <div 
-          className="relative px-5 py-4 rounded-2xl"
+          className="relative px-6 pb-3.5 pt-4 rounded-2xl"
           style={{
             background: 'linear-gradient(180deg, rgba(15,15,25,0.95) 0%, rgba(10,10,20,0.98) 100%)',
             backdropFilter: 'blur(20px)',
@@ -549,7 +549,7 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
               return (
                 <div
                   key={weapon.key}
-                  className={`hotkey-slot relative w-14 h-14 rounded-xl flex items-center justify-center ${isPurchasedItem ? 'cursor-default' : 'cursor-pointer'}`}
+                  className={`hotkey-slot relative w-12 h-12 rounded-xl flex items-center justify-center ${isPurchasedItem ? 'cursor-default' : 'cursor-pointer'}`}
                   style={{
                     background: style.background,
                     border: `2px solid ${style.borderColor}`,
@@ -561,7 +561,7 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
                 >
                   {/* Hotkey badge */}
                   <div 
-                    className="absolute -top-2 -left-2 w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold"
+                    className="absolute -top-3 -left-3 w-6 h-6 rounded-lg flex items-center justify-center text-[12px] font-bold"
                     style={{
                       background: 'linear-gradient(180deg, rgba(30,30,45,0.95) 0%, rgba(20,20,30,0.98) 100%)',
                       border: '1px solid rgba(255,255,255,0.15)',
@@ -573,7 +573,7 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
                   </div>
 
                   {/* Weapon icon */}
-                  <span className="text-2xl relative z-10" style={{ filter: isOnCooldown && !isCurrentWeapon ? 'grayscale(50%) brightness(0.7)' : 'none' }}>
+                  <span className="text-xl relative z-10" style={{ filter: isOnCooldown && !isCurrentWeapon ? 'grayscale(50%) brightness(0.7)' : 'none' }}>
                     {weapon.icon}
                   </span>
 
@@ -670,7 +670,7 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
                 >
                   {/* Hotkey badge */}
                   <div 
-                    className="absolute -top-2 -left-2 w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold"
+                    className="absolute -top-2 -left-2 w-6 h-6 rounded-lg flex items-center justify-center text-[12px] font-bold"
                     style={{
                       background: 'linear-gradient(180deg, rgba(30,30,45,0.95) 0%, rgba(20,20,30,0.98) 100%)',
                       border: `1px solid ${canUnlock ? 'rgba(96,165,250,0.5)' : 'rgba(255,255,255,0.15)'}`,
@@ -684,7 +684,7 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
 
                   {/* Ability icon */}
                   <div 
-                    className="text-2xl relative z-10 flex items-center justify-center"
+                    className="text-xl relative z-10 flex items-center justify-center"
                     style={{ 
                       filter: isLocked && !canUnlock ? 'grayscale(100%) brightness(0.5)' : isOnCooldown ? 'brightness(0.7)' : 'none'
                     }}
