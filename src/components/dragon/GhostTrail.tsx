@@ -68,7 +68,7 @@ const GhostTrail = React.memo(({ parentRef, weaponType, weaponSubclass, targetPo
 
         // Bow subclasses
         case WeaponSubclass.ELEMENTAL:
-          return '#17CE54'; // Keep original elemental color
+          return '#13B549'; // Keep original elemental color
         case WeaponSubclass.VENOM:
           return '#17CC93'; // Green/purple for venom 17CE54
       }

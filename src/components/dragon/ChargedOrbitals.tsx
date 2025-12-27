@@ -36,7 +36,7 @@ const ChargedOrbitals = React.memo(({ parentRef, dashCharges, weaponType, weapon
         
         // Sword subclasses
         case WeaponSubclass.DIVINITY:
-          return '#E8CD57';
+          return '#FFDA32';
         case WeaponSubclass.VENGEANCE:
           return '#4682B4';
         
@@ -48,13 +48,13 @@ const ChargedOrbitals = React.memo(({ parentRef, dashCharges, weaponType, weapon
         
         // Runeblade subclasses
         case WeaponSubclass.ARCANE:
-          return '#00FF88';
+          return '#00FF66';
         case WeaponSubclass.NATURE:
           return '#00AA44';
 
         // Bow subclasses
         case WeaponSubclass.ELEMENTAL:
-          return '#17CC93';
+          return '#FFC278';
         case WeaponSubclass.VENOM:
           return '#17CC93';
       }

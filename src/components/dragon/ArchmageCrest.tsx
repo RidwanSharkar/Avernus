@@ -8,13 +8,15 @@ interface ArchmageCrestProps {
   scale?: number;
   weaponType: WeaponType;
   weaponSubclass?: WeaponSubclass;
+  isCorruptedAuraActive?: boolean;
 }
 
 export default function ArchmageCrest({
   position = [0, 0, 0],
   scale = 1,
   weaponType,
-  weaponSubclass
+  weaponSubclass,
+  isCorruptedAuraActive = false
 }: ArchmageCrestProps) {
   const groupRef = useRef<Group>(null);
   const leftWingRef = useRef<Group>(null);
@@ -22,6 +24,11 @@ export default function ArchmageCrest({
 
   // Get color based on weapon type/subclass (matching GhostTrail)
   const getCrestColor = () => {
+    // Check for CorruptedAura active state (red colors for Runeblade)
+    if (isCorruptedAuraActive && weaponType === WeaponType.RUNEBLADE) {
+      return { main: '#cc3333', emissive: '#aa0000', glow: '#cc3333', secondary: '#cc3333' };
+    }
+
     if (weaponSubclass) {
       switch (weaponSubclass) {
         // Scythe subclasses
@@ -32,7 +39,7 @@ export default function ArchmageCrest({
 
         // Sword subclasses
         case WeaponSubclass.DIVINITY:
-          return { main: '#E8CD57', emissive: '#E8CD57', glow: '#E8CD57', secondary: '#B0E0E6' };
+          return { main: '#FFD829', emissive: '#FFD829', glow: '#FFD829', secondary: '#E8CD57' };
         case WeaponSubclass.VENGEANCE:
           return { main: '#4682B4', emissive: '#5F9EA0', glow: '#B0E0E6', secondary: '#87CEEB' };
 
@@ -44,13 +51,13 @@ export default function ArchmageCrest({
 
         // Runeblade subclasses
         case WeaponSubclass.ARCANE:
-          return { main: '#8783D1', emissive: '#A890F0', glow: '#D4C4F7', secondary: '#B19CD9' };
+          return { main: '#00AA44', emissive: '#00AA44', glow: '#00AA44', secondary: '#00AA44' };
         case WeaponSubclass.NATURE:
           return { main: '#00FF88', emissive: '#32CD32', glow: '#90EE90', secondary: '#66CDAA' };
 
         // Bow subclasses
         case WeaponSubclass.ELEMENTAL:
-          return { main: '#17CE54', emissive: '#00CED1', glow: '#AFEEEE', secondary: '#87CEEB' };
+          return { main: '#F2992D', emissive: '#FFC278', glow: '#FFC278', secondary: '#FFC278' };
         case WeaponSubclass.VENOM:
           return { main: '#17CC93', emissive: '#20B2AA', glow: '#87CEEB', secondary: '#48D1CC' };
       }

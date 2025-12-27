@@ -299,7 +299,7 @@ export class AudioSystem extends System {
 
   // Play enemy bow draw sound
   public playEnemyBowDrawSound(position: Vector3) {
-    return this.playWeaponSound('bow_draw', position, { volume: 0.125 }); // 0.6 * 0.25
+    return this.playWeaponSound('bow_draw', position, { volume: 0.0725 }); // 0.6 * 0.25
   }
 
   // Play enemy bow release sound
@@ -311,17 +311,17 @@ export class AudioSystem extends System {
 
   // Play enemy viper sting release sound
   public playEnemyViperStingReleaseSound(position: Vector3) {
-    return this.playWeaponSound('bow_viper_sting_release', position, { volume: 0.225 }); // 0.9 * 0.25
+    return this.playWeaponSound('bow_viper_sting_release', position, { volume: 0.25 }); // 0.9 * 0.25
   }
 
   // Play enemy sabres swing sound
   public playEnemySabresSwingSound(position: Vector3) {
-    return this.playWeaponSound('sabres_swing', position, { volume: 0.2 }); // 0.8 * 0.25
+    return this.playWeaponSound('sabres_swing', position, { volume: 0.35 }); // 0.8 * 0.25
   }
 
   // Play enemy sabres flourish sound
   public playEnemySabresFlourishSound(position: Vector3) {
-    return this.playWeaponSound('sabres_flourish', position, { volume: 0.225 }); // 0.9 * 0.25
+    return this.playWeaponSound('sabres_flourish', position, { volume: 0.45 }); // 0.9 * 0.25
   }
 
   // Play enemy sabres shadow step sound
@@ -336,7 +336,7 @@ export class AudioSystem extends System {
 
   // Play enemy entropic bolt sound
   public playEnemyEntropicBoltSound(position: Vector3) {
-    return this.playWeaponSound('entropic_bolt', position, { volume: 0.2 }); // 0.8 * 0.25
+    return this.playWeaponSound('entropic_bolt', position, { volume: 0.3 }); // 0.8 * 0.25
   }
 
   // Play enemy crossentropy sound
@@ -347,7 +347,7 @@ export class AudioSystem extends System {
   // Play enemy sword swing sounds
   public playEnemySwordSwingSound(comboStep: 1 | 2 | 3, position: Vector3) {
     const soundId = `sword_swing_${comboStep}`;
-    return this.playWeaponSound(soundId, position, { volume: 0.1 }); // 0.8 * 0.25
+    return this.playWeaponSound(soundId, position, { volume: 0.35 }); // 0.8 * 0.25
   }
 
   // Play enemy sword deflect sound
@@ -357,27 +357,27 @@ export class AudioSystem extends System {
 
   // Play enemy sword charge sound
   public playEnemySwordChargeSound(position: Vector3) {
-    return this.playWeaponSound('sword_charge', position, { volume: 0.225 }); // 0.9 * 0.25
+    return this.playWeaponSound('sword_charge', position, { volume: 0.35 }); // 0.9 * 0.25
   }
 
   // Play enemy windshear sound
   public playEnemyWindshearSound(position: Vector3) {
-    return this.playWeaponSound('windshear', position, { volume: 0.45 }); // 0.9 * 0.5
+    return this.playWeaponSound('windshear', position, { volume: 0.35 }); // 0.9 * 0.5
   }
 
   // Play enemy colossus strike sound
   public playEnemyColossusStrikeSound(position: Vector3) {
-    return this.playWeaponSound('colossus_strike', position, { volume: 0.8 }); // 1.0 * 0.5
+    return this.playWeaponSound('colossus_strike', position, { volume: 0.65 }); // 1.0 * 0.5
   }
 
   // Play enemy frost nova sound
   public playEnemyFrostNovaSound(position: Vector3) {
-    return this.playWeaponSound('frost_nova', position, { volume: 0.75 }); // 0.9 * 0.5
+    return this.playWeaponSound('frost_nova', position, { volume: 0.65 }); // 0.9 * 0.5
   }
 
   // Play enemy backstab sound
   public playEnemyBackstabSound(position: Vector3) {
-    return this.playWeaponSound('sabres_backstab', position, { volume: 0.4 }); // 0.8 * 0.5
+    return this.playWeaponSound('sabres_backstab', position, { volume: 0.45 }); // 0.8 * 0.5
   }
 
   // Play enemy runeblade sounds
@@ -386,7 +386,7 @@ export class AudioSystem extends System {
   }
 
   public playEnemyRunebladeSmiteSound(position: Vector3) {
-    return this.playWeaponSound('runeblade_smite', position, { volume: 0.45 }); // Assuming 0.9 base volume
+    return this.playWeaponSound('runeblade_smite', position, { volume: 0.6 }); // Assuming 0.9 base volume
   }
 
   public playEnemyRunebladeWraithbladeSound(position: Vector3) {

@@ -412,6 +412,7 @@ export default function DragonUnit({
         scale={-0.625}
         weaponType={currentWeapon}
         weaponSubclass={currentSubclass}
+        isCorruptedAuraActive={isCorruptedAuraActive}
       />
 
 
