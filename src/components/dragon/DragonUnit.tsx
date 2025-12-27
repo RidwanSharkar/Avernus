@@ -52,6 +52,7 @@ interface DragonUnitProps {
   isDeathGrasping?: boolean;
   isWraithStriking?: boolean;
   isCorruptedAuraActive?: boolean;
+  hasCryoflame?: boolean;
   onSmiteComplete?: () => void;
   onColossusStrikeComplete?: () => void;
   onDeathGraspComplete?: () => void;
@@ -159,6 +160,7 @@ export default function DragonUnit({
   isDeathGrasping = false,
   isWraithStriking = false,
   isCorruptedAuraActive = false,
+  hasCryoflame = false,
   onSmiteComplete = () => {},
   onColossusStrikeComplete = () => {},
   onDeathGraspComplete = () => {},
@@ -224,6 +226,7 @@ export default function DragonUnit({
           level={1}
           isEmpowered={false}
           isSpinning={isSpinning}
+          hasCryoflame={hasCryoflame}
         />
       );
     } else if (currentWeapon === WeaponType.SWORD) {
@@ -315,7 +318,7 @@ export default function DragonUnit({
 
   // Memoize components for performance optimization
   const bonePlate = useMemo(() => (
-    <group scale={[0.95, 0.7, 0.95]} position={[0, 0.04, -0.015]} rotation={[0.4, 0, 0]}>
+    <group scale={[0.825, 0.625, 0.825]} position={[0, 0.04, -0.015]} rotation={[0.2, 0, 0]}>
       <BonePlate />
     </group>
   ), []);

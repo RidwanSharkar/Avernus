@@ -127,6 +127,7 @@ type PlayerAnimationState = {
   isDeathGrasping?: boolean;
   isWraithStriking?: boolean;
   isCorruptedAuraActive?: boolean;
+  hasCryoflame?: boolean;
   isSkyfalling?: boolean;
   isBackstabbing?: boolean;
   isSundering?: boolean;

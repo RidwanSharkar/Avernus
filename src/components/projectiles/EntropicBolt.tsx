@@ -254,7 +254,7 @@ function EntropicBoltImpact({ position, onComplete, isCryoflame = false }: Entro
             <meshStandardMaterial
               color={isCryoflame ? "#dbeafe" : "#FFD700"}
               emissive={isCryoflame ? "#bfdbfe" : "#FFD700"}
-              emissiveIntensity={(isCryoflame ? 3.0 : 1.5) * fade}
+              emissiveIntensity={(isCryoflame ? 3.0 : 2) * fade}
               transparent
               opacity={0.8 * fade}
             />
@@ -272,7 +272,7 @@ function EntropicBoltImpact({ position, onComplete, isCryoflame = false }: Entro
           <meshStandardMaterial
             color={isCryoflame ? "#1e40af" : "#FF4500"}
             emissive={isCryoflame ? "#3b82f6" : "#FF6600"}
-            emissiveIntensity={(isCryoflame ? 3.0 : 1.5) * fade}
+            emissiveIntensity={(isCryoflame ? 3.0 : 2) * fade}
             transparent
             opacity={0.5 * fade * (1 - i * 0.3)}
             blending={AdditiveBlending}

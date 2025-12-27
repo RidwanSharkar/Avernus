@@ -480,9 +480,9 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
         // Add Collider component for targeting and damage detection
         const collider = world.createComponent(Collider);
         collider.type = ColliderType.SPHERE;
-        collider.radius = 0.5;
+        collider.radius = 0.55;
         collider.layer = CollisionLayer.ENEMY; // Use enemy layer so towers and players can target them
-        collider.setOffset(0, 0.6, 0); // Center on unit
+        collider.setOffset(0, 0.625, 0); // Center on unit
         entity.addComponent(collider);
 
         // Store server unit ID in userData for damage routing
@@ -578,7 +578,7 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
         collider.type = ColliderType.SPHERE;
         collider.radius = 1.5; // Tower collision radius
         collider.layer = CollisionLayer.ENEMY; // Use enemy layer so they can be targeted
-        collider.setOffset(0, 1.0, 0); // Center on tower
+        collider.setOffset(0, 0, 0); // Center on tower
         entity.addComponent(collider);
 
         // Store server tower ID in userData
@@ -680,8 +680,9 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
         // Add Collider component for targeting
         const collider = world.createComponent(Collider);
         collider.type = ColliderType.SPHERE;
-        collider.radius = 0.7; // Pillar collision radius (matches visual)
+        collider.radius = 0.9; // Pillar collision radius (increased from 0.7 for better projectile hit detection)
         collider.layer = CollisionLayer.ENEMY; // Use enemy layer so they can be targeted like towers
+        collider.setOffset(0, 1.5, 0); // Center on pillar
         collider.isStatic = true;
         entity.addComponent(collider);
 
@@ -1791,6 +1792,7 @@ const [maxMana, setMaxMana] = useState(150);
     isDeathGrasping: boolean;
     isWraithStriking: boolean;
     isCorruptedAuraActive: boolean;
+    hasCryoflame?: boolean;
     isSundering?: boolean;
     isSummonTotemCharging?: boolean;
     summonTotemChargeProgress?: number;
@@ -4999,6 +5001,7 @@ const hasMana = useCallback((amount: number) => {
           isDeathGrasping={controlSystemRef.current?.isDeathGraspActive() || false}
           isWraithStriking={controlSystemRef.current?.isWraithStrikeActive() || false}
           isCorruptedAuraActive={controlSystemRef.current?.isCorruptedAuraActive() || false}
+          hasCryoflame={controlSystemRef.current?.isPassiveAbilityUnlocked?.('P', WeaponType.SCYTHE, weaponState.currentWeapon === selectedWeapons?.primary ? 'primary' : 'secondary') || false}
           reanimateRef={reanimateRef}
           isLocalPlayer={true}
           isStealthing={controlSystemRef.current?.getIsStealthing() || false}
@@ -5121,11 +5124,14 @@ const hasMana = useCallback((amount: number) => {
           cobraShotChargeProgress: 0,
           isSkyfalling: false,
           isBackstabbing: false,
+          isSundering: false,
           // Add missing Runeblade animation states
           isSmiting: false,
+          isColossusStriking: false,
           isDeathGrasping: false,
           isWraithStriking: false,
           isCorruptedAuraActive: false,
+          hasCryoflame: false,
           isFrozen: false
         };
         
@@ -5162,6 +5168,7 @@ const hasMana = useCallback((amount: number) => {
             isDeathGrasping={playerState.isDeathGrasping || false}
             isWraithStriking={playerState.isWraithStriking || false}
             isCorruptedAuraActive={playerState.isCorruptedAuraActive || false}
+          hasCryoflame={playerState.hasCryoflame || false}
             isDead={isPlayerDead}
             rotation={player.rotation}
             isLocalPlayer={false}

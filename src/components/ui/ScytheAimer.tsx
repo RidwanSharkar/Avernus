@@ -64,7 +64,7 @@ const ScytheAimer = memo(function ScytheAimer({
     if (!isVisible) return;
 
     let rotationFrame: number;
-    const rotationSpeed = 0.5; // degrees per frame
+    const rotationSpeed = 0.2; // degrees per frame
 
     const rotateCircles = () => {
       setRotation(prev => (prev + rotationSpeed) % 360);
@@ -112,11 +112,11 @@ const ScytheAimer = memo(function ScytheAimer({
   const verticalOffset = compensationOffset + (verticalAim * aimRange) + zoomAdjustment;
   
   return (
-    <div 
+    <div
       className="fixed inset-0 pointer-events-none flex items-center justify-center"
       style={{
         zIndex: 9999,
-        transform: `translateY(${verticalOffset}%)`,
+        transform: `translateY(${verticalOffset}%) scale(0.8)`,
         transition: 'transform 0.05s ease-out',
         background: 'transparent',
         overflow: 'visible'

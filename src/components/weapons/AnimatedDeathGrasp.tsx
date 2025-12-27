@@ -58,37 +58,37 @@ export default function AnimatedDeathGrasp({
 
   const materials = useMemo(() => ({
     spiral1: new MeshBasicMaterial({
-      color: new Color("#6A0DAD"),
+      color: new Color("#cc3333"),
       transparent: true,
       opacity: 1.0,
       blending: AdditiveBlending
     }),
     spiral2: new MeshBasicMaterial({
-      color: new Color("#9370DB"),
+      color: new Color("#ff4444"),
       transparent: true,
       opacity: 1.0,
       blending: AdditiveBlending
     }),
     spiral3: new MeshBasicMaterial({
-      color: new Color("#8A2BE2"),
+      color: new Color("#ff6666"),
       transparent: true,
       opacity: 1.0,
       blending: AdditiveBlending
     }),
     impact: new MeshBasicMaterial({
-      color: new Color("#6A0DAD"),
+      color: new Color("#cc3333"),
       transparent: true,
       opacity: 1.0,
       blending: AdditiveBlending
     }),
     core: new MeshBasicMaterial({
-      color: new Color("#9370DB"),
+      color: new Color("#ff4444"),
       transparent: true,
       opacity: 1.0,
       blending: AdditiveBlending
     }),
     chain: new MeshBasicMaterial({
-      color: new Color("#4A0E4E"),
+      color: new Color("#8B0000"),
       transparent: true,
       opacity: 0.8,
       blending: AdditiveBlending
@@ -381,7 +381,7 @@ export default function AnimatedDeathGrasp({
       {/* Dynamic lighting */}
       <pointLight
         position={startPosition.toArray()}
-        color="#6A0DAD"
+        color="#cc3333"
         intensity={10 * (phaseRef.current !== 'complete' ? 1 : 0) * flickerRef.current}
         distance={4}
         decay={2}
@@ -390,7 +390,7 @@ export default function AnimatedDeathGrasp({
       {phaseRef.current === 'forward' && (
         <pointLight
           position={currentProjectilePosition.current.toArray()}
-          color="#9370DB"
+          color="#ff4444"
           intensity={8 * flickerRef.current}
           distance={5}
           decay={2}
@@ -400,7 +400,7 @@ export default function AnimatedDeathGrasp({
       {phaseRef.current === 'return' && (
         <pointLight
           position={currentReturnPosition.current.toArray()}
-          color="#8A2BE2"
+          color="#ff6666"
           intensity={6 * flickerRef.current}
           distance={4}
           decay={2}

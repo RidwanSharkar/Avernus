@@ -43,31 +43,31 @@ export default function DeathGrasp({
 
   const materials = useMemo(() => ({
     spiral1: new MeshBasicMaterial({
-      color: new Color("#6A0DAD"),
+      color: new Color("#cc3333"),
       transparent: true,
       opacity: 1.0,
       blending: AdditiveBlending
     }),
     spiral2: new MeshBasicMaterial({
-      color: new Color("#9370DB"),
+      color: new Color("#ff4444"),
       transparent: true,
       opacity: 1.0,
       blending: AdditiveBlending
     }),
     spiral3: new MeshBasicMaterial({
-      color: new Color("#8A2BE2"),
+      color: new Color("#ff6666"),
       transparent: true,
       opacity: 1.0,
       blending: AdditiveBlending
     }),
     impact: new MeshBasicMaterial({
-      color: new Color("#6A0DAD"),
+      color: new Color("#cc3333"),
       transparent: true,
       opacity: 1.0,
       blending: AdditiveBlending
     }),
     core: new MeshBasicMaterial({
-      color: new Color("#9370DB"),
+      color: new Color("#ff4444"),
       transparent: true,
       opacity: 1.0,
       blending: AdditiveBlending
@@ -245,10 +245,10 @@ export default function DeathGrasp({
         ]}
       />
 
-      {/* Dynamic lighting - deep purple theme */}
+      {/* Dynamic lighting - deep red theme */}
       <pointLight
         position={startPosition.toArray()}
-        color="#6A0DAD"
+        color="#cc3333"
         intensity={10 * (1 - timeRef.current / duration) * flickerRef.current}
         distance={4}
         decay={2}
@@ -256,7 +256,7 @@ export default function DeathGrasp({
 
       <pointLight
         position={targetPosition.toArray()}
-        color="#9370DB"
+        color="#ff4444"
         intensity={8 * (1 - timeRef.current / duration) * flickerRef.current}
         distance={5}
         decay={2}
@@ -266,7 +266,7 @@ export default function DeathGrasp({
       {spiralStreams[0] && spiralStreams[0].length > 0 && (
         <pointLight
           position={spiralStreams[0][Math.floor(spiralStreams[0].length / 2)]?.position.toArray() || [0, 0, 0]}
-          color="#8A2BE2"
+          color="#ff6666"
           intensity={4 * (1 - timeRef.current / duration) * flickerRef.current}
           distance={3}
           decay={2}

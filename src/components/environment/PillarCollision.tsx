@@ -33,8 +33,8 @@ const PillarCollision: React.FC<PillarCollisionProps> = ({ world, positions }) =
       // Add Collider component - cylinder shape to match pillar
       const collider = world.createComponent(Collider);
       collider.type = ColliderType.CYLINDER;
-      collider.radius = 0.7; // Slightly larger than visual pillar for easier collision (pillar scale is 0.35, base radius is 2.2, so 2.2 * 0.35 = 0.77)
-      collider.height = 3; // Height to cover the pillar structure (pillar scale is 0.35, total height ~8.5, so 8.5 * 0.35 = ~3)
+      collider.radius = 0.8; // Slightly larger than visual pillar for easier collision (increased from 0.7 for better projectile hit detection)
+      collider.height = 5; // Height to cover the pillar structure (pillar scale is 0.35, total height ~8.5, so 8.5 * 0.35 = ~3)
       collider.layer = CollisionLayer.ENVIRONMENT;
       collider.isStatic = true; // Pillars don't move
       collider.isTrigger = false; // Solid collision, blocks movement

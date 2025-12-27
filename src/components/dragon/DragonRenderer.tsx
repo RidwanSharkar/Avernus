@@ -48,6 +48,7 @@ interface DragonRendererProps {
   isDeathGrasping?: boolean;
   isWraithStriking?: boolean;
   isCorruptedAuraActive?: boolean;
+  hasCryoflame?: boolean;
   isDead?: boolean;
   onSmiteComplete?: () => void;
   onColossusStrikeComplete?: () => void;
@@ -113,6 +114,7 @@ export default function DragonRenderer({
   isDeathGrasping = false,
   isWraithStriking = false,
   isCorruptedAuraActive = false,
+  hasCryoflame = false,
   onSmiteComplete = () => {},
   onColossusStrikeComplete = () => {},
   onDeathGraspComplete = () => {},
@@ -420,6 +422,7 @@ export default function DragonRenderer({
           isDeathGrasping={isDeathGrasping}
           isWraithStriking={isWraithStriking}
           isCorruptedAuraActive={isCorruptedAuraActive}
+          hasCryoflame={hasCryoflame}
           onSmiteComplete={onSmiteComplete}
           onColossusStrikeComplete={onColossusStrikeComplete}
           onDeathGraspComplete={onDeathGraspComplete}

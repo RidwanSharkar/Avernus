@@ -17,7 +17,7 @@ const EntropicBoltTrail: React.FC<EntropicBoltTrailProps> = ({
   opacity = 1,
   isCryoflame = false
 }) => {
-  const particlesCount = 25; // Fewer particles than CrossentropyBoltTrail for simpler effect
+  const particlesCount = 28; // Fewer particles than CrossentropyBoltTrail for simpler effect
   const particlesRef = useRef<Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -154,11 +154,11 @@ const EntropicBoltTrail: React.FC<EntropicBoltTrailProps> = ({
             if (uIsCryoflame) {
               // For Cryoflame: mix with a deep navy blue for a rich blue effect and increase emissive intensity
               glowColor = mix(uColor, vec3(0.2, 0.4, 0.8), 0.4);
-              emissiveMultiplier = 2.0;
+              emissiveMultiplier = 2.25;
             } else {
               // For normal Entropic: mix with orange for fire effect
-              glowColor = mix(uColor, vec3(1.0, 0.6, 0.0), 0.4);
-              emissiveMultiplier = 1.0;
+              glowColor = mix(uColor, vec3(1.0, 0.4, 0.0), 0.4);
+              emissiveMultiplier = 2.0; 
             }
             gl_FragColor = vec4(glowColor * emissiveMultiplier, vOpacity * strength);
           }

@@ -30,19 +30,19 @@ const ChargedOrbitals = React.memo(({ parentRef, dashCharges, weaponType, weapon
       switch (weaponSubclass) {
         // Scythe subclasses
         case WeaponSubclass.CHAOS:
-          return '#7ADEFF';
+          return '#7ADEFF'; //
         case WeaponSubclass.ABYSSAL:
           return '#17CE54';
         
         // Sword subclasses
         case WeaponSubclass.DIVINITY:
-          return '#FFDA32';
+          return '#F3D54D';
         case WeaponSubclass.VENGEANCE:
           return '#4682B4';
         
         // Sabres subclasses
         case WeaponSubclass.FROST:
-          return '#F27663';
+          return '#ECA24E'; //F27663
         case WeaponSubclass.ASSASSIN:
           return '#FF544E';
         
@@ -84,7 +84,7 @@ const ChargedOrbitals = React.memo(({ parentRef, dashCharges, weaponType, weapon
     orbitalsRef.current.children.forEach((orbital, index) => {
       const angle = (index / dashCharges.length) * Math.PI * 2 + time * 1;
       const radius = 0.7; // Fixed radius for circular orbit
-      const height = -0.2; // Fixed height above parent
+      const height = -0.175; // Fixed height above parent
       
       orbital.position.set(
         Math.cos(angle) * radius,
@@ -119,12 +119,12 @@ const ChargedOrbitals = React.memo(({ parentRef, dashCharges, weaponType, weapon
                 emissive={new Color(isAvailable ? activeColor : inactiveColor)}
                 emissiveIntensity={isAvailable ? 0.3 : 0.1}
                 transparent
-                opacity={isAvailable ? 0.8 : 0.4}
+                opacity={isAvailable ? 0.75 : 0.4}
               />
             </mesh>
 
             <mesh>
-              <sphereGeometry args={[0.115*1.225, 8, 8]} />
+              <sphereGeometry args={[0.1125*1.225, 16, 16]} />
               <meshStandardMaterial
                 color={isAvailable ? activeColor : "#333333"}
                 emissive={isAvailable ? activeColor : "#333333"}

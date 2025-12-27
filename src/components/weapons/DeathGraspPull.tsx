@@ -12,8 +12,8 @@ interface DeathGraspPullProps {
   updateEntityPosition: (entityId: number, position: Vector3) => void;
 }
 
-const PULL_DISTANCE = 20.0; // How far to pull the player (increased to match extended range)
-const PULL_DURATION = 0.6; // Faster duration for more responsive feel
+const PULL_DISTANCE = 16.0; // How far to pull the player (reduced for shorter range)
+const PULL_DURATION = 0.35; // Faster duration for more responsive feel
 const MAX_PULL_BOUNDS = 25; // Maximum distance from origin
 
 export default function DeathGraspPull({

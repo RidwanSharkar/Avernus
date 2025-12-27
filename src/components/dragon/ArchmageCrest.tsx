@@ -39,13 +39,13 @@ export default function ArchmageCrest({
 
         // Sword subclasses
         case WeaponSubclass.DIVINITY:
-          return { main: '#FFD829', emissive: '#FFD829', glow: '#FFD829', secondary: '#E8CD57' };
+          return { main: '#FFD000', emissive: '#FFD000', glow: '#FFD000', secondary: '#FFD000' };
         case WeaponSubclass.VENGEANCE:
           return { main: '#4682B4', emissive: '#5F9EA0', glow: '#B0E0E6', secondary: '#87CEEB' };
 
         // Sabres subclasses
         case WeaponSubclass.FROST:
-          return { main: '#FF544E', emissive: '#FF6B6B', glow: '#FFB3B3', secondary: '#FF9999' };
+          return { main: '#CD6E00', emissive: '#FF6B6B', glow: '#FFB3B3', secondary: '#FF9999' };
         case WeaponSubclass.ASSASSIN:
           return { main: '#FF544E', emissive: '#FF6B6B', glow: '#FFB3B3', secondary: '#FF9999' };
 
@@ -184,11 +184,11 @@ export default function ArchmageCrest({
     // rightWingRef.current.rotation.z = -Math.sin(time * 1.5) * 0.05;
   });
 
-  const createWingHalf = (isLeft: boolean) => (
+  const createWingHalf = (isLeft: boolean, customRotation?: [number, number, number]) => (
     <group
       ref={isLeft ? leftWingRef : rightWingRef}
-      position={[isLeft ? 0.45 : -0.45, 0.15, 0.15]}
-      rotation={[Math.PI / 3, 0, isLeft ? Math.PI / 1.25 : -Math.PI / 1.25]}
+      position={[isLeft ? 0.45 : -0.45, 0.15, 0.025]}
+      rotation={customRotation || [Math.PI /3.25, 0, isLeft ? Math.PI / 1.25 : -Math.PI / 1.25]}
     >
       {/* Main blade wing - large primary blade */}
       <group
@@ -198,7 +198,7 @@ export default function ArchmageCrest({
           isLeft ? Math.PI/2 + 0.375  : Math.PI/2 - 0.375,
           isLeft ? -Math.PI / 8 + 0.25 : -Math.PI / 8 + 0.25
         ]}
-        scale={[0.7, 0.35, 0.35]}
+        scale={[0.625, 0.425, 0.4]}
       >
         <mesh geometry={geometries.blade} material={materials.bladeCore}>
 
@@ -218,11 +218,20 @@ export default function ArchmageCrest({
     >
 
 
+      {/* First set of wings */}
       {/* Left wing half */}
       {createWingHalf(true)}
 
       {/* Right wing half */}
       {createWingHalf(false)}
+
+      {/* Second set of wings - shifted up slightly */}
+      <group position={[0, 0.4, 0.2]} scale={[0.5, 0.6, 0.55]} rotation={[0.5, 0, 0]}>
+        {createWingHalf(true, [Math.PI , 0.035, Math.PI/1.275])}
+
+        {/* Upper right wing half */}
+        {createWingHalf(false, [Math.PI , -0.035, -Math.PI / 1.275])}
+      </group>
 
     </group>
   );

@@ -1,8 +1,9 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Shape } from '@/utils/three-exports';
 import { DoubleSide } from '@/utils/three-exports';
 import { WeaponSubclass } from '@/components/dragon/weapons';
+import SpellCastingAura from './SpellCastingAura';
 
 interface ScytheProps {
   parentRef: React.RefObject<Group>;
@@ -10,6 +11,7 @@ interface ScytheProps {
   level?: number;
   isEmpowered?: boolean;
   isSpinning?: boolean;
+  hasCryoflame?: boolean;
 }
 
 // Reusable ScytheModel component
@@ -224,11 +226,13 @@ function ScytheModel({
   );
 }
 
-export default function Scythe({ 
+export default function Scythe({
+  parentRef,
   currentSubclass = WeaponSubclass.CHAOS,
   level = 1,
   isEmpowered = false,
-  isSpinning = false
+  isSpinning = false,
+  hasCryoflame = false
 }: ScytheProps) {
   
   // Debug: Log when empowerment changes
@@ -249,34 +253,68 @@ export default function Scythe({
   const scytheRef = useRef<Group>(null);
   const spinTime = useRef(0);
 
+  // Aura timing and state
+  const [showAura, setShowAura] = useState(false);
+  const [auraFadeStart, setAuraFadeStart] = useState(0);
+  const leftClickStartTime = useRef(0);
+  const lastLeftClickState = useRef(false);
+
   const basePosition = [-0.9, 0.65, 0.3] as const;
 
   useFrame((_, delta) => {
     if (!scytheRef.current) return;
 
+    // Handle aura timing logic
+    const currentTime = Date.now();
+
+    if (isSpinning && !lastLeftClickState.current) {
+      // Spinning just started (left click just started being held)
+      leftClickStartTime.current = currentTime;
+      setAuraFadeStart(0);
+    } else if (!isSpinning && lastLeftClickState.current) {
+      // Spinning just stopped (left click just released)
+      if (showAura) {
+        setAuraFadeStart(currentTime);
+      }
+    }
+
+    lastLeftClickState.current = isSpinning;
+
+    // Show aura if spinning for more than 1 second
+    if (isSpinning && currentTime - leftClickStartTime.current > 1000 && !showAura) {
+      setShowAura(true);
+      setAuraFadeStart(0);
+    }
+
+    // Fade aura after 1 second of not spinning
+    if (!isSpinning && showAura && auraFadeStart > 0 && currentTime - auraFadeStart > 1000) {
+      setShowAura(false);
+      setAuraFadeStart(0);
+    }
+
     if (isSpinning) {
       // Continuously accumulate spin time for smooth rotation
       spinTime.current += delta;
-      
+
       // Spin the scythe around its center
       const spinSpeed = 25; // Adjust speed as needed
       const currentRotation = spinTime.current * spinSpeed;
-      
+
       // Position scythe in front of dragon for spinning
       scytheRef.current.position.set(0, 0.5, 1.2);
-      
+
       // Rotate the scythe around its handle (Z-axis rotation for spinning)
       scytheRef.current.rotation.set(Math.PI/8, 0, currentRotation);
     } else {
       // Reset spin time when not spinning
       spinTime.current = 0;
-      
+
       // Return to base position when not spinning
       const easeFactor = 0.85;
       scytheRef.current.rotation.x *= easeFactor;
       scytheRef.current.rotation.y *= easeFactor;
       scytheRef.current.rotation.z *= easeFactor;
-      
+
       scytheRef.current.position.x += (basePosition[0] - scytheRef.current.position.x) * 0.14;
       scytheRef.current.position.y += (basePosition[1] - scytheRef.current.position.y) * 0.14;
       scytheRef.current.position.z += (basePosition[2] - scytheRef.current.position.z) * 0.025;
@@ -284,5 +322,10 @@ export default function Scythe({
   });
 
   // Single scythe only
-  return <ScytheModel scytheRef={scytheRef} basePosition={basePosition} isEmpowered={isEmpowered} />;
+  return (
+    <>
+      <ScytheModel scytheRef={scytheRef} basePosition={basePosition} isEmpowered={isEmpowered} />
+      <SpellCastingAura parentRef={parentRef} isActive={showAura} hasCryoflame={hasCryoflame} />
+    </>
+  );
 }
