@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Group, Vector3, Euler, AdditiveBlending } from 'three';
+import { Group, Vector3, Euler, AdditiveBlending, IcosahedronGeometry, MeshStandardMaterial } from 'three';
 import { WeaponType, WeaponSubclass } from './weapons';
 
 interface WingJetProps {
@@ -30,6 +30,16 @@ const DraconicWingJets: React.FC<WingJetProps> = ({
       maxLife: Math.random() * 0.6 + 0.5
     }))
   );
+
+  // Create shared geometry once - CRITICAL: prevents memory leak from inline JSX geometries
+  const particleGeometry = useMemo(() => new IcosahedronGeometry(0.8, 0), []);
+
+  // Cleanup geometry on unmount
+  useEffect(() => {
+    return () => {
+      particleGeometry.dispose();
+    };
+  }, [particleGeometry]);
 
   // Get color based on weapon type/subclass (matching GhostTrail)
   const getJetColor = () => {
@@ -192,8 +202,8 @@ const DraconicWingJets: React.FC<WingJetProps> = ({
             key={particle.id}
             position={particle.position.toArray()}
             scale={[particle.scale, particle.scale, particle.scale]}
+            geometry={particleGeometry}
           >
-            <icosahedronGeometry args={[0.8, 0]} />
             <meshStandardMaterial
               color={colors.particle}
               emissive={colors.main}

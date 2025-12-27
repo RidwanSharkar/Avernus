@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface ControlsPanelProps {
   className?: string;
@@ -6,6 +6,23 @@ interface ControlsPanelProps {
 
 export default function ControlsPanel({ className = '' }: ControlsPanelProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+
+  // Auto-minimize after 10 seconds
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (isExpanded) {
+      timer = setTimeout(() => {
+        setIsExpanded(false);
+      }, 10000); // 10 seconds
+    }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [isExpanded]);
 
   const controls = [
     { key: 'WASD', description: 'Double Tap to Dash', icon: '⌨️' },

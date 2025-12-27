@@ -219,6 +219,12 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
   const enemyPlayerPositionRefs = useRef<Map<string, { current: Vector3 }>>(new Map());
   const [playerPosition, setPlayerPosition] = useState(new Vector3(0, 0.5, 0));
   const [playerEntity, setPlayerEntity] = useState<any>(null);
+  
+  // CRITICAL: Cache Vector3/Quaternion/Euler objects to prevent memory leaks from creating new ones every frame
+  const cameraDirectionCache = useRef<Vector3>(new Vector3());
+  const tempRotationQuaternion = useRef<Quaternion>(new Quaternion());
+  const tempRotationEuler = useRef<Euler>(new Euler());
+  const tempPositionVector = useRef<Vector3>(new Vector3());
 
   // PVP Kill Counter - tracks kills for all players
   const [playerKills, setPlayerKills] = useState<Map<string, number>>(new Map());
@@ -3890,12 +3896,15 @@ const hasMana = useCallback((amount: number) => {
           const transform = entity.getComponent(Transform);
           const interpolationBuffer = entity.getComponent(InterpolationBuffer);
           if (transform && interpolationBuffer) {
-            // Create rotation quaternion from Euler angles
-            const rotation = new Quaternion();
-            rotation.setFromEuler(new Euler(serverPlayer.rotation.x, serverPlayer.rotation.y, serverPlayer.rotation.z));
+            // Use cached objects to prevent memory leaks
+            const rotation = tempRotationQuaternion.current;
+            const euler = tempRotationEuler.current;
+            euler.set(serverPlayer.rotation.x, serverPlayer.rotation.y, serverPlayer.rotation.z);
+            rotation.setFromEuler(euler);
 
             // Add server state to interpolation buffer for smooth remote player movement
-            const position = new Vector3(serverPlayer.position.x, serverPlayer.position.y, serverPlayer.position.z);
+            const position = tempPositionVector.current;
+            position.set(serverPlayer.position.x, serverPlayer.position.y, serverPlayer.position.z);
             interpolationBuffer.addServerState(position, rotation);
           } else if (transform) {
             // Fallback to direct position update if interpolation buffer not available
@@ -4657,7 +4666,7 @@ const hasMana = useCallback((amount: number) => {
           viperStingParentRef.current.position.copy(newPosition);
 
           // Calculate quaternion from camera direction for Viper Sting
-          const cameraDirection = new Vector3();
+          const cameraDirection = cameraDirectionCache.current;
           camera.getWorldDirection(cameraDirection);
           const cameraAngle = Math.atan2(cameraDirection.x, cameraDirection.z);
 

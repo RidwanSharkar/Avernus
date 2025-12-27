@@ -81,7 +81,7 @@ function AbilityTooltip({ content, visible, x, y }: TooltipProps) {
 }
 
 function HomeContent() {
-  const { selectedWeapons, setSelectedWeapons, skillPointData, unlockAbility, updateSkillPointsForLevel, purchaseItem, players, socket } = useMultiplayer();
+  const { selectedWeapons, setSelectedWeapons, skillPointData, unlockAbility, updateSkillPointsForLevel, purchaseItem, players, socket, winner } = useMultiplayer();
 
   const [damageNumbers, setDamageNumbers] = useState<DamageNumberData[]>([]);
   const [cameraInfo, setCameraInfo] = useState<{
@@ -922,6 +922,7 @@ function HomeContent() {
                 towerMaxHealth={towerInfo.maxHealth}
                 towerPosition={towerInfo.towerPosition}
                 playerPosition={towerInfo.playerPosition}
+                winner={winner}
               />
             </div>
 

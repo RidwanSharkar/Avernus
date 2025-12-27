@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { Mesh, Group, SphereGeometry, MeshStandardMaterial, MeshBasicMaterial, BackSide, DoubleSide, Matrix4, Vector3, RingGeometry, CanvasTexture, LinearFilter, Frustum, Sphere } from '@/utils/three-exports';
 import { useFrame } from '@react-three/fiber';
 
@@ -79,6 +79,19 @@ const Planet: React.FC = () => {
   const frustum = useMemo(() => new Frustum(), []);
   const matrix = useMemo(() => new Matrix4(), []);
   const sphere = useMemo(() => new Sphere(new Vector3(), 18 * Math.sqrt(3)), []);
+
+  // Cleanup textures, geometries, and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      sphereGeometry.dispose();
+      ringGeometry.dispose();
+      ringTexture.dispose();
+      planetMaterial.dispose();
+      glowMaterial.dispose();
+      outerGlowMaterial.dispose();
+      ringMaterial.dispose();
+    };
+  }, [sphereGeometry, ringGeometry, ringTexture, planetMaterial, glowMaterial, outerGlowMaterial, ringMaterial]);
 
   // Rotate the ring slowly and apply frustum culling
   useFrame((state, delta) => {

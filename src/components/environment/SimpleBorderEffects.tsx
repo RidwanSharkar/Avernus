@@ -30,6 +30,9 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
   const particleRef = useRef<InstancedMesh>(null);
   const glowRef = useRef<InstancedMesh>(null);
   const groupRef = useRef<Group>(null);
+  
+  // CRITICAL: Cache Matrix4 to prevent memory leak from creating new ones every frame
+  const matrixRef = useRef<Matrix4>(new Matrix4());
 
   // Generate particle positions in a ring around the border
   const particlePositions = useMemo(() => {
@@ -84,9 +87,19 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
   const particleGeometry = useMemo(() => new PlaneGeometry(0.05, 0.05), []);
   const glowGeometry = useMemo(() => new CircleGeometry(0.275, 12), []);
 
+  // Cleanup geometries and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      particleGeometry.dispose();
+      glowGeometry.dispose();
+      particleMaterial.dispose();
+      glowMaterial.dispose();
+    };
+  }, [particleGeometry, glowGeometry, particleMaterial, glowMaterial]);
+
   // Update instanced matrices
   useEffect(() => {
-    const matrix = new Matrix4();
+    const matrix = matrixRef.current;
 
     // Update particle instances
     if (particleRef.current) {
@@ -118,7 +131,7 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
 
     // Update particle positions for floating animation
     if (particleRef.current) {
-      const matrix = new Matrix4();
+      const matrix = matrixRef.current;
       particlePositions.forEach((position, i) => {
         const floatOffset = Math.sin(time * 2 + i * 0.1) * 0.2;
         matrix.makeTranslation(

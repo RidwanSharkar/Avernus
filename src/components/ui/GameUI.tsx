@@ -5,6 +5,7 @@ import { SkillPointData, AbilityUnlock } from '@/utils/SkillPointSystem';
 import { RuneCounter } from './RuneCounter';
 import ChatUI from './ChatUI';
 import { TowerSideIndicator } from './TowerSideIndicator';
+import VictoryNotification from './VictoryNotification';
 
 interface GameUIProps {
   currentWeapon: WeaponType;
@@ -39,6 +40,8 @@ interface GameUIProps {
   towerMaxHealth?: number;
   towerPosition?: { x: number; y: number; z: number } | null;
   playerPosition?: { x: number; y: number; z: number } | null;
+  // Victory notification for PVP mode
+  winner?: 'Red' | 'Blue' | null;
 }
 
 interface ResourceBarProps {
@@ -169,7 +172,8 @@ export default function GameUI({
   towerHealth = 0,
   towerMaxHealth = 0,
   towerPosition = null,
-  playerPosition = null
+  playerPosition = null,
+  winner = null
 }: GameUIProps) {
   // Store resources per weapon type to persist across switches
   const [weaponResources, setWeaponResources] = useState<{
@@ -596,6 +600,9 @@ export default function GameUI({
 
       {/* Chat UI */}
       <ChatUI />
+
+      {/* Victory Notification */}
+      <VictoryNotification winner={winner} />
     </>
   );
 }

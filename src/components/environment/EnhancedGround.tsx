@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, ShaderMaterial, CylinderGeometry, Color, RepeatWrapping, CanvasTexture } from '@/utils/three-exports';
 
@@ -176,6 +176,16 @@ const EnhancedGround: React.FC<EnhancedGroundProps> = ({
   }, [groundTexture, normalTexture, levelColors]);
 
   const geometry = useMemo(() => new CylinderGeometry(radius, radius, height, 32, 1), [radius, height]);
+
+  // Cleanup textures, geometries, and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      groundTexture.dispose();
+      normalTexture.dispose();
+      geometry.dispose();
+      material.dispose();
+    };
+  }, [groundTexture, normalTexture, geometry, material]);
 
   // Animate the shader
   useFrame((state, delta) => {

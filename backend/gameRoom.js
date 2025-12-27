@@ -313,6 +313,24 @@ class GameRoom {
           towerId: towerId,
           ownerId: tower.ownerId
         });
+
+        // Check for victory condition in PVP mode
+        if (this.gameMode === 'pvp') {
+          // Determine the winner based on which tower was destroyed
+          // North tower = Red, South tower = Blue
+          const winner = tower.side === 'North' ? 'Blue' : 'Red';
+
+          // Emit victory event to all players
+          this.io.to(this.roomId).emit('game-victory', {
+            roomId: this.roomId,
+            winner: winner,
+            defeatedTowerSide: tower.side,
+            defeatedPlayerId: tower.ownerId,
+            timestamp: Date.now()
+          });
+
+          console.log(`🏆 PVP Victory: ${winner} wins! (Tower destroyed: ${tower.side})`);
+        }
       }
     }
     return true;

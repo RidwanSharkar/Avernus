@@ -96,11 +96,13 @@ export default function DeathGrasp({
     const segments = Math.ceil(distance * 4); // More segments for smoother spirals
     const streams = [[], [], []] as Array<Array<{position: Vector3, scale: number}>>;
 
-    // Create normalized direction vector and perpendicular vectors for spiral calculation
+    // Create normalized direction vector and perpendicular vectors for spiral calculation (cached in useMemo)
     const normalizedDirection = direction.clone().normalize();
     const up = new Vector3(0, 1, 0);
-    const right = new Vector3().crossVectors(normalizedDirection, up).normalize();
-    const forward = new Vector3().crossVectors(right, normalizedDirection).normalize();
+    const right = new Vector3();
+    right.crossVectors(normalizedDirection, up).normalize();
+    const forward = new Vector3();
+    forward.crossVectors(right, normalizedDirection).normalize();
 
     // Spiral parameters
     const spiralRadius = 0.15; // Radius of the spiral

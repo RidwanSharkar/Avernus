@@ -38,6 +38,11 @@ export default function DeathGraspProjectile({
   const hitEnemies = useRef(new Set<string>());
   const hasHit = useRef(false);
   const useAnimatedVersion = useRef(true); // Flag to use new animated version
+  const hitPlayers = useRef<Set<string>>(new Set());
+  
+  // CRITICAL: Cache Vector3 objects to prevent memory leaks from creating new ones every frame
+  const currentPositionCache = useRef<Vector3>(new Vector3());
+  const directionCache = useRef<Vector3>(new Vector3());
 
   // Adjust direction to be more horizontal (DeathGrasp should shoot horizontally, not downward)
   const adjustedDirection = useMemo(() => {
@@ -104,10 +109,12 @@ export default function DeathGraspProjectile({
     const segments = Math.ceil(range * 2); // More segments for projectile path
     const streams = [[], [], []] as Array<Array<{position: Vector3, scale: number}>>;
 
-    // Create normalized direction vector and perpendicular vectors for spiral calculation
+    // Create normalized direction vector and perpendicular vectors for spiral calculation (cached in useMemo)
     const up = new Vector3(0, 1, 0);
-    const right = new Vector3().crossVectors(directionNormalized, up).normalize();
-    const forward = new Vector3().crossVectors(right, directionNormalized).normalize();
+    const right = new Vector3();
+    right.crossVectors(directionNormalized, up).normalize();
+    const forward = new Vector3();
+    forward.crossVectors(right, directionNormalized).normalize();
 
     // Spiral parameters
     const spiralRadius = 0.2; // Radius of the spiral
@@ -166,7 +173,10 @@ export default function DeathGraspProjectile({
 
     // Calculate current projectile position along the path using adjusted direction
     const currentDistance = progress * range;
-    const currentPosition = startPosition.clone().add(adjustedDirection.clone().multiplyScalar(currentDistance));
+    const currentPosition = currentPositionCache.current;
+    const tempDirection = directionCache.current;
+    tempDirection.copy(adjustedDirection).multiplyScalar(currentDistance);
+    currentPosition.copy(startPosition).add(tempDirection);
 
     // Check for hits during the first 80% of the projectile's travel
     if (progress < 0.8 && !hasHit.current) {

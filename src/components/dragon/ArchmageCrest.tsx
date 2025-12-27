@@ -32,7 +32,7 @@ export default function ArchmageCrest({
 
         // Sword subclasses
         case WeaponSubclass.DIVINITY:
-          return { main: '#3FD3FC', emissive: '#87CEEB', glow: '#E0F6FF', secondary: '#B0E0E6' };
+          return { main: '#E8CD57', emissive: '#E8CD57', glow: '#E8CD57', secondary: '#B0E0E6' };
         case WeaponSubclass.VENGEANCE:
           return { main: '#4682B4', emissive: '#5F9EA0', glow: '#B0E0E6', secondary: '#87CEEB' };
 

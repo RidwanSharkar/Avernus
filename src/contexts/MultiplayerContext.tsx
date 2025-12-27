@@ -152,6 +152,9 @@ interface MultiplayerContextType {
   gameStarted: boolean;
   gameMode: 'multiplayer' | 'pvp';
 
+  // Victory state
+  winner: 'Red' | 'Blue' | null;
+
   // Chat state
   chatMessages: ChatMessage[];
   isChatOpen: boolean;
@@ -264,6 +267,7 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
   const [killCount, setKillCount] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameMode, setGameMode] = useState<'multiplayer' | 'pvp'>('multiplayer');
+  const [winner, setWinner] = useState<'Red' | 'Blue' | null>(null);
   const [currentPreview, setCurrentPreview] = useState<RoomPreview | null>(null);
   const [selectedWeapons, setSelectedWeaponsState] = useState<{
     primary: WeaponType;
@@ -704,6 +708,11 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
         }
         return updated;
       });
+    });
+
+    addEventHandler('game-victory', (data) => {
+      console.log('🏆 Game victory:', data.winner);
+      setWinner(data.winner);
     });
 
     // Pillar event handlers
@@ -1300,6 +1309,7 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     killCount,
     gameStarted,
     gameMode,
+    winner,
     currentPreview,
     joinRoom,
     leaveRoom,

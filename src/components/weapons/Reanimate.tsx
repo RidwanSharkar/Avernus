@@ -1,4 +1,4 @@
-import React, { useImperativeHandle, forwardRef, useState, useCallback, useMemo } from 'react';
+import React, { useImperativeHandle, forwardRef, useState, useCallback, useMemo, useRef } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame, RootState } from '@react-three/fiber';
 
@@ -11,24 +11,18 @@ export interface ReanimateRef {
 }
 
 const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = React.memo(({ position, onComplete }) => {
-  const [time, setTime] = useState(0);
+  const timeRef = useRef(0);
   const duration = 1.5;
-  
-  // Use useCallback for frame updates
-  const onFrame = useCallback((_: RootState, delta: number) => {
-    setTime(prev => {
-      const newTime = prev + delta;
-      if (newTime >= duration) {
-        onComplete();
-      }
-      return newTime;
-    });
-  }, [duration, onComplete]);
 
-  useFrame(onFrame);
+  useFrame((_: RootState, delta: number) => {
+    timeRef.current += delta;
+    if (timeRef.current >= duration) {
+      onComplete();
+    }
+  });
 
-  // Memoize these calculations
-  const progress = time / duration;
+  // Calculate values from ref
+  const progress = Math.min(timeRef.current / duration, 1);
   const opacity = Math.sin(progress * Math.PI);
   const scale = 1 + progress * 2;
 
@@ -58,7 +52,7 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = R
         <mesh
           key={`ring-${i}`}
           position={[0, progress * 2 + i * 0.5, 0]}
-          rotation={[Math.PI / 2, 0, time * 2]}
+          rotation={[Math.PI / 2, 0, timeRef.current * 2]}
         >
           <torusGeometry args={[0.8 - i * 0.2, 0.05, 16, 32]} />
           <meshStandardMaterial
@@ -90,9 +84,9 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = R
           <mesh
             key={`particle-${i}`}
             position={[
-              Math.cos(angle + time * 2) * radius/1.1,
-              yOffset + Math.sin(time * 3 + i) * 0.5,
-              Math.sin(angle + time * 2) * radius/1.1
+              Math.cos(angle + timeRef.current * 2) * radius/1.1,
+              yOffset + Math.sin(timeRef.current * 3 + i) * 0.5,
+              Math.sin(angle + timeRef.current * 2) * radius/1.1
             ]}
           >
             <sphereGeometry args={[0.095, 8, 8]} />

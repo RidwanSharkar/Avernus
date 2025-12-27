@@ -31,7 +31,7 @@ export default function SummonedUnitRenderer({
   // Debug logging for elite units
   useEffect(() => {
     if (isElite) {
-      console.log(`👑 Elite unit rendered for ${ownerId}: health=${health}/${maxHealth}, position=(${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)})`);
+      //console.log(`👑 Elite unit rendered for ${ownerId}: health=${health}/${maxHealth}, position=(${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)})`);
     }
   }, [isElite, ownerId, health, maxHealth, position]);
   const groupRef = useRef<Group>(null);
