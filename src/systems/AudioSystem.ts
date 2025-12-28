@@ -299,7 +299,7 @@ export class AudioSystem extends System {
 
   // Play enemy bow draw sound
   public playEnemyBowDrawSound(position: Vector3) {
-    return this.playWeaponSound('bow_draw', position, { volume: 0.0725 }); // 0.6 * 0.25
+    // return this.playWeaponSound('bow_draw', position, { volume: 0.0725 }); // 0.6 * 0.25
   }
 
   // Play enemy bow release sound

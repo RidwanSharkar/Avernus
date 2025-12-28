@@ -128,8 +128,32 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
   // If already in room, show room info
   if (isInRoom) {
     return (
-      <div className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/95 p-8 rounded-xl border-2 ${gameMode === 'pvp' ? 'border-red-500' : 'border-green-500'} text-white max-w-md w-11/12 z-50 text-center`}>
-        <h2 className="text-2xl font-bold mb-4">{gameMode === 'pvp' ? 'PVP' : 'Multiplayer'} Room: {roomId}</h2>
+      <div className="fixed inset-0 flex items-center justify-center z-50 overflow-y-auto">
+        <div className="relative">
+          {/* Animated background glow */}
+          <div className={`absolute -inset-4 rounded-xl blur-lg animate-pulse ${gameMode === 'pvp' ? 'bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20' : 'bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20'}`}></div>
+
+          {/* Main panel with glassmorphism */}
+          <div className={`relative bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 backdrop-blur-xl p-8 rounded-xl border ${gameMode === 'pvp' ? 'border-red-500/30 shadow-2xl shadow-red-500/10' : 'border-blue-500/30 shadow-2xl shadow-blue-500/10'} text-white max-w-md w-11/12 text-center`}>
+            {/* Enhanced title section */}
+            <div className="text-center mb-6 relative">
+              {/* Decorative background elements */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className={`w-24 h-px bg-gradient-to-r from-transparent via-${gameMode === 'pvp' ? 'red' : 'blue'}-400 to-transparent opacity-50`}></div>
+              </div>
+
+              <h2 className={`text-2xl font-black mb-2 bg-gradient-to-r ${gameMode === 'pvp' ? 'from-red-400 via-orange-400 to-red-400' : 'from-blue-400 via-purple-400 to-blue-400'} bg-clip-text text-transparent relative`}>
+                {gameMode === 'pvp' ? 'PVP' : 'MULTIPLAYER'} ROOM
+              </h2>
+
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className={`w-8 h-px bg-gradient-to-r from-transparent to-${gameMode === 'pvp' ? 'red' : 'blue'}-400/60`}></div>
+                <div className={`text-xs font-medium text-${gameMode === 'pvp' ? 'red' : 'blue'}-300/80 tracking-wider uppercase`}>
+                  Room ID: {roomId}
+                </div>
+                <div className={`w-8 h-px bg-gradient-to-l from-transparent to-${gameMode === 'pvp' ? 'red' : 'blue'}-400/60`}></div>
+              </div>
+            </div>
         <p className="mb-4">Players connected: {players.size}</p>
         <div className="flex flex-col gap-3 mb-6">
           {Array.from(players.values()).map(player => (
@@ -139,20 +163,31 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
             </div>
           ))}
         </div>
-        <div className="flex flex-col gap-3">
-          <button 
-            className={`w-full px-8 py-4 text-xl ${gameMode === 'pvp' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white border-none rounded-lg cursor-pointer transition-all duration-300 font-bold hover:-translate-y-1`}
-            onClick={handleStartGame}
-            disabled={false}
-          >
-            {gameStarted ? 'Join Game' : `Start ${gameMode === 'pvp' ? 'PVP' : 'Game'}`}
-          </button>
-          <button 
-            className="w-full px-8 py-3 text-lg bg-gray-600 text-white border-none rounded-lg cursor-pointer transition-all duration-300 font-bold hover:bg-gray-500 hover:-translate-y-1"
-            onClick={handleBack}
-          >
-            Return
-          </button>
+            <div className="flex flex-col gap-3 items-center mt-6">
+              <div className="relative group">
+                {/* Button glow effect */}
+                <div className={`absolute -inset-1.5 rounded-lg blur-md transition-all duration-500 ${gameMode === 'pvp' ? 'bg-gradient-to-r from-red-500/30 via-orange-500/30 to-red-500/30 opacity-75 group-hover:opacity-100' : 'bg-gradient-to-r from-green-500/30 via-blue-500/30 to-green-500/30 opacity-75 group-hover:opacity-100'}`}></div>
+
+                <button
+                  className={`relative px-8 py-3 text-lg font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 w-full min-w-[240px] max-w-[320px] ${gameMode === 'pvp' ? 'bg-gradient-to-r from-red-600 via-red-500 to-orange-600 text-white border-red-400/50 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:from-red-500 hover:via-red-400 hover:to-orange-500 hover:border-red-300/70' : 'bg-gradient-to-r from-green-600 via-green-500 to-blue-600 text-white border-green-400/50 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:from-green-500 hover:via-green-400 hover:to-blue-500 hover:border-green-300/70'}`}
+                  onClick={handleStartGame}
+                  disabled={false}
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-white">
+                      {gameStarted ? 'JOIN GAME' : (gameMode === 'pvp' ? 'START AVERNUS' : 'START GAME')}
+                    </span>
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  </div>
+                </button>
+              </div>
+
+              {/* Subtle hint text */}
+              <div className="text-center">
+
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -161,10 +196,34 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
   // Show room preview if requested
   if (showPreview && currentPreview) {
     return (
-      <div className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/95 p-8 rounded-xl border-2 ${gameMode === 'pvp' ? 'border-red-500' : 'border-green-500'} text-white max-w-2xl w-11/12 z-50`}>
-        <h2 className="text-2xl font-bold mb-6">{gameMode === 'pvp' ? 'PVP' : 'Multiplayer'} Room Preview: {currentPreview.roomId}</h2>
-        
-        {currentPreview.exists ? (
+      <div className="fixed inset-0 flex items-center justify-center z-50 overflow-y-auto">
+        <div className="relative">
+          {/* Animated background glow */}
+          <div className={`absolute -inset-4 rounded-xl blur-lg animate-pulse ${gameMode === 'pvp' ? 'bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20' : 'bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20'}`}></div>
+
+          {/* Main panel with glassmorphism */}
+          <div className={`relative bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 backdrop-blur-xl p-8 rounded-xl border ${gameMode === 'pvp' ? 'border-red-500/30 shadow-2xl shadow-red-500/10' : 'border-blue-500/30 shadow-2xl shadow-blue-500/10'} text-white max-w-2xl w-11/12`}>
+            {/* Enhanced title section */}
+            <div className="text-center mb-6 relative">
+              {/* Decorative background elements */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className={`w-24 h-px bg-gradient-to-r from-transparent via-${gameMode === 'pvp' ? 'red' : 'blue'}-400 to-transparent opacity-50`}></div>
+              </div>
+
+              <h2 className={`text-2xl font-black mb-2 bg-gradient-to-r ${gameMode === 'pvp' ? 'from-red-400 via-orange-400 to-red-400' : 'from-blue-400 via-purple-400 to-blue-400'} bg-clip-text text-transparent relative`}>
+                {gameMode === 'pvp' ? 'PVP' : 'MULTIPLAYER'} ROOM PREVIEW
+              </h2>
+
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className={`w-8 h-px bg-gradient-to-r from-transparent to-${gameMode === 'pvp' ? 'red' : 'blue'}-400/60`}></div>
+                <div className={`text-xs font-medium text-${gameMode === 'pvp' ? 'red' : 'blue'}-300/80 tracking-wider uppercase`}>
+                  Room ID: {currentPreview.roomId}
+                </div>
+                <div className={`w-8 h-px bg-gradient-to-l from-transparent to-${gameMode === 'pvp' ? 'red' : 'blue'}-400/60`}></div>
+              </div>
+            </div>
+
+            {currentPreview.exists ? (
           <div className="flex flex-col gap-6">
             <div className="flex justify-around bg-white/5 p-4 rounded-lg mb-4">
               <p className="m-0 font-bold text-green-500">Players: {currentPreview.playerCount}/{currentPreview.maxPlayers}</p>
@@ -174,12 +233,19 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
             
             {currentPreview.playerCount > 0 ? (
               <div className="flex flex-col gap-3">
-                <h3 className="text-lg font-bold">Players in Room:</h3>
+                <h3 className="text-lg font-bold text-center mb-4">PLAYERS IN ROOM</h3>
                 {currentPreview.players.map(player => (
-                  <div key={player.id} className="flex justify-between items-center p-3 bg-white/10 rounded-lg border border-gray-600">
-                    <span className="font-bold text-green-500">{player.name}</span>
-                    <span className="text-orange-500 capitalize">({player.weapon})</span>
-                    <span className="text-red-400 font-mono">{player.health}/{player.maxHealth} HP</span>
+                  <div key={player.id} className="relative overflow-hidden rounded-xl cursor-pointer transition-all duration-500 bg-gradient-to-br from-gray-800/80 via-gray-900/90 to-gray-800/80 backdrop-blur-sm border border-gray-700/50 p-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full bg-green-500 shadow-lg animate-pulse"></div>
+                        <span className="font-bold text-green-400">{player.name}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-orange-400 capitalize font-semibold">({player.weapon})</span>
+                        <span className="text-red-400 font-mono text-sm bg-red-900/30 px-2 py-1 rounded">{player.health}/{player.maxHealth} HP</span>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -190,21 +256,27 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
             )}
             
             <div className="flex gap-4 mt-6">
-              <button 
-                className="flex-1 px-8 py-4 text-lg bg-green-500 text-white border-none rounded-lg cursor-pointer transition-all duration-300 font-bold hover:bg-green-600 hover:-translate-y-1 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none"
-                onClick={handleJoin}
-                disabled={isJoining || !playerName.trim() || currentPreview.playerCount >= currentPreview.maxPlayers}
-              >
-                {isJoining ? 'Joining...' : 
-                 currentPreview.playerCount >= currentPreview.maxPlayers ? 'Room Full' : 'Join This Room'}
-              </button>
-              <button 
-                className="flex-1 px-8 py-4 text-lg bg-gray-600 text-white border-none rounded-lg cursor-pointer transition-all duration-300 font-bold hover:bg-gray-500 hover:-translate-y-1 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:transform-none"
-                onClick={handleBackToForm}
-                disabled={isJoining}
-              >
-                Back
-              </button>
+              <div className="flex-1 relative group">
+                <div className="absolute -inset-1.5 rounded-lg blur-md transition-all duration-500 bg-gradient-to-r from-green-500/30 via-blue-500/30 to-green-500/30 opacity-75 group-hover:opacity-100"></div>
+                <button
+                  className="relative w-full px-6 py-3 text-lg font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 bg-gradient-to-r from-green-600 via-green-500 to-blue-600 text-white border-green-400/50 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:from-green-500 hover:via-green-400 hover:to-blue-500 hover:border-green-300/70 disabled:bg-gradient-to-r disabled:from-gray-700 disabled:to-gray-600 disabled:text-gray-400 disabled:border-gray-600/50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none"
+                  onClick={handleJoin}
+                  disabled={isJoining || !playerName.trim() || currentPreview.playerCount >= currentPreview.maxPlayers}
+                >
+                  {isJoining ? 'JOINING...' :
+                   currentPreview.playerCount >= currentPreview.maxPlayers ? 'ROOM FULL' : 'JOIN THIS ROOM'}
+                </button>
+              </div>
+              <div className="flex-1 relative group">
+                <div className="absolute -inset-1.5 rounded-lg blur-md transition-all duration-500 bg-gradient-to-r from-gray-500/30 via-gray-600/30 to-gray-500/30 opacity-75 group-hover:opacity-100"></div>
+                <button
+                  className="relative w-full px-6 py-3 text-lg font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 bg-gradient-to-r from-gray-700 to-gray-600 text-white border-gray-600/50 shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 hover:from-gray-600 hover:to-gray-500 hover:border-gray-500/70 disabled:bg-gradient-to-r disabled:from-gray-800 disabled:to-gray-700 disabled:text-gray-500 disabled:border-gray-700/50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none"
+                  onClick={handleBackToForm}
+                  disabled={isJoining}
+                >
+                  BACK
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -227,66 +299,115 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
               </button>
             </div>
           </div>
-        )}
+            )}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/95 p-8 rounded-xl border-2 ${gameMode === 'pvp' ? 'border-red-500' : 'border-green-500'} text-white max-w-lg w-11/12 z-50`}>
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <label htmlFor="playerName" className="font-bold text-green-500">Your Name:</label>
-          <input
-            id="playerName"
-            type="text"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            placeholder="Enter your name"
-            maxLength={20}
-            disabled={isJoining}
-            className="p-2 border-2 border-gray-600 rounded-lg bg-white/10 text-white text-base focus:outline-none focus:border-green-500 focus:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed"
-          />
-        </div>
+    <div className="fixed inset-0 flex items-center justify-center z-50 overflow-y-auto">
+      <div className="relative">
+        {/* Animated background glow */}
+        <div className={`absolute -inset-4 rounded-xl blur-lg animate-pulse ${gameMode === 'pvp' ? 'bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20' : 'bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20'}`}></div>
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="roomId" className="font-bold text-green-500">Room ID:</label>
-          <input
-            id="roomId"
-            type="text"
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-            placeholder="Room ID (e.g., 'default', 'room1')"
-            maxLength={50}
-            disabled={isJoining}
-            className="p-2 border-2 border-gray-600 rounded-lg bg-white/10 text-white text-base focus:outline-none focus:border-green-500 focus:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed"
-          />
-        </div>
+        {/* Main panel with glassmorphism */}
+        <div className={`relative bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 backdrop-blur-xl p-8 rounded-xl border ${gameMode === 'pvp' ? 'border-red-500/30 shadow-2xl shadow-red-500/10' : 'border-blue-500/30 shadow-2xl shadow-blue-500/10'} text-white max-w-lg w-11/12`}>
+          {/* Enhanced title section */}
+          <div className="text-center mb-6 relative">
+            {/* Decorative background elements */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className={`w-24 h-px bg-gradient-to-r from-transparent via-${gameMode === 'pvp' ? 'red' : 'blue'}-400 to-transparent opacity-50`}></div>
+            </div>
 
-        {connectionError && (
-          <div className="bg-red-500/20 border border-red-400 text-red-400 p-4 rounded-lg text-center">
-            Error: {connectionError}
+            <h1 className={`text-2xl font-black mb-2 bg-gradient-to-r ${gameMode === 'pvp' ? 'from-red-400 via-orange-400 to-red-400' : 'from-blue-400 via-purple-400 to-blue-400'} bg-clip-text text-transparent relative`}>
+              {gameMode === 'pvp' ? 'ENTER AVERNUS' : 'JOIN MULTIPLAYER'}
+            </h1>
+
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className={`w-8 h-px bg-gradient-to-r from-transparent to-${gameMode === 'pvp' ? 'red' : 'blue'}-400/60`}></div>
+              <div className={`text-xs font-medium text-${gameMode === 'pvp' ? 'red' : 'blue'}-300/80 tracking-wider uppercase`}>
+                {gameMode === 'pvp' ? 'Player vs Player' : 'Choose Your Room'}
+              </div>
+              <div className={`w-8 h-px bg-gradient-to-l from-transparent to-${gameMode === 'pvp' ? 'red' : 'blue'}-400/60`}></div>
+            </div>
           </div>
-        )}
 
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="playerName" className={`font-bold ${gameMode === 'pvp' ? 'text-red-400' : 'text-green-500'}`}>YOUR NAME:</label>
+              <input
+                id="playerName"
+                type="text"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                placeholder="Enter your name"
+                maxLength={20}
+                disabled={isJoining}
+                className={`p-3 border-2 rounded-lg bg-gradient-to-br from-gray-800/80 via-gray-900/90 to-gray-800/80 backdrop-blur-sm text-white text-base focus:outline-none focus:border-${gameMode === 'pvp' ? 'red' : 'green'}-500 focus:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed border-gray-600/50 focus:border-opacity-75 transition-all duration-300`}
+              />
+            </div>
 
-        <div className="flex flex-col gap-3">
-          <button 
-            className="w-full px-8 py-2.5 text-lg bg-green-500 text-white border-none rounded-lg cursor-pointer transition-all duration-300 font-bold hover:bg-green-600 hover:-translate-y-1 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none"
-            onClick={handleJoin}
-            disabled={isJoining || !isConnected || !playerName.trim()}
-          >
-            {isJoining ? 'Entering...' : 'Enter Room'}
-          </button>
-          <button
-            className="w-full px-8 py-2.5 text-lg bg-gray-600 text-white border-none rounded-lg cursor-pointer transition-all duration-300 font-bold hover:bg-gray-500 hover:-translate-y-1 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:transform-none"
-            onClick={handleBack}
-            disabled={isJoining}
-          >
-            Back
-          </button>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="roomId" className={`font-bold ${gameMode === 'pvp' ? 'text-red-400' : 'text-green-500'}`}>ROOM ID:</label>
+              <input
+                id="roomId"
+                type="text"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+                placeholder="Room ID (e.g., 'default', 'room1')"
+                maxLength={50}
+                disabled={isJoining}
+                className={`p-3 border-2 rounded-lg bg-gradient-to-br from-gray-800/80 via-gray-900/90 to-gray-800/80 backdrop-blur-sm text-white text-base focus:outline-none focus:border-${gameMode === 'pvp' ? 'red' : 'green'}-500 focus:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed border-gray-600/50 focus:border-opacity-75 transition-all duration-300`}
+              />
+            </div>
+
+            {connectionError && (
+              <div className="bg-red-500/20 border border-red-400 text-red-400 p-4 rounded-lg text-center">
+                Error: {connectionError}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 items-center mt-6">
+              <div className="relative group">
+                <div className={`absolute -inset-1.5 rounded-lg blur-md transition-all duration-500 ${gameMode === 'pvp' ? 'bg-gradient-to-r from-red-500/30 via-orange-500/30 to-red-500/30 opacity-75 group-hover:opacity-100' : 'bg-gradient-to-r from-green-500/30 via-blue-500/30 to-green-500/30 opacity-75 group-hover:opacity-100'}`}></div>
+                <button
+                  className={`relative px-8 py-3 text-lg font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 w-full min-w-[240px] max-w-[320px] ${gameMode === 'pvp' ? 'bg-gradient-to-r from-red-600 via-red-500 to-orange-600 text-white border-red-400/50 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:from-red-500 hover:via-red-400 hover:to-orange-500 hover:border-red-300/70' : 'bg-gradient-to-r from-green-600 via-green-500 to-blue-600 text-white border-green-400/50 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:from-green-500 hover:via-green-400 hover:to-blue-500 hover:border-green-300/70'} disabled:bg-gradient-to-r disabled:from-gray-700 disabled:to-gray-600 disabled:text-gray-400 disabled:border-gray-600/50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none`}
+                  onClick={handleJoin}
+                  disabled={isJoining || !isConnected || !playerName.trim()}
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-white">
+                      {isJoining ? 'ENTERING...' : 'ENTER ROOM'}
+                    </span>
+                    {(!isJoining && isConnected && playerName.trim()) && (
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    )}
+                  </div>
+                </button>
+              </div>
+
+              <div className="relative group">
+                <div className="absolute -inset-1.5 rounded-lg blur-md transition-all duration-500 bg-gradient-to-r from-gray-500/30 via-gray-600/30 to-gray-500/30 opacity-75 group-hover:opacity-100"></div>
+                <button
+                  className="relative px-8 py-3 text-lg font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 w-full min-w-[240px] max-w-[320px] bg-gradient-to-r from-gray-700 to-gray-600 text-white border-gray-600/50 shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 hover:from-gray-600 hover:to-gray-500 hover:border-gray-500/70 disabled:bg-gradient-to-r disabled:from-gray-800 disabled:to-gray-700 disabled:text-gray-500 disabled:border-gray-700/50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none"
+                  onClick={handleBack}
+                  disabled={isJoining}
+                >
+                  BACK
+                </button>
+              </div>
+
+              {/* Subtle hint text */}
+              {gameMode === 'pvp' && (
+                <div className="text-center">
+
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-
       </div>
     </div>
   );

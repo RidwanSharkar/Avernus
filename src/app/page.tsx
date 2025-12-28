@@ -602,115 +602,259 @@ function HomeContent() {
         {/* Main Menu */}
         {gameMode === 'menu' && (
           <div className="absolute inset-0 flex items-center justify-center z-50 overflow-y-auto">
-            <div className="bg-gray-900/95 p-8 rounded-xl border-2 border-blue-500 text-white max-w-5xl w-11/12 my-6 relative">
+            <div className="relative">
+              {/* Animated background glow */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20 rounded-xl blur-lg animate-pulse"></div>
+
+              {/* Main panel with glassmorphism */}
+              <div className="relative bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 backdrop-blur-xl p-6 rounded-xl border border-blue-500/30 shadow-2xl shadow-blue-500/10 text-white max-w-4xl w-11/12 my-4">
               <button
                 onClick={() => setShowRulesPanel(true)}
-                className="absolute top-4 right-4 text-2xl hover:scale-110 transition-transform cursor-pointer text-yellow-400 hover:text-yellow-300"
+                className="absolute top-3 right-3 text-xl hover:scale-110 transition-transform cursor-pointer text-yellow-400 hover:text-yellow-300"
                 title="Rulebook"
               >
                 📜
               </button>
-              <h1 className="text-xl font-bold mb-1 text-blue-400 text-center"> SELECT 2 WEAPONS</h1>
+              {/* Enhanced title section */}
+              <div className="text-center mb-6 relative">
+                {/* Decorative background elements */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-24 h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-50"></div>
+                </div>
+
+                <h1 className="text-2xl font-black mb-2 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent relative">
+                  SELECT 2 WEAPONS
+                </h1>
+
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <div className="w-8 h-px bg-gradient-to-r from-transparent to-blue-400/60"></div>
+                  <div className="text-xs font-medium text-blue-300/80 tracking-wider uppercase">
+                    Choose Your Arsenal
+                  </div>
+                  <div className="w-8 h-px bg-gradient-to-l from-transparent to-blue-400/60"></div>
+                </div>
+              </div>
 
               {/* Weapon Selection Section */}
               <div className="mb-6">
-                <h2 className="text-sm font-normal mb-2 text-center text-blue-400">
-                  Primary Weapon becomes the '1' key | Secondary Weapon becomes the '2' key
-                </h2>
+                <div className="text-center mb-4">
+                  <p className="text-xs text-gray-300/90 leading-relaxed">
+                    <span className="font-semibold text-blue-300">Primary Weapon</span> becomes the '1' key |
+                    <span className="font-semibold text-purple-300 ml-1">Secondary Weapon</span> becomes the '2' key
+                  </p>
+                </div>
 
 
-                <div className="flex flex-wrap justify-center gap-3 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4">
                   {weapons.slice(0, 5).map((weapon) => {
                     const isSelected = tempSelectedWeapons.includes(weapon.type);
                     const canSelect = !isSelected && tempSelectedWeapons.length < 2;
                     const colorScheme = getWeaponColorScheme(weapon.type);
+                    const weaponPosition = getWeaponPosition(weapon.type);
 
                     return (
                       <div
                         key={weapon.type}
                         onClick={() => handleWeaponToggle(weapon.type)}
                         className={`
-                          w-full sm:w-72 md:w-64 lg:w-72 p-3 rounded-lg border-2 cursor-pointer transition-all duration-300
+                          group relative overflow-hidden rounded-xl cursor-pointer transition-all duration-500 transform
                           ${isSelected
-                            ? `${colorScheme.border} ${colorScheme.background} shadow-lg ${colorScheme.shadow}`
+                            ? `ring-2 ${colorScheme.border} ring-opacity-75 shadow-2xl ${colorScheme.shadow} scale-105`
                             : canSelect
-                              ? 'border-gray-600 bg-gray-800/50 hover:border-gray-400 hover:bg-gray-700/50'
-                              : 'border-gray-700 bg-gray-900/50 opacity-60 cursor-not-allowed'
+                              ? 'hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20'
+                              : 'opacity-50 cursor-not-allowed'
                           }
                         `}
                       >
-                        <div className="text-center mb-2">
-                          <div className="text-2xl mb-1">{weapon.icon}</div>
-                          <h3 className="text-base font-bold mb-1">{weapon.name}</h3>
-                        </div>
+                        {/* Animated background glow */}
+                        <div className={`
+                          absolute inset-0 transition-all duration-500 rounded-xl
+                          ${isSelected
+                            ? `${colorScheme.background} blur-sm`
+                            : canSelect
+                              ? 'bg-gradient-to-br from-gray-800/30 to-gray-900/30 group-hover:from-gray-700/40 group-hover:to-gray-800/40'
+                              : 'bg-gray-900/20'
+                          }
+                        `}></div>
 
-                        <p className="text-xs text-gray-300 mb-2 text-center">
-                          {weapon.description}
-                        </p>
+                        {/* Card content */}
+                        <div className="relative bg-gradient-to-br from-gray-800/80 via-gray-900/90 to-gray-800/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 h-full">
+                          {/* Selection indicator */}
+                          {isSelected && (
+                            <div className="absolute top-3 right-3">
+                              <div className={`w-3 h-3 rounded-full ${colorScheme.badge} shadow-lg animate-pulse`}></div>
+                            </div>
+                          )}
 
-                        {/* Weapon Abilities */}
-                        <div className="mb-2">
-                          <div className="text-xs text-gray-400 text-center mb-1">Abilities:</div>
-                          <div className="flex justify-center gap-1">
-                            {weaponAbilities[weapon.type]?.map((ability) => (
-                              <div
-                                key={ability.key}
-                                className="relative w-7 h-7 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer flex items-center justify-center"
-                                onMouseEnter={(e) => handleAbilityHover(e, ability)}
-                                onMouseLeave={handleAbilityLeave}
-                              >
-                                {/* Hotkey indicator */}
-                                <div className="absolute -top-1 -left-1 bg-gray-900 border border-gray-500 rounded text-xs text-white px-0.5 font-semibold leading-none text-[9px]">
-                                  {ability.key}
-                                </div>
-                                
-                                {/* Ability icon */}
-                                <div className="text-xs">
-                                  {getAbilityIcon(weapon.type, ability.key)}
-                                </div>
-                              </div>
-                            ))}
+                          {/* Weapon icon with enhanced styling */}
+                          <div className="text-center mb-3 relative">
+                            <div className={`
+                              inline-flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 mb-2
+                              ${isSelected
+                                ? `${colorScheme.background} ring-2 ${colorScheme.border} ring-opacity-50 shadow-lg`
+                                : canSelect
+                                  ? 'bg-gray-700/50 ring-1 ring-gray-600/50 group-hover:ring-gray-500/70'
+                                  : 'bg-gray-800/50 ring-1 ring-gray-700/30'
+                              }
+                            `}>
+                              <span className="text-2xl filter drop-shadow-sm">{weapon.icon}</span>
+                            </div>
+
+                            <h3 className={`
+                              text-sm font-bold mb-1 transition-colors duration-300
+                              ${isSelected ? 'text-white' : canSelect ? 'text-gray-200 group-hover:text-white' : 'text-gray-400'}
+                            `}>
+                              {weapon.name}
+                            </h3>
                           </div>
-                        </div>
 
-                        {isSelected && (
-                          <div className="text-center">
-                            <span className={`inline-block px-1.5 py-0.5 ${colorScheme.badge} text-white text-xs rounded-full`}>
-                              Selected ({getWeaponPosition(weapon.type) === 'primary' ? 'Primary' : 'Secondary'})
+                          {/* Weapon class/description */}
+                          <div className="text-center mb-3">
+                            <span className={`
+                              inline-block px-2 py-0.5 rounded-full text-xs font-semibold tracking-wide uppercase transition-all duration-300
+                              ${isSelected
+                                ? `${colorScheme.badge} text-white shadow-md`
+                                : canSelect
+                                  ? 'bg-gray-700/60 text-gray-300 group-hover:bg-gray-600/60'
+                                  : 'bg-gray-800/60 text-gray-500'
+                              }
+                            `}>
+                              {weapon.description}
                             </span>
                           </div>
-                        )}
+
+                          {/* Enhanced abilities section */}
+                          <div className="mb-3">
+                            <div className="text-xs text-gray-400 text-center mb-2 font-medium">ABILITIES</div>
+                            <div className="flex justify-center gap-2">
+                              {weaponAbilities[weapon.type]?.map((ability) => (
+                                <div
+                                  key={ability.key}
+                                  className={`
+                                    relative group/ability transition-all duration-200
+                                    ${isSelected || canSelect ? 'cursor-pointer' : 'cursor-not-allowed'}
+                                  `}
+                                  onMouseEnter={(e) => handleAbilityHover(e, ability)}
+                                  onMouseLeave={handleAbilityLeave}
+                                >
+                                  {/* Ability button with enhanced styling */}
+                                  <div className={`
+                                    w-7 h-7 rounded border flex items-center justify-center transition-all duration-200
+                                    ${isSelected || canSelect
+                                      ? 'bg-gray-700/80 border-gray-600 hover:bg-gray-600/80 hover:border-gray-500 hover:scale-110'
+                                      : 'bg-gray-800/60 border-gray-700/50'
+                                    }
+                                  `}>
+                                    <span className="text-xs font-medium">
+                                      {getAbilityIcon(weapon.type, ability.key)}
+                                    </span>
+                                  </div>
+
+                                  {/* Hotkey badge */}
+                                  <div className={`
+                                    absolute -top-1 -right-1 w-3.5 h-3.5 rounded flex items-center justify-center text-[7px] font-bold transition-all duration-200
+                                    ${isSelected
+                                      ? `${colorScheme.badge} text-white shadow-md`
+                                      : canSelect
+                                        ? 'bg-gray-600 text-gray-200 group-hover/ability:bg-gray-500'
+                                        : 'bg-gray-700 text-gray-500'
+                                    }
+                                  `}>
+                                    {ability.key}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Selection status */}
+                          {isSelected && weaponPosition && (
+                            <div className="text-center">
+                              <div className={`
+                                inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300
+                                ${weaponPosition === 'primary'
+                                  ? 'bg-blue-600/80 text-blue-100 border border-blue-500/50'
+                                  : 'bg-purple-600/80 text-purple-100 border border-purple-500/50'
+                                }
+                              `}>
+                                <div className={`
+                                  w-2 h-2 rounded-full
+                                  ${weaponPosition === 'primary' ? 'bg-blue-300' : 'bg-purple-300'}
+                                `}></div>
+                                {weaponPosition === 'primary' ? 'PRIMARY (1)' : 'SECONDARY (2)'}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Hover effect overlay */}
+                          {canSelect && !isSelected && (
+                            <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none"></div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Game Mode Buttons */}
-              <div className="flex flex-col gap-3 items-center">
-                <button
-                  className={`px-6 py-2.5 text-lg text-white border-none rounded-lg cursor-pointer transition-all duration-300 font-bold hover:-translate-y-1 w-1/2.5 ${
-                    selectedWeapons
-                      ? 'bg-red-500 hover:bg-red-600'
-                      : 'bg-gray-600 cursor-not-allowed'
-                  }`}
-                  onClick={() => {
-                    // Play interface sound
-                    if (window.audioSystem) {
-                      window.audioSystem.playUIInterfaceSound();
+              {/* Enhanced Game Mode Buttons */}
+              <div className="flex flex-col gap-3 items-center mt-6">
+                <div className="relative group">
+                  {/* Button glow effect */}
+                  <div className={`
+                    absolute -inset-1.5 rounded-lg blur-md transition-all duration-500
+                    ${selectedWeapons
+                      ? 'bg-gradient-to-r from-red-500/30 via-orange-500/30 to-red-500/30 opacity-75 group-hover:opacity-100'
+                      : 'bg-gray-600/20 opacity-50'
                     }
+                  `}></div>
 
-                    if (selectedWeapons) {
-                      setRoomJoinMode('pvp');
-                      setShowRoomJoin(true);
-                    }
-                  }}
-                  disabled={!selectedWeapons}
-                >
-                  ENTER AVERNUS
-                  {!selectedWeapons && ' (Select Weapons First)'}
-                </button>
+                  <button
+                    className={`
+                      relative px-6 py-3 text-lg font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 w-full min-w-[240px] max-w-[320px]
+                      ${selectedWeapons
+                        ? 'bg-gradient-to-r from-red-600 via-red-500 to-orange-600 text-white border-red-400/50 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:from-red-500 hover:via-red-400 hover:to-orange-500 hover:border-red-300/70'
+                        : 'bg-gradient-to-r from-gray-700 to-gray-600 text-gray-400 border-gray-600/50 cursor-not-allowed shadow-md'
+                      }
+                    `}
+                    onClick={() => {
+                      // Play interface sound
+                      if (window.audioSystem) {
+                        window.audioSystem.playUIInterfaceSound();
+                      }
+
+                      if (selectedWeapons) {
+                        setRoomJoinMode('pvp');
+                        setShowRoomJoin(true);
+                      }
+                    }}
+                    disabled={!selectedWeapons}
+                  >
+                    <div className="flex items-center justify-center gap-3">
+                      <span className={selectedWeapons ? 'text-white' : 'text-gray-400'}>
+                        ⚔️ ENTER AVERNUS
+                      </span>
+                      {selectedWeapons && (
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      )}
+                    </div>
+
+                    {!selectedWeapons && (
+                      <div className="text-sm text-gray-300 mt-1 font-normal opacity-75">
+                        Select 2 Weapons First
+                      </div>
+                    )}
+                  </button>
+                </div>
+
+                {/* Subtle hint text */}
+                {selectedWeapons && (
+                  <div className="text-center">
+         
+                  </div>
+                )}
               </div>
+            </div>
             </div>
           </div>
         )}
