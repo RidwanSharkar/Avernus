@@ -4280,7 +4280,7 @@ export class ControlSystem extends System {
     // Gain rage for using charge ability (+20 rage)
     const gameUI = (window as any).gameUI;
     if (gameUI) {
-      gameUI.gainRage(20);
+      gameUI.gainRage(25);
     }
     
     // Start the charge movement using the separate charge system

@@ -62,7 +62,7 @@ function ResourceBar({ current, max, gradient, glowColor, icon, label }: Resourc
     <div className="relative w-full group">
       {/* Outer container with tapered ends and metallic border */}
       <div
-        className="relative w-full h-8"
+        className="relative w-full h-10"
         style={{
           clipPath: `polygon(${angleCut}px 0%, calc(100% - ${angleCut}px) 0%, 100% 50%, calc(100% - ${angleCut}px) 100%, ${angleCut}px 100%, 0% 50%)`,
           background: 'linear-gradient(135deg, rgba(60,60,70,0.95) 0%, rgba(80,80,90,0.9) 50%, rgba(60,60,70,0.95) 100%)',
@@ -593,14 +593,14 @@ export default function GameUI({
       {/* Skill Points Notification */}
       {skillPointData && skillPointData.skillPoints > 0 && (
         <div 
-          className="fixed bottom-20 left-1/2 z-50 animate-fade-in" 
+          className="fixed bottom-24 left-1/2 z-50 animate-fade-in" 
           style={{ 
             transform: 'translateX(-50%) scale(0.85)',
             transformOrigin: 'center bottom'
           }}
         >
           <div
-            className="px-4 py-0.5 rounded-2xl"
+            className="px-5 py-0.25 rounded-2xl"
             style={{
               background: 'linear-gradient(180deg, rgba(15,15,25,0.95) 0%, rgba(10,10,20,0.98) 100%)',
               backdropFilter: 'blur(20px)',
@@ -635,22 +635,17 @@ export default function GameUI({
         <div 
           className="relative min-w-[310px] p-3 rounded-2xl"
           style={{
-            background: 'linear-gradient(180deg, rgba(15,15,25,0.95) 0%, rgba(10,10,20,0.98) 100%)',
-            backdropFilter: 'blur(20px)',
-            boxShadow: `
-              0 0 0 1px rgba(255,255,255,0.05),
-              0 4px 30px rgba(0,0,0,0.5),
-              0 0 60px rgba(99,102,241,0.1),
-              inset 0 1px 0 rgba(255,255,255,0.05)
-            `,
-            border: '1px solid rgba(255,255,255,0.08)'
+            background: 'transparent',
+            backdropFilter: 'none',
+            boxShadow: 'none',
+            border: 'none'
           }}
         >
-          {/* Decorative corner accents */}
-          <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-indigo-500/30 rounded-tl-lg" />
-          <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-indigo-500/30 rounded-tr-lg" />
-          <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-indigo-500/30 rounded-bl-lg" />
-          <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-indigo-500/30 rounded-br-lg" />
+          {/* Decorative corner accents - hidden */}
+          <div className="hidden absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-indigo-500/30 rounded-tl-lg" />
+          <div className="hidden absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-indigo-500/30 rounded-tr-lg" />
+          <div className="hidden absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-indigo-500/30 rounded-bl-lg" />
+          <div className="hidden absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-indigo-500/30 rounded-br-lg" />
 
           {/* Shield Bar */}
           <div className="mb-1.5">
