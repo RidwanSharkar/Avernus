@@ -242,6 +242,54 @@ function HomeContent() {
     }
   };
 
+  // Get button styling classes for weapon position indicator
+  const getWeaponPositionButtonClasses = (weaponType: WeaponType) => {
+    switch (weaponType) {
+      case WeaponType.BOW:
+        return {
+          bg: 'bg-green-600/80',
+          text: 'text-green-100',
+          border: 'border-green-500/50',
+          dot: 'bg-green-300'
+        };
+      case WeaponType.SWORD:
+        return {
+          bg: 'bg-sky-500/80',
+          text: 'text-sky-100',
+          border: 'border-sky-400/50',
+          dot: 'bg-sky-300'
+        };
+      case WeaponType.SCYTHE:
+        return {
+          bg: 'bg-blue-600/80',
+          text: 'text-blue-100',
+          border: 'border-blue-500/50',
+          dot: 'bg-blue-300'
+        };
+      case WeaponType.RUNEBLADE:
+        return {
+          bg: 'bg-purple-600/80',
+          text: 'text-purple-100',
+          border: 'border-purple-500/50',
+          dot: 'bg-purple-300'
+        };
+      case WeaponType.SABRES:
+        return {
+          bg: 'bg-red-600/80',
+          text: 'text-red-100',
+          border: 'border-red-500/50',
+          dot: 'bg-red-300'
+        };
+      default:
+        return {
+          bg: 'bg-green-600/80',
+          text: 'text-green-100',
+          border: 'border-green-500/50',
+          dot: 'bg-green-300'
+        };
+    }
+  };
+
   // Weapon options
   const weapons: WeaponOption[] = [
     {
@@ -659,7 +707,7 @@ function HomeContent() {
                         className={`
                           group relative overflow-hidden rounded-xl cursor-pointer transition-all duration-500 transform
                           ${isSelected
-                            ? `ring-2 ${colorScheme.border} ring-opacity-75 shadow-2xl ${colorScheme.shadow} scale-105`
+                            ? `shadow-2xl ${colorScheme.shadow} scale-105`
                             : canSelect
                               ? 'hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20'
                               : 'opacity-50 cursor-not-allowed'
@@ -678,7 +726,9 @@ function HomeContent() {
                         `}></div>
 
                         {/* Card content */}
-                        <div className="relative bg-gradient-to-br from-gray-800/80 via-gray-900/90 to-gray-800/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 h-full">
+                        <div className={`relative bg-gradient-to-br from-gray-800/80 via-gray-900/90 to-gray-800/80 backdrop-blur-sm rounded-xl p-4 h-full ${
+                          isSelected ? `border-2 ${colorScheme.border}` : 'border border-gray-700/50'
+                        }`}>
                           {/* Selection indicator */}
                           {isSelected && (
                             <div className="absolute top-3 right-3">
@@ -691,10 +741,10 @@ function HomeContent() {
                             <div className={`
                               inline-flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 mb-2
                               ${isSelected
-                                ? `${colorScheme.background} ring-2 ${colorScheme.border} ring-opacity-50 shadow-lg`
+                                ? `${colorScheme.background} border-2 ${colorScheme.border} shadow-lg`
                                 : canSelect
-                                  ? 'bg-gray-700/50 ring-1 ring-gray-600/50 group-hover:ring-gray-500/70'
-                                  : 'bg-gray-800/50 ring-1 ring-gray-700/30'
+                                  ? 'bg-gray-700/50 border border-gray-600/50 group-hover:border-gray-500/70'
+                                  : 'bg-gray-800/50 border border-gray-700/30'
                               }
                             `}>
                               <span className="text-2xl filter drop-shadow-sm">{weapon.icon}</span>
@@ -768,23 +818,22 @@ function HomeContent() {
                           </div>
 
                           {/* Selection status */}
-                          {isSelected && weaponPosition && (
-                            <div className="text-center">
-                              <div className={`
-                                inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300
-                                ${weaponPosition === 'primary'
-                                  ? 'bg-blue-600/80 text-blue-100 border border-blue-500/50'
-                                  : 'bg-purple-600/80 text-purple-100 border border-purple-500/50'
-                                }
-                              `}>
+                          {isSelected && weaponPosition && (() => {
+                            const buttonClasses = getWeaponPositionButtonClasses(weapon.type);
+                            return (
+                              <div className="text-center">
                                 <div className={`
-                                  w-2 h-2 rounded-full
-                                  ${weaponPosition === 'primary' ? 'bg-blue-300' : 'bg-purple-300'}
-                                `}></div>
-                                {weaponPosition === 'primary' ? 'PRIMARY (1)' : 'SECONDARY (2)'}
+                                  inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300
+                                  ${buttonClasses.bg} ${buttonClasses.text} border ${buttonClasses.border}
+                                `}>
+                                  <div className={`
+                                    w-2 h-2 rounded-full ${buttonClasses.dot}
+                                  `}></div>
+                                  {weaponPosition === 'primary' ? 'PRIMARY (1)' : 'SECONDARY (2)'}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            );
+                          })()}
 
                           {/* Hover effect overlay */}
                           {canSelect && !isSelected && (
