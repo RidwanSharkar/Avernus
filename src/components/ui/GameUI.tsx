@@ -56,48 +56,122 @@ interface ResourceBarProps {
 function ResourceBar({ current, max, gradient, glowColor, icon, label }: ResourceBarProps) {
   const percentage = Math.max(0, Math.min(100, (current / max) * 100));
   const isLow = percentage < 30;
+  const angleCut = 10; // pixels for the angled taper at ends
 
   return (
     <div className="relative w-full group">
-      {/* Outer container with techno border */}
+      {/* Outer container with tapered ends and metallic border */}
       <div
-        className="relative w-full h-8 border border-gray-600/50 rounded-sm overflow-hidden"
+        className="relative w-full h-8"
         style={{
-          background: 'linear-gradient(135deg, rgba(10,10,15,0.95) 0%, rgba(20,20,30,0.9) 100%)',
-          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.8), 0 0 20px ${glowColor}20, 0 1px 0 rgba(255,255,255,0.05)`
+          clipPath: `polygon(${angleCut}px 0%, calc(100% - ${angleCut}px) 0%, 100% 50%, calc(100% - ${angleCut}px) 100%, ${angleCut}px 100%, 0% 50%)`,
+          background: 'linear-gradient(135deg, rgba(60,60,70,0.95) 0%, rgba(80,80,90,0.9) 50%, rgba(60,60,70,0.95) 100%)',
+          boxShadow: `
+            inset 0 2px 0 rgba(255,255,255,0.3),
+            inset 0 -2px 0 rgba(0,0,0,0.6),
+            inset 2px 0 0 rgba(255,255,255,0.2),
+            inset -2px 0 0 rgba(0,0,0,0.4),
+            0 0 20px ${glowColor}15,
+            0 2px 4px rgba(0,0,0,0.3)
+          `,
+          border: '3px solid rgba(200,200,220,0.5)',
+          position: 'relative'
         }}
       >
-        {/* Inner track with sharp corners */}
+        {/* Metallic border highlight */}
         <div
-          className="absolute inset-[1px] rounded-[2px] overflow-hidden"
+          className="absolute inset-0 pointer-events-none"
           style={{
+            clipPath: `polygon(${angleCut}px 0%, calc(100% - ${angleCut}px) 0%, 100% 50%, calc(100% - ${angleCut}px) 100%, ${angleCut}px 100%, 0% 50%)`,
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.2) 100%)',
+            border: '3px solid rgba(255,255,255,0.3)'
+          }}
+        />
+
+        {/* Corner rivets/screws at tapered ends */}
+        <div
+          className="absolute top-0 left-0 w-2.5 h-2.5 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(100,100,120,0.8) 0%, rgba(40,40,50,0.9) 100%)',
+            borderRadius: '50%',
+            boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), 0 0 2px rgba(0,0,0,0.5)',
+            transform: `translate(${angleCut - 4}px, -4px)`
+          }}
+        />
+        <div
+          className="absolute top-0 right-0 w-2.5 h-2.5 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(100,100,120,0.8) 0%, rgba(40,40,50,0.9) 100%)',
+            borderRadius: '50%',
+            boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), 0 0 2px rgba(0,0,0,0.5)',
+            transform: `translate(calc(-${angleCut}px + 4px), -4px)`
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-2.5 h-2.5 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(100,100,120,0.8) 0%, rgba(40,40,50,0.9) 100%)',
+            borderRadius: '50%',
+            boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), 0 0 2px rgba(0,0,0,0.5)',
+            transform: `translate(${angleCut - 4}px, 4px)`
+          }}
+        />
+        <div
+          className="absolute bottom-0 right-0 w-2.5 h-2.5 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(100,100,120,0.8) 0%, rgba(40,40,50,0.9) 100%)',
+            borderRadius: '50%',
+            boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), 0 0 2px rgba(0,0,0,0.5)',
+            transform: `translate(calc(-${angleCut}px + 4px), 4px)`
+          }}
+        />
+
+        {/* Inner track with tapered ends */}
+        <div
+          className="absolute inset-[3px] overflow-hidden"
+          style={{
+            clipPath: `polygon(${angleCut - 3}px 0%, calc(100% - ${angleCut - 3}px) 0%, 100% 50%, calc(100% - ${angleCut - 3}px) 100%, ${angleCut - 3}px 100%, 0% 50%)`,
             background: 'linear-gradient(135deg, rgba(5,5,10,0.98) 0%, rgba(15,15,25,0.95) 100%)',
-            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.9), inset 0 -1px 0 rgba(255,255,255,0.05)'
+            boxShadow: 'inset 0 2px 3px rgba(0,0,0,0.9), inset 0 -2px 0 rgba(255,255,255,0.05)'
           }}
         >
           {/* Fill bar container - use transform for smooth animation */}
           <div
-            className="h-full w-full rounded-[1px] relative"
+            className="h-full w-full relative"
             style={{
               transform: `scaleX(${percentage / 100})`,
               transformOrigin: 'left center',
               transition: 'transform 0.15s ease-out',
               background: gradient,
-              boxShadow: `0 0 12px ${glowColor}50, inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.4)`
+              boxShadow: `
+                0 0 15px ${glowColor}60,
+                inset 0 1px 0 rgba(255,255,255,0.25),
+                inset 0 -1px 0 rgba(0,0,0,0.5)
+              `,
+              filter: `brightness(1.1) saturate(1.2)`
             }}
           >
-            {/* Highlight at top */}
+            {/* Highlight at top for glossy effect */}
             <div
-              className="absolute inset-x-0 top-0 h-[35%] rounded-[1px] pointer-events-none"
+              className="absolute inset-x-0 top-0 h-[40%] pointer-events-none"
               style={{
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%)'
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%)'
+              }}
+            />
+
+            {/* Subtle inner glow */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `radial-gradient(ellipse at center, ${glowColor}40 0%, transparent 70%)`,
+                opacity: 0.6
               }}
             />
 
             {/* Pulse effect when low */}
             {isLow && (
               <div
-                className="absolute inset-0 rounded-[1px] pointer-events-none"
+                className="absolute inset-0 pointer-events-none"
                 style={{
                   background: 'rgba(255,0,0,0.3)',
                   animation: 'lowHealthPulse 1s ease-in-out infinite'
@@ -110,15 +184,15 @@ function ResourceBar({ current, max, gradient, glowColor, icon, label }: Resourc
         {/* Value display */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
           <div className="flex items-center gap-1.5">
-            {icon && <span className="text-xs opacity-80">{icon}</span>}
+            {icon && <span className="text-xs opacity-90 drop-shadow-lg">{icon}</span>}
             <span 
               className="text-xs font-bold tracking-wide"
               style={{
                 color: '#fff',
-                textShadow: '0 1px 2px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.5)'
+                textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.4)'
               }}
             >
-              {Math.round(current)}<span className="opacity-50 mx-0.5">/</span>{max}
+              {Math.round(current)}<span className="opacity-60 mx-0.5">/</span>{max}
             </span>
           </div>
         </div>
@@ -526,7 +600,7 @@ export default function GameUI({
           }}
         >
           <div
-            className="px-4 py-1.5 rounded-2xl"
+            className="px-4 py-0.5 rounded-2xl"
             style={{
               background: 'linear-gradient(180deg, rgba(15,15,25,0.95) 0%, rgba(10,10,20,0.98) 100%)',
               backdropFilter: 'blur(20px)',

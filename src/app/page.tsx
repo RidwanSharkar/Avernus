@@ -650,12 +650,12 @@ function HomeContent() {
         {/* Main Menu */}
         {gameMode === 'menu' && (
           <div className="absolute inset-0 flex items-center justify-center z-50 overflow-y-auto">
-            <div className="relative">
+            <div className="relative max-w-4xl w-11/12">
               {/* Animated background glow */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20 rounded-xl blur-lg animate-pulse"></div>
+              <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20 rounded-xl blur-lg animate-pulse"></div>
 
               {/* Main panel with glassmorphism */}
-              <div className="relative bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 backdrop-blur-xl p-6 rounded-xl border border-blue-500/30 shadow-2xl shadow-blue-500/10 text-white max-w-4xl w-11/12 my-4">
+              <div className="relative bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 backdrop-blur-xl p-6 rounded-xl border border-blue-500/30 shadow-2xl shadow-blue-500/10 text-white my-4">
               <button
                 onClick={() => setShowRulesPanel(true)}
                 className="absolute top-3 right-3 text-xl hover:scale-110 transition-transform cursor-pointer text-yellow-400 hover:text-yellow-300"
@@ -664,36 +664,70 @@ function HomeContent() {
                 📜
               </button>
               {/* Enhanced title section */}
-              <div className="text-center mb-6 relative">
-                {/* Decorative background elements */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-24 h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-50"></div>
-                </div>
-
-                <h1 className="text-2xl font-black mb-2 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent relative">
-                  SELECT 2 WEAPONS
-                </h1>
-
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <div className="w-8 h-px bg-gradient-to-r from-transparent to-blue-400/60"></div>
-                  <div className="text-xs font-medium text-blue-300/80 tracking-wider uppercase">
-                    Choose Your Arsenal
+              <div className="text-center mb-2 relative">
+                {/* Enhanced title with decorative lines */}
+                <div className="relative">
+                  {/* Text with enhanced styling */}
+                  <div className="relative z-10 mb-3">
+                    <h1 className="text-3xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-300 tracking-widest uppercase drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">
+                      SELECT TWO WEAPONS
+                    </h1>
                   </div>
-                  <div className="w-8 h-px bg-gradient-to-l from-transparent to-blue-400/60"></div>
+                  
+                  {/* Decorative lines below the text */}
+                  <div className="flex items-center justify-center gap-3 relative z-10">
+                    <div className="h-px bg-gradient-to-r from-transparent via-blue-400/70 to-blue-400/90 flex-1 max-w-32"></div>
+                    <div className="w-2 h-2 rounded-full bg-blue-400/60"></div>
+                    <div className="h-px bg-gradient-to-l from-transparent via-blue-400/70 to-blue-400/90 flex-1 max-w-32"></div>
+                  </div>
                 </div>
               </div>
 
               {/* Weapon Selection Section */}
               <div className="mb-6">
                 <div className="text-center mb-4">
-                  <p className="text-xs text-gray-300/90 leading-relaxed">
-                    <span className="font-semibold text-blue-300">Primary Weapon</span> becomes the '1' key |
-                    <span className="font-semibold text-purple-300 ml-1">Secondary Weapon</span> becomes the '2' key
-                  </p>
+                  {(() => {
+                    // Find primary and secondary weapons
+                    const primaryWeapon = tempSelectedWeapons.find(w => weaponPositions[w] === 'primary');
+                    const secondaryWeapon = tempSelectedWeapons.find(w => weaponPositions[w] === 'secondary');
+                    
+                    // Get color schemes for selected weapons, or use default weapon types for color scheme
+                    const primaryColorScheme = primaryWeapon 
+                      ? getWeaponColorScheme(primaryWeapon)
+                      : getWeaponColorScheme(WeaponType.SCYTHE); // Default to blue
+                    const secondaryColorScheme = secondaryWeapon 
+                      ? getWeaponColorScheme(secondaryWeapon)
+                      : getWeaponColorScheme(WeaponType.RUNEBLADE); // Default to purple
+                    
+                    // Extract text color class from color scheme
+                    const getTextColorClass = (scheme: ReturnType<typeof getWeaponColorScheme>) => {
+                      // Map border colors to text colors
+                      if (scheme.border.includes('green')) return 'text-green-300';
+                      if (scheme.border.includes('blue')) return 'text-blue-300';
+                      if (scheme.border.includes('sky')) return 'text-sky-300';
+                      if (scheme.border.includes('purple')) return 'text-purple-300';
+                      if (scheme.border.includes('red')) return 'text-red-300';
+                      return 'text-blue-300'; // default
+                    };
+                    
+                    const primaryTextColor = primaryWeapon 
+                      ? getTextColorClass(primaryColorScheme) 
+                      : 'text-blue-300';
+                    const secondaryTextColor = secondaryWeapon 
+                      ? getTextColorClass(secondaryColorScheme) 
+                      : 'text-purple-300';
+                    
+                    return (
+                      <p className="text-xs text-gray-300/90 leading-relaxed">
+                        <span className={`font-semibold ${primaryTextColor}`}>Primary Weapon</span> becomes the '1' key |
+                        <span className={`font-semibold ${secondaryTextColor} ml-1`}>Secondary Weapon</span> becomes the '2' key
+                      </p>
+                    );
+                  })()}
                 </div>
 
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4">
+                <div className="flex flex-wrap justify-center gap-4 mb-4">
                   {weapons.slice(0, 5).map((weapon) => {
                     const isSelected = tempSelectedWeapons.includes(weapon.type);
                     const canSelect = !isSelected && tempSelectedWeapons.length < 2;
@@ -704,8 +738,9 @@ function HomeContent() {
                       <div
                         key={weapon.type}
                         onClick={() => handleWeaponToggle(weapon.type)}
-                        className={`
+                          className={`
                           group relative overflow-hidden rounded-xl cursor-pointer transition-all duration-500 transform
+                          w-full md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)] xl:w-[calc(33.333%-0.667rem)]
                           ${isSelected
                             ? `shadow-2xl ${colorScheme.shadow} scale-105`
                             : canSelect
@@ -737,7 +772,7 @@ function HomeContent() {
                           )}
 
                           {/* Weapon icon with enhanced styling */}
-                          <div className="text-center mb-3 relative">
+                          <div className="text-center mb-1 relative">
                             <div className={`
                               inline-flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 mb-2
                               ${isSelected
@@ -776,7 +811,7 @@ function HomeContent() {
                           {/* Enhanced abilities section */}
                           <div className="mb-3">
                             <div className="text-xs text-gray-400 text-center mb-2 font-medium">ABILITIES</div>
-                            <div className="flex justify-center gap-2">
+                            <div className="flex justify-center gap-2.5">
                               {weaponAbilities[weapon.type]?.map((ability) => (
                                 <div
                                   key={ability.key}
@@ -789,7 +824,7 @@ function HomeContent() {
                                 >
                                   {/* Ability button with enhanced styling */}
                                   <div className={`
-                                    w-7 h-7 rounded border flex items-center justify-center transition-all duration-200
+                                    w-8 h-8 rounded border flex items-center justify-center transition-all duration-200
                                     ${isSelected || canSelect
                                       ? 'bg-gray-700/80 border-gray-600 hover:bg-gray-600/80 hover:border-gray-500 hover:scale-110'
                                       : 'bg-gray-800/60 border-gray-700/50'
@@ -823,7 +858,7 @@ function HomeContent() {
                             return (
                               <div className="text-center">
                                 <div className={`
-                                  inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300
+                                  inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-xs font-semibold transition-all duration-300
                                   ${buttonClasses.bg} ${buttonClasses.text} border ${buttonClasses.border}
                                 `}>
                                   <div className={`
@@ -847,7 +882,7 @@ function HomeContent() {
               </div>
 
               {/* Enhanced Game Mode Buttons */}
-              <div className="flex flex-col gap-3 items-center mt-6">
+              <div className="flex flex-col gap-2 items-center mt-6">
                 <div className="relative group">
                   {/* Button glow effect */}
                   <div className={`
@@ -860,7 +895,7 @@ function HomeContent() {
 
                   <button
                     className={`
-                      relative px-6 py-3 text-lg font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 w-full min-w-[240px] max-w-[320px]
+                      relative px-6 py-2 text-lg font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 w-full min-w-[240px] max-w-[320px]
                       ${selectedWeapons
                         ? 'bg-gradient-to-r from-red-600 via-red-500 to-orange-600 text-white border-red-400/50 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:from-red-500 hover:via-red-400 hover:to-orange-500 hover:border-red-300/70'
                         : 'bg-gradient-to-r from-gray-700 to-gray-600 text-gray-400 border-gray-600/50 cursor-not-allowed shadow-md'
@@ -880,8 +915,11 @@ function HomeContent() {
                     disabled={!selectedWeapons}
                   >
                     <div className="flex items-center justify-center gap-3">
-                      <span className={selectedWeapons ? 'text-white' : 'text-gray-400'}>
-                        ⚔️ ENTER AVERNUS
+                    {selectedWeapons && (
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      )}
+                      <span className={selectedWeapons ? 'text-gray-200' : 'text-gray-400'}>
+                         ENTER
                       </span>
                       {selectedWeapons && (
                         <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -1062,12 +1100,12 @@ function HomeContent() {
             </div>
             
             {/* Performance Stats */}
-            <div className="absolute top-2 right-4 text-white font-mono text-xs">
+            <div className="absolute top-2 right-3 text-white font-mono text-xs">
               <div id="fps-counter">FPS: --</div>
 
               {gameMode === 'pvp' && (
                 <div className="mt-0.5 text-red-400">
-                  <div>PVP Mode</div>
+
                 </div>
               )}
             </div>

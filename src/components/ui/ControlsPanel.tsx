@@ -25,7 +25,8 @@ export default function ControlsPanel({ className = '' }: ControlsPanelProps) {
   }, [isExpanded]);
 
   const controls = [
-    { key: 'WASD', description: 'Double Tap to Dash', icon: '⌨️' },
+    { key: 'WASD', description: 'Movement', icon: '⌨️' },
+    { key: 'Double Tap WASD', description: 'Dash', icon: '⌨️' },
     { key: 'Right Click (Hold)', description: 'Camera', icon: '🖱️' },
     { key: 'Left Click (Hold)', description: 'Attack', icon: '⚔️' },
     { key: 'Spacebar', description: 'Jump', icon: '⌨️' }
@@ -71,7 +72,7 @@ export default function ControlsPanel({ className = '' }: ControlsPanelProps) {
                 </div>
 
                 {/* Expand/Collapse Button */}
-                <div className="w-7 h-7 rounded-lg bg-black/40 border border-white/20 flex items-center justify-center">
+                <div className="w-7 h-6 rounded-lg bg-black/40 border border-white/20 flex items-center justify-center">
                   <span
                     className="text-gray-400 text-xs transition-transform duration-200"
                     style={{
@@ -84,7 +85,7 @@ export default function ControlsPanel({ className = '' }: ControlsPanelProps) {
                 </div>
               </>
             ) : (
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-400/30 flex items-center justify-center">
+              <div className="w-7 h-6 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-400/30 flex items-center justify-center">
                 <span className="text-sm">🎮</span>
               </div>
             )}

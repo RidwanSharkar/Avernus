@@ -12,7 +12,7 @@ export function RuneCounter({
   criticalDamageMultiplier
 }: RuneCounterProps) {
   return (
-    <div className="flex items-center gap-0.5 bg-black bg-opacity-60 backdrop-blur-sm rounded-lg px-2 py-1 border border-gray-600">
+    <div className="flex items-center gap-0.5 bg-black bg-opacity-30 backdrop-blur-sm rounded-lg px-2 py-1 border border-gray-600">
 
       <div className="flex flex-col text-xs text-white">
 

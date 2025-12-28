@@ -193,7 +193,7 @@ const SmiteComponent = memo(function Smite({
 
   // Function to perform damage in a radius around the impact location
   const performSmiteDamage = () => {
-    if (damageTriggered.current || !enemyData.length) return;
+    if (damageTriggered.current) return;
 
     damageTriggered.current = true;
     const baseSmiteDamage = 100;

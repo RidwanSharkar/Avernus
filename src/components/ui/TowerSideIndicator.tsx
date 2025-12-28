@@ -29,7 +29,7 @@ export function TowerSideIndicator({ side, towerHealth, towerMaxHealth, towerPos
   const distance = Math.sqrt(dx * dx + dz * dz);
 
   return (
-    <div className="fixed bottom-4 left-4 z-50">
+    <div className="fixed bottom-5 left-5 z-50">
       <div 
         className="relative rounded-2xl overflow-hidden cursor-pointer select-none transition-all duration-300 hover:scale-105"
         style={{
