@@ -668,9 +668,9 @@ function HomeContent() {
                 {/* Enhanced title with decorative lines */}
                 <div className="relative">
                   {/* Text with enhanced styling */}
-                  <div className="relative z-10 mb-3">
+                  <div className="relative z-10 mb-1">
                     <h1 className="text-3xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-300 tracking-widest uppercase drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">
-                      SELECT TWO WEAPONS
+                    AVERNUS
                     </h1>
                   </div>
                   
@@ -712,16 +712,21 @@ function HomeContent() {
                     
                     const primaryTextColor = primaryWeapon 
                       ? getTextColorClass(primaryColorScheme) 
-                      : 'text-blue-300';
+                      : 'text-cyan-300';
                     const secondaryTextColor = secondaryWeapon 
                       ? getTextColorClass(secondaryColorScheme) 
-                      : 'text-purple-300';
+                      : 'text-cyan-300';
                     
                     return (
-                      <p className="text-xs text-gray-300/90 leading-relaxed">
-                        <span className={`font-semibold ${primaryTextColor}`}>Primary Weapon</span> becomes the '1' key |
-                        <span className={`font-semibold ${secondaryTextColor} ml-1`}>Secondary Weapon</span> becomes the '2' key
-                      </p>
+                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-xs text-gray-300/90 leading-relaxed max-w-2xl mx-auto">
+                        <div className="text-right">
+                          <span className={`font-semibold ${primaryTextColor}`}>Primary Weapon</span> becomes the '1' key
+                        </div>
+                        <div className="text-gray-400/60 text-center">|</div>
+                        <div className="text-left">
+                          <span className={`font-semibold ${secondaryTextColor}`}>Secondary Weapon</span> becomes the '2' key
+                        </div>
+                      </div>
                     );
                   })()}
                 </div>
@@ -887,7 +892,7 @@ function HomeContent() {
                   {/* Button glow effect */}
                   <div className={`
                     absolute -inset-1.5 rounded-lg blur-md transition-all duration-500
-                    ${selectedWeapons
+                    ${tempSelectedWeapons.length === 2
                       ? 'bg-gradient-to-r from-red-500/30 via-orange-500/30 to-red-500/30 opacity-75 group-hover:opacity-100'
                       : 'bg-gray-600/20 opacity-50'
                     }
@@ -896,7 +901,7 @@ function HomeContent() {
                   <button
                     className={`
                       relative px-6 py-2 text-lg font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 w-full min-w-[240px] max-w-[320px]
-                      ${selectedWeapons
+                      ${tempSelectedWeapons.length === 2
                         ? 'bg-gradient-to-r from-red-600 via-red-500 to-orange-600 text-white border-red-400/50 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:from-red-500 hover:via-red-400 hover:to-orange-500 hover:border-red-300/70'
                         : 'bg-gradient-to-r from-gray-700 to-gray-600 text-gray-400 border-gray-600/50 cursor-not-allowed shadow-md'
                       }
@@ -907,28 +912,28 @@ function HomeContent() {
                         window.audioSystem.playUIInterfaceSound();
                       }
 
-                      if (selectedWeapons) {
+                      if (tempSelectedWeapons.length === 2) {
                         setRoomJoinMode('pvp');
                         setShowRoomJoin(true);
                       }
                     }}
-                    disabled={!selectedWeapons}
+                    disabled={tempSelectedWeapons.length !== 2}
                   >
                     <div className="flex items-center justify-center gap-3">
-                    {selectedWeapons && (
+                    {tempSelectedWeapons.length === 2 && (
                         <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                       )}
-                      <span className={selectedWeapons ? 'text-gray-200' : 'text-gray-400'}>
+                      <span className={tempSelectedWeapons.length === 2 ? 'text-gray-200' : 'text-gray-400'}>
                          ENTER
                       </span>
-                      {selectedWeapons && (
+                      {tempSelectedWeapons.length === 2 && (
                         <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                       )}
                     </div>
 
-                    {!selectedWeapons && (
-                      <div className="text-sm text-gray-300 mt-1 font-normal opacity-75">
-                        Select 2 Weapons First
+                    {tempSelectedWeapons.length !== 2 && (
+                      <div className="text-xs text-gray-300 mt-0 font-normal opacity-75">
+                        Select 2 Weapons
                       </div>
                     )}
                   </button>
@@ -949,16 +954,21 @@ function HomeContent() {
         {/* Rules Panel */}
         {showRulesPanel && (
           <div
-            className="absolute inset-0 bg-black/80 flex items-center justify-center z-50"
+            className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 overflow-y-auto"
             onClick={() => setShowRulesPanel(false)}
           >
-            <div
-              className="bg-gray-900 border-2 border-yellow-400 rounded-xl p-8 max-w-2xl w-11/12 max-h-[80vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-yellow-400 mb-2">📜 RULEBOOK</h2>
-              </div>
+            <div className="relative max-w-2xl w-11/12 my-4">
+              {/* Animated background glow */}
+              <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20 rounded-xl blur-lg animate-pulse"></div>
+
+              {/* Main panel with glassmorphism */}
+              <div
+                className="relative bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 backdrop-blur-xl p-8 pr-5 rounded-xl border border-blue-500/30 shadow-2xl shadow-blue-500/10 text-white max-h-[80vh] overflow-y-auto rulebook-scrollbar"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold text-yellow-400 mb-2">📜 RULEBOOK</h2>
+                </div>
 
               <div className="text-white space-y-4">
                 <div className="border-b border-gray-600 pb-4">
@@ -1019,6 +1029,7 @@ function HomeContent() {
                 </div>
 
               
+              </div>
               </div>
             </div>
           </div>

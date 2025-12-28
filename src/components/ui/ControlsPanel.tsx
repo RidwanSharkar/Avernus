@@ -97,7 +97,7 @@ export default function ControlsPanel({ className = '' }: ControlsPanelProps) {
               {controls.map((control, index) => (
                 <div
                   key={control.key}
-                  className="px-3 py-2.5 rounded-lg bg-black/10 border border-white/5 hover:bg-indigo-500/10 transition-all duration-200 flex items-center justify-between group"
+                  className="px-3 py-2 rounded-lg bg-black/10 border border-white/5 hover:bg-indigo-500/10 transition-all duration-200 flex items-center justify-between group"
                   style={{
                     animationDelay: `${index * 50}ms`
                   }}

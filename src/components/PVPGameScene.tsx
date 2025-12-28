@@ -4250,7 +4250,7 @@ const hasMana = useCallback((amount: number) => {
               direction.normalize();
               
               // Apply same downward compensation as projectile system
-              const compensationAngle = Math.PI / 12; // 30 degrees
+              const compensationAngle = 0; // 30 degrees
               const cameraRight = new Vector3();
               cameraRight.crossVectors(direction, new Vector3(0, 1, 0)).normalize();
               const rotationMatrix = new Matrix4();
