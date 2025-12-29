@@ -4261,9 +4261,11 @@ const hasMana = useCallback((amount: number) => {
               direction.applyMatrix4(rotationMatrix);
               direction.normalize();
               
-              // Create perfect shot effect
+              // Create perfect shot effect at the same height as the projectile
+              const beamPosition = transform.position.clone();
+              beamPosition.y += 0.5; // Match projectile spawn height offset
               const effectId = createPowershotEffect(
-                transform.position.clone(),
+                beamPosition,
                 direction,
                 controlSystem.getCurrentSubclass(),
                 true, // isPerfectShot

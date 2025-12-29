@@ -431,13 +431,13 @@ export default function TowerRenderer({
       <group ref={healthBarRef}>
         {/* Player Name in Panel */}
         <Html
-          position={[0, 5.5, 0]}
+          position={[0, 5.65, 0]}
           center
           transform={false}
           style={{
             pointerEvents: 'none',
             userSelect: 'none',
-            width: '120px',
+            width: '80px',
             height: '25px',
             transform: 'translate(-50%, -50%)'
           }}
@@ -449,8 +449,8 @@ export default function TowerRenderer({
             justifyContent: 'center',
             alignItems: 'center',
             background: 'rgba(26, 26, 26, 0.95)',
-            border: '1px solid rgba(68, 68, 68, 0.8)',
-            borderRadius: '4px',
+            border: '0px solid rgba(68, 68, 68, 0.8)',
+            borderRadius: '0px',
             padding: '4px 4px',
             boxSizing: 'border-box'
           }}>

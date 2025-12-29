@@ -97,7 +97,7 @@ export default function PillarRenderer({
       color: pillarColor,
       emissive: pillarColor.clone().multiplyScalar(0.3),
       transparent: true,
-      opacity: 0.125,
+      opacity: 0.25,
       metalness: 0.8,
       roughness: 0.2,
     });
@@ -273,12 +273,12 @@ export default function PillarRenderer({
           ref={energySphereRef}
           geometry={pillarGeometries.energySphere}
           material={materials.energySphere}
-          position={[0, 1.65, 0]}
+          position={[0, 1.45, 0]}
           scale={[1, 1, 1]}
         >
           <pointLight
             color={pillarColor}
-            intensity={3.5}
+            intensity={2}
             distance={12}
             decay={1.5}
           />
