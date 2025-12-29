@@ -65,13 +65,13 @@ export default function SummonedUnitRenderer({
     // Debug logging
     console.log(`SummonedUnitRenderer: ownerId = "${ownerId}", playerNumber = ${playerNumber}, effectivePlayerNumber = ${effectivePlayerNumber}`);
 
-    // Player 1 = Red, Player 2 = Blue
+    // Player 1 = Light Blue, Player 2 = Fire Red
     if (effectivePlayerNumber === 1) {
-      console.log(`SummonedUnitRenderer: using RED color for player ${effectivePlayerNumber}`);
-      return new Color(0xFF4444); // Red
+      console.log(`SummonedUnitRenderer: using LIGHT BLUE color for player ${effectivePlayerNumber}`);
+      return new Color(0x4444FF); // Light Blue
     } else {
-      console.log(`SummonedUnitRenderer: using BLUE color for player ${effectivePlayerNumber}`);
-      return new Color(0x4444FF); // Blue
+      console.log(`SummonedUnitRenderer: using FIRE RED color for player ${effectivePlayerNumber}`);
+      return new Color(0xFF4444); // Fire Red
     }
   }, [ownerId, playerNumber]);
 

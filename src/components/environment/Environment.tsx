@@ -3,7 +3,7 @@ import CustomSky from './CustomSky';
 import Planet from './Planet';
 import InstancedMountains from './InstancedMountains';
 import Pillar from './Pillar';
-import Pedestal from './Pedestal';
+import RuneCircle from './RuneCircle';
 import EnhancedGround from './EnhancedGround';
 import PillarCollision from './PillarCollision';
 import DetailedTrees, { DetailedTree } from './DetailedTrees';
@@ -59,9 +59,9 @@ const Environment: React.FC<EnvironmentProps> = ({
     }
     // Default triangle formation for regular gameplay
     return [
-      [0, 0, -5],        // Front pillar
-      [-4.25, 0, 2.5],   // Left pillar
-      [4.25, 0, 2.5]     // Right pillar
+      [0, 0.05, -5],        // Front pillar (raised so base sits on ground)
+      [-4.25, 0.05, 2.5],   // Left pillar (raised so base sits on ground)
+      [4.25, 0.05, 2.5]     // Right pillar (raised so base sits on ground)
     ];
   }, [isPVP, pvpPillarPositions]);
 
@@ -106,8 +106,8 @@ const Environment: React.FC<EnvironmentProps> = ({
         />
       )}
 
-      {/* Central Pedestal */}
-      <Pedestal position={pedestalPosition} scale={0.4} level={level} />
+      {/* Central Rune Circle */}
+      <RuneCircle position={pedestalPosition} scale={0.4} level={level} />
 
 
       {/* Atmospheric particles around central area */}

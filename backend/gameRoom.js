@@ -383,7 +383,7 @@ class GameRoom {
       pillarIndex: 0,
       position: {
         x: towerX + (normalizedX * frontOffset) + (perpX * -pillarSpacing),
-        y: towerY,
+        y: towerY + 0.1625, // Raise pillar so base sits on ground (half of scaled base height)
         z: towerZ + (normalizedZ * frontOffset) + (perpZ * -pillarSpacing)
       },
       health: 4000,
@@ -403,7 +403,7 @@ class GameRoom {
       pillarIndex: 1,
       position: {
         x: towerX + (normalizedX * frontOffset),
-        y: towerY,
+        y: towerY + 0.1625, // Raise pillar so base sits on ground (half of scaled base height)
         z: towerZ + (normalizedZ * frontOffset)
       },
       health: 4000,
@@ -423,7 +423,7 @@ class GameRoom {
       pillarIndex: 2,
       position: {
         x: towerX + (normalizedX * frontOffset) + (perpX * pillarSpacing),
-        y: towerY,
+        y: towerY + 0.12, // Raise pillar so base sits on ground (half of scaled base height)
         z: towerZ + (normalizedZ * frontOffset) + (perpZ * pillarSpacing)
       },
       health: 4000,

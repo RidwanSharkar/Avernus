@@ -5,6 +5,7 @@ import {
   MeshBasicMaterial,
   PlaneGeometry,
   CircleGeometry,
+  BoxGeometry,
   Matrix4,
   Vector3,
   Group
@@ -62,7 +63,7 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
 
-      positions.push(new Vector3(x, 0.675, z));
+      positions.push(new Vector3(x, 0.75, z)); // Position pillars so they sit on ground (half height + ground offset)
     }
 
     return positions;
@@ -79,13 +80,13 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
   const glowMaterial = useMemo(() => new MeshBasicMaterial({
     color: 0xF74F4F, // Light purple
     transparent: true,
-    opacity: 0.325,
+    opacity: 0.4,
     alphaTest: 0.1,
   }), []);
 
   // Geometries
   const particleGeometry = useMemo(() => new PlaneGeometry(0.05, 0.05), []);
-  const glowGeometry = useMemo(() => new CircleGeometry(0.275, 12), []);
+  const glowGeometry = useMemo(() => new BoxGeometry(0.0625, 1.5, 0.0625), []); // 3D pillars visible from all angles
 
   // Cleanup geometries and materials on unmount to prevent memory leaks
   useEffect(() => {
@@ -156,7 +157,7 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
         frustumCulled={false}
       />
 
-      {/* Ground glow effects */}
+      {/* 3D pillar effects */}
       <instancedMesh
         ref={glowRef}
         args={[glowGeometry, glowMaterial, count]}

@@ -181,15 +181,20 @@ export default function InstancedSummonedUnitRenderer({
     new Color("#FFD6D6")  // Light Red (Player 5)
   ], []);
 
-  // Generate consistent color based on ownerId
+  // Generate consistent color based on ownerId - Player 1 = Light Blue, Player 2 = Fire Red
   const getPlayerColor = useMemo(() => (ownerId: string): Color => {
-    let hash = 0;
-    for (let i = 0; i < ownerId.length; i++) {
-      hash = ((hash << 5) - hash) + ownerId.charCodeAt(i);
-      hash = hash & hash; // Convert to 32bit integer
+    // Extract player number from ownerId (e.g., "player1" -> 1, "player2" -> 2)
+    const playerMatch = ownerId.match(/player(\d+)/);
+    if (playerMatch) {
+      const playerNumber = parseInt(playerMatch[1]);
+      // Player 1 = index 0 (Light Blue), Player 2 = index 1 (Fire Red)
+      const index = playerNumber - 1; // Convert to 0-based index
+      if (index >= 0 && index < playerColors.length) {
+        return playerColors[index];
+      }
     }
-    const index = Math.abs(hash) % playerColors.length;
-    return playerColors[index];
+    // Fallback to first color if parsing fails
+    return playerColors[0];
   }, [playerColors]);
 
   // Update unit instances from world state
