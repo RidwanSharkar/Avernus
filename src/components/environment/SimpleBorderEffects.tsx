@@ -8,7 +8,9 @@ import {
   BoxGeometry,
   Matrix4,
   Vector3,
-  Group
+  Group,
+  Euler,
+  Quaternion
 } from '@/utils/three-exports';
 
 interface SimpleBorderEffectsProps {
@@ -19,7 +21,7 @@ interface SimpleBorderEffectsProps {
 }
 
 /**
- * Ultra-performance border effects using simple geometries and particles
+ * Ultra-performance circular gate effects with spinning pillars and curved archways
  * Perfect for maintaining 120+ FPS while adding atmospheric elements
  */
 const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
@@ -30,10 +32,12 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
 }) => {
   const particleRef = useRef<InstancedMesh>(null);
   const glowRef = useRef<InstancedMesh>(null);
+  const archwayRef = useRef<InstancedMesh>(null);
   const groupRef = useRef<Group>(null);
-  
+
   // CRITICAL: Cache Matrix4 to prevent memory leak from creating new ones every frame
   const matrixRef = useRef<Matrix4>(new Matrix4());
+  const quaternionRef = useRef<Quaternion>(new Quaternion());
 
   // Generate particle positions in a ring around the border
   const particlePositions = useMemo(() => {
@@ -69,6 +73,46 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
     return positions;
   }, [radius, count]);
 
+  // Generate archway segments between poles
+  const archwayData = useMemo(() => {
+    const segments: { position: Vector3; rotation: Euler }[] = [];
+    const angleStep = (Math.PI * 2) / count;
+    const segmentsPerArch = 8; // Number of segments per archway
+
+    for (let i = 0; i < count; i++) {
+      const startAngle = i * angleStep;
+      const endAngle = ((i + 1) % count) * angleStep;
+
+      // Calculate arch parameters
+      const archRadius = radius;
+      const archHeight = 2.5; // Height of the arch peak
+
+      for (let j = 0; j < segmentsPerArch; j++) {
+        // Create a smooth curve from start to end angle
+        const t = j / (segmentsPerArch - 1);
+        const currentAngle = startAngle + (endAngle - startAngle) * t;
+
+        // Calculate position along the arch curve
+        const baseX = Math.cos(currentAngle) * archRadius;
+        const baseZ = Math.sin(currentAngle) * archRadius;
+
+        // Create parabolic arch shape
+        const archProgress = Math.sin(t * Math.PI); // Sine wave for smooth arch
+        const y = archProgress * archHeight;
+
+        // Calculate rotation to face outward from center
+        const rotation = new Euler(0, currentAngle + Math.PI/2, 0);
+
+        segments.push({
+          position: new Vector3(baseX, y, baseZ),
+          rotation: rotation
+        });
+      }
+    }
+
+    return segments;
+  }, [radius, count]);
+
   // Materials
   const particleMaterial = useMemo(() => new MeshBasicMaterial({
     color: 0xF40000,
@@ -84,19 +128,29 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
     alphaTest: 0.1,
   }), []);
 
+  const archwayMaterial = useMemo(() => new MeshBasicMaterial({
+    color: 0xE63946, // Darker red for archways
+    transparent: true,
+    opacity: 0.6,
+    alphaTest: 0.1,
+  }), []);
+
   // Geometries
   const particleGeometry = useMemo(() => new PlaneGeometry(0.05, 0.05), []);
   const glowGeometry = useMemo(() => new BoxGeometry(0.0625, 1.5, 0.0625), []); // 3D pillars visible from all angles
+  const archwayGeometry = useMemo(() => new BoxGeometry(0.08, 0.15, 0.08), []); // Thicker segments for archways
 
   // Cleanup geometries and materials on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
       particleGeometry.dispose();
       glowGeometry.dispose();
+      archwayGeometry.dispose();
       particleMaterial.dispose();
       glowMaterial.dispose();
+      archwayMaterial.dispose();
     };
-  }, [particleGeometry, glowGeometry, particleMaterial, glowMaterial]);
+  }, [particleGeometry, glowGeometry, archwayGeometry, particleMaterial, glowMaterial, archwayMaterial]);
 
   // Update instanced matrices
   useEffect(() => {
@@ -119,7 +173,17 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       });
       glowRef.current.instanceMatrix.needsUpdate = true;
     }
-  }, [particlePositions, glowPositions]);
+
+    // Update archway instances
+    if (archwayRef.current) {
+      archwayData.forEach((segment, i) => {
+        matrix.makeRotationFromEuler(segment.rotation);
+        matrix.setPosition(segment.position);
+        archwayRef.current?.setMatrixAt(i, matrix);
+      });
+      archwayRef.current.instanceMatrix.needsUpdate = true;
+    }
+  }, [particlePositions, glowPositions, archwayData]);
 
   // Animate particles
   useFrame((state) => {
@@ -161,6 +225,13 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       <instancedMesh
         ref={glowRef}
         args={[glowGeometry, glowMaterial, count]}
+        frustumCulled={false}
+      />
+
+      {/* Curved archway segments */}
+      <instancedMesh
+        ref={archwayRef}
+        args={[archwayGeometry, archwayMaterial, archwayData.length]}
         frustumCulled={false}
       />
     </group>

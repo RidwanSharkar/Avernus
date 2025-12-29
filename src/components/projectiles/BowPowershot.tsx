@@ -93,7 +93,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
       {/* Main beam trail - very thin like firebeam but 1/4 diameter */}
       <group
         rotation={[
-          -Math.asin(direction.y / direction.length()), // Pitch (vertical angle)
+          -Math.asin(direction.y / direction.length()), // Pitch (vertical angle) // was 0
           Math.atan2(direction.x, direction.z), // Yaw (horizontal angle)
           0
         ]}
