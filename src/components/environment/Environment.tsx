@@ -59,7 +59,7 @@ const Environment: React.FC<EnvironmentProps> = ({
     }
     // Default triangle formation for regular gameplay
     return [
-      [0, 0.05, -5],        // Front pillar (raised so base sits on ground)
+      [0, 0.0, -5],        // Front pillar (raised so base sits on ground)
       [-4.25, 0.05, 2.5],   // Left pillar (raised so base sits on ground)
       [4.25, 0.05, 2.5]     // Right pillar (raised so base sits on ground)
     ];
@@ -99,8 +99,8 @@ const Environment: React.FC<EnvironmentProps> = ({
       {/* Border effects - particles and glows around map perimeter */}
       {enableBorderEffects && (
         <SimpleBorderEffects
-          radius={22}
-          count={64}
+          radius={24}
+          count={48}
           enableParticles={true}
           particleCount={100}
         />

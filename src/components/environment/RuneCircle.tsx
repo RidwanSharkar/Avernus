@@ -194,7 +194,7 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
 
     // Expanding ring effect (grows and fades)
     if (expandingRingRef.current && expandingRingRef.current.material) {
-      const expandScale = 1 + expandIntensity * 0.8;
+      const expandScale = 0.7 + expandIntensity * 0.35;
       expandingRingRef.current.scale.setScalar(expandScale);
       (expandingRingRef.current.material as THREE.MeshStandardMaterial).opacity = (1 - expandIntensity) * 0.4;
     }

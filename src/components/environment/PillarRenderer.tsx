@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Color, Group, Mesh, CylinderGeometry, SphereGeometry, MeshStandardMaterial, PointLight } from '@/utils/three-exports';
+import { Vector3, Color, Group, Mesh, CylinderGeometry, SphereGeometry, MeshStandardMaterial, PointLight, PlaneGeometry, MeshBasicMaterial } from '@/utils/three-exports';
 import { World } from '@/ecs/World';
 import { Transform } from '@/ecs/components/Transform';
 import { Pillar } from '@/ecs/components/Pillar';
@@ -37,6 +37,14 @@ export default function PillarRenderer({
   const groupRef = useRef<Group>(null);
   const healthBarRef = useRef<Group>(null);
   const energySphereRef = useRef<Mesh>(null);
+  const healthBarFillRef = useRef<Mesh>(null);
+  const healthBarGlowRef = useRef<Mesh>(null);
+  
+  // Smooth health interpolation state
+  const lerpState = useRef({
+    currentHealth: health,
+    lastHealth: health
+  });
 
   // Default colors for different players
   const playerColors = useMemo(() => [
@@ -49,9 +57,10 @@ export default function PillarRenderer({
   const pillarColor = color || playerColors[playerIndex % playerColors.length];
 
   // Health bar dimensions
-  const healthBarWidth = 2;
-  const healthBarHeight = 0.2;
+  const healthBarWidth = 2.4;
+  const healthBarHeight = 0.18;
   const healthBarY = 3.25; // Above the pillar
+  const healthBarBorderWidth = 0.04;
 
   // Create geometries and materials only once using useMemo
   const { pillarGeometries, materials } = useMemo(() => {
@@ -135,6 +144,17 @@ export default function PillarRenderer({
   }, [pillarGeometries, materials]);
 
   useFrame((state, delta) => {
+    // Smoothly interpolate health changes
+    const lerpSpeed = 8;
+    const healthDiff = health - lerpState.current.currentHealth;
+    
+    // Handle large jumps (like respawn or massive damage) without lerping
+    if (Math.abs(healthDiff) > maxHealth * 0.3) {
+      lerpState.current.currentHealth = health;
+    } else {
+      lerpState.current.currentHealth += (health - lerpState.current.currentHealth) * Math.min(1, delta * lerpSpeed);
+    }
+    
     // Update health bar to always face camera
     if (healthBarRef.current && camera) {
       healthBarRef.current.lookAt(camera.position);
@@ -145,6 +165,57 @@ export default function PillarRenderer({
       const time = state.clock.getElapsedTime();
       const pulseScale = 1 + Math.sin(time * 2) * 0.05; // Subtle pulsing
       energySphereRef.current.scale.setScalar(pulseScale);
+    }
+    
+    // Update health bar visuals
+    const currentHealthPercent = Math.max(0, Math.min(1, lerpState.current.currentHealth / maxHealth));
+    
+    if (healthBarFillRef.current) {
+      // Update health bar scale
+      healthBarFillRef.current.scale.x = currentHealthPercent;
+      // Position to align left when scaling
+      healthBarFillRef.current.position.x = -(healthBarWidth * (1 - currentHealthPercent)) / 2;
+      
+      // Update color based on health with smooth transitions
+      const material = healthBarFillRef.current.material as MeshBasicMaterial;
+      let targetColor: Color;
+      
+      if (currentHealthPercent > 0.6) {
+        // High health: Use player color with slight green tint
+        targetColor = pillarColor.clone().lerp(new Color(0x00ff88), 0.3);
+      } else if (currentHealthPercent > 0.3) {
+        // Medium health: Blend player color with yellow
+        const t = (currentHealthPercent - 0.3) / 0.3;
+        targetColor = pillarColor.clone().lerp(new Color(0xffff00), 0.5 - t * 0.3);
+      } else {
+        // Low health: Blend player color with red, with pulsing effect
+        const t = currentHealthPercent / 0.3;
+        const pulseIntensity = 0.3 + Math.sin(state.clock.getElapsedTime() * 4) * 0.2;
+        targetColor = pillarColor.clone().lerp(new Color(0xff4444), 0.6 - t * 0.3);
+        targetColor.multiplyScalar(1 + pulseIntensity);
+      }
+      
+      // Smooth color transition
+      material.color.lerp(targetColor, delta * 5);
+      
+      // Adjust opacity for glow effect that intensifies with health
+      const glowIntensity = 0.85 + currentHealthPercent * 0.15;
+      material.opacity = glowIntensity;
+    }
+    
+    // Update glow effect behind health bar
+    if (healthBarGlowRef.current) {
+      const glowMaterial = healthBarGlowRef.current.material as MeshBasicMaterial;
+      const glowIntensity = currentHealthPercent * 0.4;
+      const glowColor = pillarColor.clone().multiplyScalar(glowIntensity);
+      glowMaterial.color.copy(glowColor);
+      glowMaterial.opacity = glowIntensity * 0.6;
+      
+      // Pulse glow when health is low
+      if (currentHealthPercent < 0.3) {
+        const pulse = 0.3 + Math.sin(state.clock.getElapsedTime() * 5) * 0.2;
+        glowMaterial.opacity = pulse * 0.6;
+      }
     }
   });
 
@@ -216,26 +287,84 @@ export default function PillarRenderer({
 
       {/* Health Bar */}
       <group ref={healthBarRef} position={[0, healthBarY, 0]}>
-        {/* Background */}
-        <mesh position={[0, 0, 0]}>
-          <planeGeometry args={[healthBarWidth, healthBarHeight]} />
-          <meshBasicMaterial color="#333333" transparent opacity={0.8} />
+        {/* Outer glow effect (behind everything) */}
+        <mesh ref={healthBarGlowRef} position={[0, 0, -0.01]}>
+          <planeGeometry args={[healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2]} />
+          <meshBasicMaterial 
+            color={pillarColor} 
+            transparent 
+            opacity={0.3}
+            depthWrite={false}
+          />
         </mesh>
-
-        {/* Health fill */}
-        <mesh position={[-(healthBarWidth * (1 - healthPercent)) / 2, 0, 0.01]}>
-          <planeGeometry args={[healthBarWidth * healthPercent, healthBarHeight * 0.8]} />
-          <meshBasicMaterial
-            color={healthPercent > 0.6 ? "#00ff00" : healthPercent > 0.3 ? "#ffff00" : "#ff0000"}
-            transparent
+        
+        {/* Outer border (dark) */}
+        <mesh position={[0, 0, 0.001]}>
+          <planeGeometry args={[healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2]} />
+          <meshBasicMaterial 
+            color="#1a1a1a" 
+            transparent 
             opacity={0.9}
+            depthWrite={false}
+          />
+        </mesh>
+        
+        {/* Background (slightly rounded appearance) */}
+        <mesh position={[0, 0, 0.002]}>
+          <planeGeometry args={[healthBarWidth, healthBarHeight]} />
+          <meshBasicMaterial 
+            color="#2a2a2a" 
+            transparent 
+            opacity={0.85}
+            depthWrite={false}
+          />
+        </mesh>
+        
+        {/* Inner shadow/depth effect */}
+        <mesh position={[0, 0, 0.003]}>
+          <planeGeometry args={[healthBarWidth * 0.98, healthBarHeight * 0.7]} />
+          <meshBasicMaterial 
+            color="#1a1a1a" 
+            transparent 
+            opacity={0.5}
+            depthWrite={false}
           />
         </mesh>
 
-        {/* Border */}
-        <mesh position={[0, 0, 0.02]}>
-          <planeGeometry args={[healthBarWidth, healthBarHeight]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
+        {/* Health fill with glow */}
+        <mesh 
+          ref={healthBarFillRef}
+          position={[0, 0, 0.004]}
+        >
+          <planeGeometry args={[healthBarWidth, healthBarHeight * 0.75]} />
+          <meshBasicMaterial
+            color={pillarColor.clone().lerp(new Color(0x00ff88), 0.3)}
+            transparent
+            opacity={0.95}
+            depthWrite={false}
+          />
+        </mesh>
+        
+        {/* Top highlight for depth */}
+        <mesh position={[0, healthBarHeight * 0.25, 0.005]}>
+          <planeGeometry args={[healthBarWidth * 0.98, healthBarHeight * 0.15]} />
+          <meshBasicMaterial 
+            color="#ffffff" 
+            transparent 
+            opacity={0.2}
+            depthWrite={false}
+          />
+        </mesh>
+
+        {/* Outer border highlight */}
+        <mesh position={[0, 0, 0.006]}>
+          <planeGeometry args={[healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2]} />
+          <meshBasicMaterial 
+            color={pillarColor} 
+            transparent 
+            opacity={0.4}
+            depthWrite={false}
+          />
         </mesh>
       </group>
     </group>
