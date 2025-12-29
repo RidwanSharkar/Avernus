@@ -235,6 +235,7 @@ class GameRoom {
       ownerId: playerId,
       ownerName: playerName,
       towerIndex: playerIndex,
+      playerNumber: playerIndex + 1, // 1-based player number (1 or 2)
       position: { x, y, z },
       side: side, // Add side information
       health: 10000,
@@ -1117,9 +1118,14 @@ class GameRoom {
       z: spawnPosition.z + offset.z
     };
     
+    // Get player number from the tower
+    const tower = Array.from(this.towers.values()).find(t => t.ownerId === ownerId);
+    const playerNumber = tower ? tower.playerNumber : 1;
+
     const unit = {
       unitId: unitId,
       ownerId: ownerId,
+      playerNumber: playerNumber, // Include player number for color determination
       position: actualSpawnPosition,
       targetPosition: targetPosition,
       health: isElite ? 1500 : 1000, // Elite units have 1.5x health
@@ -1137,7 +1143,8 @@ class GameRoom {
       isElite: isElite,
       deathTime: 0,
       summonTime: currentTime,
-      lifetime: 120 // 2 minutes
+      lifetime: 120, // 2 minutes
+      lastDamageTime: 0
     };
     
     this.summonedUnits.set(unitId, unit);
@@ -1158,6 +1165,7 @@ class GameRoom {
     
     const previousHealth = unit.health;
     unit.health = Math.max(0, unit.health - damage);
+    unit.lastDamageTime = Date.now() / 1000; // Record damage time for visual effects
     const wasKilled = previousHealth > 0 && unit.health <= 0;
     
     if (wasKilled) {
@@ -1218,6 +1226,7 @@ class GameRoom {
       unitUpdates.push({
         unitId: unit.unitId,
         ownerId: unit.ownerId,
+        playerNumber: unit.playerNumber,
         position: unit.position,
         health: unit.health,
         maxHealth: unit.maxHealth,
@@ -1225,7 +1234,8 @@ class GameRoom {
         isActive: unit.isActive,
         isElite: unit.isElite,
         currentTarget: unit.currentTarget,
-        targetPosition: unit.targetPosition
+        targetPosition: unit.targetPosition,
+        lastDamageTime: unit.lastDamageTime
       });
     }
     

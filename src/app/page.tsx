@@ -829,13 +829,19 @@ function HomeContent() {
                                 >
                                   {/* Ability button with enhanced styling */}
                                   <div className={`
-                                    w-8 h-8 rounded border flex items-center justify-center transition-all duration-200
-                                    ${isSelected || canSelect
-                                      ? 'bg-gray-700/80 border-gray-600 hover:bg-gray-600/80 hover:border-gray-500 hover:scale-110'
-                                      : 'bg-gray-800/60 border-gray-700/50'
+                                    w-8 h-8 rounded border-2 flex items-center justify-center transition-all duration-200 relative
+                                    ${ability.key === 'Q' && isSelected
+                                      ? `${colorScheme.background} border-2 ${colorScheme.border} shadow-lg ${colorScheme.shadow}`
+                                      : isSelected || canSelect
+                                        ? 'bg-gray-700/80 border-gray-600 hover:bg-gray-600/80 hover:border-gray-500 hover:scale-110'
+                                        : 'bg-gray-800/60 border-gray-700/50'
                                     }
                                   `}>
-                                    <span className="text-xs font-medium">
+                                    {/* Special glow effect for Q abilities when weapon is selected */}
+                                    {ability.key === 'Q' && isSelected && (
+                                      <div className={`absolute inset-0 rounded border ${colorScheme.border} animate-pulse opacity-60`}></div>
+                                    )}
+                                    <span className="text-xs font-medium relative z-10">
                                       {getAbilityIcon(weapon.type, ability.key)}
                                     </span>
                                   </div>

@@ -174,8 +174,9 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
                   disabled={false}
                 >
                   <div className="flex items-center justify-center gap-3">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                     <span className="text-white">
-                      {gameStarted ? 'JOIN GAME' : (gameMode === 'pvp' ? 'START AVERNUS' : 'START GAME')}
+                      {gameStarted ? 'JOIN GAME' : (gameMode === 'pvp' ? 'START' : 'START GAME')}
                     </span>
                     <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                   </div>

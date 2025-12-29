@@ -14,6 +14,7 @@ export class SummonedUnit extends Component {
   public attackDamage: number;
   public attackCooldown: number; // Seconds between attacks
   public lastAttackTime: number;
+  public lastDamageTime: number; // Timestamp when unit was last damaged
   public maxHealth: number;
 
   // Movement properties
@@ -53,12 +54,14 @@ export class SummonedUnit extends Component {
       this.attackDamage = 120; // Double damage (2x)
       this.attackCooldown = 2.0; // Same cooldown
       this.lastAttackTime = 0;
+      this.lastDamageTime = 0;
       this.maxHealth = 1500; // 1.5x health
     } else {
       this.attackRange = 4; // 4 unit attack range as specified
       this.attackDamage = 60; // 60 damage per hit as specified
       this.attackCooldown = 2.0; // 2 second between attacks
       this.lastAttackTime = 0;
+      this.lastDamageTime = 0;
       this.maxHealth = 1000; // 1000 HP as specified
     }
 
@@ -88,6 +91,10 @@ export class SummonedUnit extends Component {
 
   public performAttack(currentTime: number): void {
     this.lastAttackTime = currentTime;
+  }
+
+  public recordDamage(currentTime: number): void {
+    this.lastDamageTime = currentTime;
   }
 
   public canSearchForTargets(currentTime: number): boolean {
@@ -129,6 +136,7 @@ export class SummonedUnit extends Component {
     this.attackDamage = 60;
     this.attackCooldown = 2.0;
     this.lastAttackTime = 0;
+    this.lastDamageTime = 0;
     this.maxHealth = 1000;
     this.moveSpeed = 2.25;
     this.targetPosition = null;
@@ -149,6 +157,7 @@ export class SummonedUnit extends Component {
     clone.attackDamage = this.attackDamage;
     clone.attackCooldown = this.attackCooldown;
     clone.lastAttackTime = this.lastAttackTime;
+    clone.lastDamageTime = this.lastDamageTime;
     clone.maxHealth = this.maxHealth;
     clone.moveSpeed = this.moveSpeed;
     clone.currentTarget = this.currentTarget;

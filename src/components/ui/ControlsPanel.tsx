@@ -27,9 +27,10 @@ export default function ControlsPanel({ className = '' }: ControlsPanelProps) {
   const controls = [
     { key: 'WASD', description: 'Movement', icon: '⌨️' },
     { key: 'Double Tap WASD', description: 'Dash', icon: '⌨️' },
-    { key: 'Right Click (Hold)', description: 'Camera', icon: '🖱️' },
+    { key: 'Right Click (Hold)', description: 'Rotate', icon: '🖱️' },
     { key: 'Left Click (Hold)', description: 'Attack', icon: '⚔️' },
-    { key: 'Spacebar', description: 'Jump', icon: '⌨️' }
+    { key: 'Scoll Wheel', description: 'Zoom Camera', icon: '🖱️' },
+    { key: 'Space Bar', description: 'Jump', icon: '⌨️' }
   ];
 
   return (

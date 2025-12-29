@@ -128,7 +128,10 @@ export class CombatSystem extends System {
     }
 
     const currentTime = Date.now() / 1000;
-    
+
+    // Record damage time for visual effects
+    summonedUnitComponent.recordDamage(currentTime);
+
     // Apply damage locally (pass entity so Health can use Shield component)
     const damageDealt = health.takeDamage(damage, currentTime, unitEntity);
 

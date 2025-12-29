@@ -10,11 +10,13 @@ interface SummonedUnitRendererProps {
   world: World;
   position: Vector3;
   ownerId: string;
+  playerNumber?: number;
   health: number;
   maxHealth: number;
   isDead?: boolean;
   isElite?: boolean;
   color?: Color;
+  lastDamageTime?: number; // Timestamp when unit was last damaged
 }
 
 export default function SummonedUnitRenderer({
@@ -22,11 +24,13 @@ export default function SummonedUnitRenderer({
   world,
   position,
   ownerId,
+  playerNumber,
   health,
   maxHealth,
   isDead = false,
   isElite = false,
-  color
+  color,
+  lastDamageTime
 }: SummonedUnitRendererProps) {
   // Debug logging for elite units
   useEffect(() => {
@@ -45,44 +49,69 @@ export default function SummonedUnitRenderer({
   // Elite units are 1.15x larger
   const eliteScale = isElite ? 1.15 : 1.0;
 
-  // Default colors for different players
-  const playerColors = useMemo(() => [
-    new Color(0x4A90E2), // Blue
-    new Color(0xFF6B35), // Orange
-    new Color(0x50C878), // Green
-    new Color(0x9B59B6), // Purple
-    new Color(0xF39C12)  // Yellow
-  ], []);
-
-  // Generate a consistent color based on ownerId
+  // Player-based colors: Player 1 = Red, Player 2 = Blue
   const ownerColor = useMemo(() => {
-    let hash = 0;
-    for (let i = 0; i < ownerId.length; i++) {
-      hash = ((hash << 5) - hash) + ownerId.charCodeAt(i);
-      hash = hash & hash; // Convert to 32bit integer
+    // Use playerNumber if available, otherwise extract from ownerId for backward compatibility
+    let effectivePlayerNumber = playerNumber || 1; // Default to player 1
+
+    if (!playerNumber) {
+      // Fallback: Extract player number from ownerId (e.g., "player1" -> 1, "player2" -> 2)
+      const playerMatch = ownerId.match(/player(\d+)/);
+      if (playerMatch) {
+        effectivePlayerNumber = parseInt(playerMatch[1]);
+      }
     }
-    const index = Math.abs(hash) % playerColors.length;
-    return playerColors[index];
-  }, [ownerId, playerColors]);
+
+    // Debug logging
+    console.log(`SummonedUnitRenderer: ownerId = "${ownerId}", playerNumber = ${playerNumber}, effectivePlayerNumber = ${effectivePlayerNumber}`);
+
+    // Player 1 = Red, Player 2 = Blue
+    if (effectivePlayerNumber === 1) {
+      console.log(`SummonedUnitRenderer: using RED color for player ${effectivePlayerNumber}`);
+      return new Color(0xFF4444); // Red
+    } else {
+      console.log(`SummonedUnitRenderer: using BLUE color for player ${effectivePlayerNumber}`);
+      return new Color(0x4444FF); // Blue
+    }
+  }, [ownerId, playerNumber]);
 
   const unitColor = color || ownerColor;
 
-  // Calculate health-based opacity and color
+  // Calculate health-based opacity
   const healthPercentage = Math.max(0, health / maxHealth);
   const opacity = isDead ? 0.3 : Math.max(0.5, healthPercentage);
-  const damageColor = isDead ? new Color(0x666666) : unitColor.clone().lerp(new Color(0xFF0000), 1 - healthPercentage);
+
+  // Damage flash effect - intensify color briefly when damaged
+  const damageFlashDuration = 0.2; // 200ms flash
+  const baseColor = isDead ? new Color(0x666666) : unitColor;
+  const currentDamageColorRef = useRef<Color>(baseColor.clone());
+
+  // Update current damage color ref when baseColor changes
+  useEffect(() => {
+    currentDamageColorRef.current = baseColor.clone();
+  }, [baseColor]);
 
   // Handle animations and health bar updates
   useFrame((state) => {
     if (!groupRef.current || isDead) return;
 
     const time = state.clock.elapsedTime;
+    const deltaTime = state.clock.getDelta();
+
+    // Damage flash effect
+    let damageColor = baseColor.clone();
+    if (lastDamageTime && time - lastDamageTime < damageFlashDuration) {
+      // Intensify color during flash (make it brighter and more saturated)
+      damageColor.multiplyScalar(1.5);
+      damageColor.addScalar(0.2); // Add some white to make it brighter
+    }
+    currentDamageColorRef.current = damageColor;
 
     // Gentle floating motion
     groupRef.current.position.y = position.y + Math.sin(time * 2) * 0.05;
 
     // Gentle rotation for crystal-like appearance
-    groupRef.current.rotation.y += state.clock.getDelta() * 0.5;
+    groupRef.current.rotation.y += deltaTime * 0.5;
 
     // Update health bar scale and color every frame
     const healthPercentage = Math.max(0, Math.min(1, health / maxHealth));
@@ -115,7 +144,7 @@ export default function SummonedUnitRenderer({
       >
         <octahedronGeometry args={[unitBaseRadius * 1.25, 0]} />
         <meshStandardMaterial
-          color={damageColor}
+          color={currentDamageColorRef.current}
           metalness={0.7}
           roughness={0.3}
           transparent
@@ -130,7 +159,7 @@ export default function SummonedUnitRenderer({
       >
         <octahedronGeometry args={[unitBaseRadius * 0.6, 0]} />
         <meshStandardMaterial
-          color={damageColor.clone().multiplyScalar(1.2)}
+          color={currentDamageColorRef.current.clone().multiplyScalar(1.2)}
           metalness={0.8}
           roughness={0.2}
           transparent
@@ -147,7 +176,7 @@ export default function SummonedUnitRenderer({
         >
           <sphereGeometry args={[unitBaseRadius * 0.4, 8, 8]} />
           <meshStandardMaterial
-            color={damageColor.clone().multiplyScalar(1.1)}
+            color={currentDamageColorRef.current.clone().multiplyScalar(1.1)}
             metalness={0.7}
             roughness={0.3}
             transparent
@@ -167,7 +196,7 @@ export default function SummonedUnitRenderer({
         >
           <cylinderGeometry args={[unitBaseRadius * 0.25, unitBaseRadius * 0.15, unitHeight * 0.3, 6]} />
           <meshStandardMaterial
-            color={damageColor.clone().multiplyScalar(0.9)}
+            color={currentDamageColorRef.current.clone().multiplyScalar(0.9)}
             metalness={0.6}
             roughness={0.4}
             transparent
@@ -182,7 +211,7 @@ export default function SummonedUnitRenderer({
       <mesh position={[0, unitHeight * 0.75, 0]}>
         <sphereGeometry args={[unitBaseRadius * 1.675, 8, 8]} />
         <meshBasicMaterial
-          color={damageColor}
+          color={currentDamageColorRef.current}
           transparent
           opacity={opacity * 0.3}
           depthWrite={false}

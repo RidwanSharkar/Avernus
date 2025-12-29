@@ -35,6 +35,7 @@ interface ServerPillar {
 interface ServerTower {
   id: string;
   ownerId: string;
+  ownerName: string;
   towerIndex: number;
   position: { x: number; y: number; z: number };
   side?: 'North' | 'South'; // Tower side indicator
@@ -46,6 +47,7 @@ interface ServerTower {
 interface ServerSummonedUnit {
   unitId: string;
   ownerId: string;
+  playerNumber?: number;
   position: { x: number; y: number; z: number };
   health: number;
   maxHealth: number;
@@ -54,6 +56,7 @@ interface ServerSummonedUnit {
   isElite?: boolean;
   currentTarget?: string | null;
   targetPosition?: { x: number; y: number; z: number } | null;
+  lastDamageTime?: number;
 }
 import { Entity } from '@/ecs/Entity';
 import { InterpolationBuffer } from '@/ecs/components/Interpolation';
@@ -4250,7 +4253,7 @@ const hasMana = useCallback((amount: number) => {
               direction.normalize();
               
               // Apply same downward compensation as projectile system
-              const compensationAngle = 0; // 30 degrees
+              const compensationAngle = Math.PI / 7; // 30 degrees
               const cameraRight = new Vector3();
               cameraRight.crossVectors(direction, new Vector3(0, 1, 0)).normalize();
               const rotationMatrix = new Matrix4();
@@ -5201,6 +5204,7 @@ const hasMana = useCallback((amount: number) => {
             world={engineRef.current?.getWorld() || new World()}
             position={new Vector3(tower.position.x, tower.position.y, tower.position.z)}
             ownerId={tower.ownerId}
+            ownerName={tower.ownerName}
             towerIndex={tower.towerIndex}
             health={tower.health}
             maxHealth={tower.maxHealth}
@@ -5249,10 +5253,12 @@ const hasMana = useCallback((amount: number) => {
             world={engineRef.current!.getWorld()}
             position={new Vector3(unit.position.x, unit.position.y, unit.position.z)}
             ownerId={unit.ownerId}
+            playerNumber={unit.playerNumber}
             health={unit.health}
             maxHealth={unit.maxHealth}
             isDead={unit.isDead}
             isElite={unit.isElite}
+            lastDamageTime={unit.lastDamageTime}
           />
         );
       }).filter(Boolean)}

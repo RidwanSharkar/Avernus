@@ -2,6 +2,7 @@
 
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Html } from '@react-three/drei';
 import { Vector3, Color, Group, Mesh, MeshBasicMaterial, AdditiveBlending, MathUtils } from '@/utils/three-exports';
 import { World } from '@/ecs/World';
 import { Transform } from '@/ecs/components/Transform';
@@ -12,6 +13,7 @@ interface TowerRendererProps {
   world: World;
   position: Vector3;
   ownerId: string;
+  ownerName: string;
   towerIndex: number;
   health: number;
   maxHealth: number;
@@ -25,6 +27,7 @@ export default function TowerRenderer({
   world,
   position,
   ownerId,
+  ownerName,
   towerIndex,
   health,
   maxHealth,
@@ -116,13 +119,22 @@ export default function TowerRenderer({
         healthBarRef.current.lookAt(camera.position);
 
         // Update health bar scale and color
-        const healthBarFill = healthBarRef.current.children[1] as Mesh; // Second child is the fill
+        // Find the health bar fill mesh by position (y = 4.8, z = 0)
+        let healthBarFill: Mesh | null = null;
+        for (let i = 0; i < healthBarRef.current.children.length; i++) {
+          const child = healthBarRef.current.children[i] as Mesh;
+          if (child && child.isMesh && Math.abs(child.position.y - 4.8) < 0.01 && Math.abs(child.position.z) < 0.005) {
+            healthBarFill = child;
+            break;
+          }
+        }
+
         if (healthBarFill) {
           // Update scale based on health percentage
           healthBarFill.scale.x = healthPercentage;
 
-          // Position health bar to align left when scaling
-          healthBarFill.position.x = -(2.0 * (1 - healthPercentage)) / 2;
+          // Position health bar to align left when scaling (using new width 2.4)
+          healthBarFill.position.x = -(2.4 * (1 - healthPercentage)) / 2;
 
           // Update color based on health percentage
           const material = healthBarFill.material as MeshBasicMaterial;
@@ -415,30 +427,91 @@ export default function TowerRenderer({
       />
 
 
-      {/* Health Bar - Always visible for towers */}
+      {/* Detailed Health Bar with Nameplate - Always visible for towers */}
       <group ref={healthBarRef}>
-        {/* Health bar background */}
-        <mesh position={[0, 4.5, 0]}>
-          <planeGeometry args={[2.0, 0.15]} />
+        {/* Player Name in Panel */}
+        <Html
+          position={[0, 5.5, 0]}
+          center
+          transform={false}
+          style={{
+            pointerEvents: 'none',
+            userSelect: 'none',
+            width: '120px',
+            height: '25px',
+            transform: 'translate(-50%, -50%)'
+          }}
+        >
+          <div style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            background: 'rgba(26, 26, 26, 0.95)',
+            border: '1px solid rgba(68, 68, 68, 0.8)',
+            borderRadius: '4px',
+            padding: '4px 4px',
+            boxSizing: 'border-box'
+          }}>
+            <div style={{
+              color: '#ffffff',
+              fontSize: '13px',
+              fontFamily: 'Arial, sans-serif',
+              fontWeight: 'bold',
+              textShadow: '1px 1px 2px rgba(0,0,0,0.9)',
+              lineHeight: '1.2'
+            }}>
+              {ownerName}
+            </div>
+          </div>
+        </Html>
+
+        {/* Health bar background - metallic style */}
+        <mesh position={[0, 4.8, -0.01]}>
+          <planeGeometry args={[2.4, 0.28]} />
           <meshBasicMaterial
-            color={0x333333}
+            color={0x3c3c46}
             transparent
-            opacity={0.8}
-            depthWrite={false}
+            opacity={0.95}
+            depthWrite={true}
           />
         </mesh>
 
         {/* Health bar fill */}
-        <mesh position={[0, 4.5, 0.001]}>
-          <planeGeometry args={[2.0, 0.15]} />
+        <mesh position={[0, 4.8, 0]}>
+          <planeGeometry args={[2.4, 0.28]} />
           <meshBasicMaterial
             color={
               healthPercentage > 0.6 ? 0x00ff00 :
               healthPercentage > 0.3 ? 0xffff00 : 0xff0000
             }
             transparent
-            opacity={0.9}
-            depthWrite={false}
+            opacity={0.95}
+            depthWrite={true}
+          />
+        </mesh>
+
+        {/* Health bar border - metallic style similar to GameUI */}
+        <mesh position={[0, 4.8, 0.01]}>
+          <planeGeometry args={[2.4, 0.28]} />
+          <meshBasicMaterial
+            color={0xc8c8dc}
+            transparent
+            opacity={0.5}
+            depthWrite={true}
+            wireframe
+          />
+        </mesh>
+
+        {/* Health bar border highlight - top edge */}
+        <mesh position={[0, 4.8 + 0.14, 0.02]}>
+          <planeGeometry args={[2.4, 0.01]} />
+          <meshBasicMaterial
+            color={0xffffff}
+            transparent
+            opacity={0.3}
+            depthWrite={true}
           />
         </mesh>
       </group>

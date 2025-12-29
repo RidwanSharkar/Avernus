@@ -36,6 +36,7 @@ export default function PillarRenderer({
 }: PillarRendererProps) {
   const groupRef = useRef<Group>(null);
   const healthBarRef = useRef<Group>(null);
+  const energySphereRef = useRef<Mesh>(null);
 
   // Default colors for different players
   const playerColors = useMemo(() => [
@@ -81,16 +82,29 @@ export default function PillarRenderer({
       roughness: 0.2,
     });
 
+    // Energy sphere surrounding the pillar (only for owned pillars)
+    const energySphereGeometry = new SphereGeometry(1, 16, 16);
+    const energySphereMaterial = new MeshStandardMaterial({
+      color: pillarColor,
+      emissive: pillarColor.clone().multiplyScalar(0.3),
+      transparent: true,
+      opacity: 0.125,
+      metalness: 0.8,
+      roughness: 0.2,
+    });
+
     return {
       pillarGeometries: {
         base: baseGeometry,
         column: columnGeometry,
         top: topGeometry,
         orb: orbGeometry,
+        energySphere: energySphereGeometry,
       },
       materials: {
         stone: stoneMaterial,
         orb: orbMaterial,
+        energySphere: energySphereMaterial,
       }
     };
   }, [pillarColor]);
@@ -125,6 +139,13 @@ export default function PillarRenderer({
     if (healthBarRef.current && camera) {
       healthBarRef.current.lookAt(camera.position);
     }
+
+    // Pulse the energy sphere
+    if (energySphereRef.current && ownerId) {
+      const time = state.clock.getElapsedTime();
+      const pulseScale = 1 + Math.sin(time * 2) * 0.05; // Subtle pulsing
+      energySphereRef.current.scale.setScalar(pulseScale);
+    }
   });
 
   if (isDead) {
@@ -136,7 +157,7 @@ export default function PillarRenderer({
   return (
     <group ref={groupRef} position={[position.x, position.y, position.z]}>
       {/* Pillar Visual */}
-      <group scale={[0.35, 0.35, 0.35]}>
+      <group scale={[0.325, 0.325, 0.325]}>
         {/* Base */}
         <mesh
           geometry={pillarGeometries.base}
@@ -174,6 +195,24 @@ export default function PillarRenderer({
           <pointLight color={pillarColor} intensity={0.25} distance={5} />
         </mesh>
       </group>
+
+      {/* Energy Sphere surrounding owned pillars */}
+      {ownerId && (
+        <mesh
+          ref={energySphereRef}
+          geometry={pillarGeometries.energySphere}
+          material={materials.energySphere}
+          position={[0, 1.65, 0]}
+          scale={[1, 1, 1]}
+        >
+          <pointLight
+            color={pillarColor}
+            intensity={3.5}
+            distance={12}
+            decay={1.5}
+          />
+        </mesh>
+      )}
 
       {/* Health Bar */}
       <group ref={healthBarRef} position={[0, healthBarY, 0]}>

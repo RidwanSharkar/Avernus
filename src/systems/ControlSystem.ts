@@ -521,7 +521,7 @@ export class ControlSystem extends System {
   }
 
   private lastWeaponSwitchTime = 0;
-  private weaponSwitchCooldown = 1.5; // 200ms cooldown to prevent rapid switching
+  private weaponSwitchCooldown = 4; // 200ms cooldown to prevent rapid switching
 
   private handleWeaponSwitching(): void {
     // Prevent weapon switching while dead and waiting to respawn

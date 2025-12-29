@@ -7,23 +7,11 @@ interface PedestalProps {
   level?: number;
 }
 
-const Pedestal: React.FC<PedestalProps> = ({ 
-  position = [0, 0, 0], 
+const Pedestal: React.FC<PedestalProps> = ({
+  position = [0, 0, 0],
   scale = 1,
   level = 1
 }) => {
-  // Get level-based colors
-  const getLevelColors = (level: number) => {
-    switch (level) {
-      case 1: return { color: '#FF6E6E', emissive: '#FF6E6E' }; // Green 00ff00 006600
-      case 2: return { color: '#ffa500', emissive: '#cc8400' }; // Orange
-      case 3: return { color: '#87ceeb', emissive: '#4682b4' }; // Light Blue
-      case 4: return { color: '#dda0dd', emissive: '#9370db' }; // Light Purple
-      case 5: return { color: '#ff0000', emissive: '#600000' }; // Red
-      default: return { color: '#00ff00', emissive: '#006600' }; // Default to green
-    }
-  };
-  
   // Create geometries and materials only once using useMemo
   const { pedestalGeometry, material } = useMemo(() => {
     // Create a larger base geometry similar to the pillar base but bigger

@@ -99,12 +99,18 @@ const CooldownOverlay: React.FC<{
     <>
       {/* Clock-wipe sweep effect using conic gradient */}
       <div
-        className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden"
-        style={{ zIndex: 16 }}
+        className="absolute pointer-events-none overflow-hidden rounded-xl"
+        style={{ 
+          zIndex: 16,
+          top: '-2px',
+          left: '-2px',
+          right: '-2px',
+          bottom: '-2px',
+        }}
       >
         {/* Sweep overlay - shows remaining cooldown as darkened area */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 rounded-xl"
           style={{
             background: `conic-gradient(from 0deg, transparent ${angle}deg, rgba(0,0,0,0.6) ${angle}deg)`,
             transition: 'background 0.1s linear'
@@ -114,18 +120,22 @@ const CooldownOverlay: React.FC<{
 
       {/* Animated border glow that follows the sweep */}
       <svg
-        className="absolute inset-0 pointer-events-none"
-        width="100%"
-        height="100%"
-        viewBox="0 0 56 56"
-        style={{ zIndex: 17 }}
+        className="absolute pointer-events-none rounded-xl"
+        width="calc(100% + 4px)"
+        height="calc(100% + 4px)"
+        viewBox="0 0 60 60"
+        style={{ 
+          zIndex: 17,
+          top: '-2px',
+          left: '-2px',
+        }}
       >
         {/* Background border (subtle) */}
         <rect
           x="2"
           y="2"
-          width="52"
-          height="52"
+          width="56"
+          height="56"
           rx="12"
           ry="12"
           fill="none"
@@ -136,14 +146,14 @@ const CooldownOverlay: React.FC<{
         <rect
           x="2"
           y="2"
-          width="52"
-          height="52"
+          width="56"
+          height="56"
           rx="12"
           ry="12"
           fill="none"
           stroke={color}
           strokeWidth="5"
-          strokeDasharray={`${(percentage / 100) * 208} 208`}
+          strokeDasharray={`${(percentage / 100) * 224} 224`}
           strokeLinecap="round"
           style={{
             filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}50)`,
@@ -174,21 +184,25 @@ const CooldownOverlay: React.FC<{
 
       {/* Corner accent glows */}
       <div 
-        className="absolute top-0 left-0 w-3 h-3 pointer-events-none"
+        className="absolute top-0 left-0 w-4 h-4 pointer-events-none rounded-xl"
         style={{
           background: `radial-gradient(circle at 100% 100%, ${color}40 0%, transparent 70%)`,
           zIndex: 18,
           opacity: percentage > 0 ? 1 : 0,
-          transition: 'opacity 0.2s'
+          transition: 'opacity 0.2s',
+          top: '-2px',
+          left: '-2px',
         }}
       />
       <div 
-        className="absolute bottom-0 right-0 w-3 h-3 pointer-events-none"
+        className="absolute bottom-0 right-0 w-4 h-4 pointer-events-none rounded-xl"
         style={{
           background: `radial-gradient(circle at 0% 0%, ${color}40 0%, transparent 70%)`,
           zIndex: 18,
           opacity: percentage > 50 ? 1 : 0,
-          transition: 'opacity 0.2s'
+          transition: 'opacity 0.2s',
+          bottom: '-2px',
+          right: '-2px',
         }}
       />
     </>
