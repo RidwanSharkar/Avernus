@@ -88,23 +88,41 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       const archHeight = 2.5; // Height of the arch peak
 
       for (let j = 0; j < segmentsPerArch; j++) {
-        // Create a smooth curve from start to end angle
-        const t = j / (segmentsPerArch - 1);
-        const currentAngle = startAngle + (endAngle - startAngle) * t;
+        // Create segments that connect between points
+        const t1 = j / segmentsPerArch;
+        const t2 = (j + 1) / segmentsPerArch;
 
-        // Calculate position along the arch curve
-        const baseX = Math.cos(currentAngle) * archRadius;
-        const baseZ = Math.sin(currentAngle) * archRadius;
+        // Calculate positions for start and end of this segment
+        const angle1 = startAngle + (endAngle - startAngle) * t1;
+        const angle2 = startAngle + (endAngle - startAngle) * t2;
 
-        // Create parabolic arch shape
-        const archProgress = Math.sin(t * Math.PI); // Sine wave for smooth arch
-        const y = archProgress * archHeight;
+        // Calculate base positions along the circle
+        const x1 = Math.cos(angle1) * archRadius;
+        const z1 = Math.sin(angle1) * archRadius;
+        const x2 = Math.cos(angle2) * archRadius;
+        const z2 = Math.sin(angle2) * archRadius;
 
-        // Calculate rotation to face outward from center
-        const rotation = new Euler(0, currentAngle + Math.PI/2, 0);
+        // Create parabolic arch heights
+        const archProgress1 = Math.sin(t1 * Math.PI);
+        const archProgress2 = Math.sin(t2 * Math.PI);
+        const y1 = archProgress1 * archHeight;
+        const y2 = archProgress2 * archHeight;
+
+        // Position segment at the midpoint between the two points
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const midZ = (z1 + z2) / 2;
+
+        // Calculate direction vector for rotation
+        const dirX = x2 - x1;
+        const dirZ = z2 - z1;
+        const segmentAngle = Math.atan2(dirZ, dirX);
+
+        // Calculate rotation to align with the curve direction
+        const rotation = new Euler(0, segmentAngle, 0);
 
         segments.push({
-          position: new Vector3(baseX, y, baseZ),
+          position: new Vector3(midX, midY, midZ),
           rotation: rotation
         });
       }
