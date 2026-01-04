@@ -7,6 +7,7 @@ import { Vector3, Color, Group, Mesh, MeshBasicMaterial, AdditiveBlending, MathU
 import { World } from '@/ecs/World';
 import { Transform } from '@/ecs/components/Transform';
 import { Tower } from '@/ecs/components/Tower';
+import ElementalVortex from '../enemies/ElementalVortex';
 
 interface TowerRendererProps {
   entityId: number;
@@ -37,8 +38,21 @@ export default function TowerRenderer({
 }: TowerRendererProps) {
   const groupRef = useRef<Group>(null);
   const healthBarRef = useRef<Group>(null);
+  const healthBarFillRef = useRef<Mesh>(null);
   const timeRef = useRef(0);
   const isAttackingRef = useRef(false);
+  const lastPositionRef = useRef(new Vector3());
+
+  // Refs for orbital tendrils to prevent recreation every render
+  const horizontalTendrilsRef = useRef<Group[]>([]);
+  const verticalTendrilsRef = useRef<Group[]>([]);
+
+  // Cached entity data to avoid repeated lookups
+  const cachedEntityData = useRef({
+    tower: null as any,
+    lastEntityId: -1,
+    lastTowerRange: 12
+  });
 
   // Default colors for different players
   const playerColors = useMemo(() => [
@@ -52,17 +66,21 @@ export default function TowerRenderer({
   const healthPercentage = Math.max(0, health / maxHealth);
   const opacity = isDead ? 0.3 : Math.max(0.5, healthPercentage);
 
-  // Get tower range from component
-  let towerRange = 12; // Default range
-  if (world && entityId) {
-    const entity = world.getEntity(entityId);
-    if (entity) {
-      const towerComponent = entity.getComponent(Tower);
-      if (towerComponent) {
-        towerRange = towerComponent.attackRange;
+  // Get tower range from component (cached for performance)
+  const towerRange = useMemo(() => {
+    if (world && entityId && cachedEntityData.current.lastEntityId !== entityId) {
+      const entity = world.getEntity(entityId);
+      if (entity) {
+        const towerComponent = entity.getComponent(Tower);
+        if (towerComponent) {
+          cachedEntityData.current.lastTowerRange = towerComponent.attackRange;
+          cachedEntityData.current.lastEntityId = entityId;
+          return towerComponent.attackRange;
+        }
       }
     }
-  }
+    return cachedEntityData.current.lastTowerRange;
+  }, [world, entityId]);
 
   // Convert player color to hex for material colors
   const colorHex = towerColor.getHex();
@@ -72,14 +90,16 @@ export default function TowerRenderer({
     timeRef.current += delta;
 
     if (groupRef.current) {
-      // Update position from props
-      groupRef.current.position.copy(position);
+      // Only update position if it has changed
+      if (!lastPositionRef.current.equals(position)) {
+        groupRef.current.position.copy(position);
+        lastPositionRef.current.copy(position);
+      }
 
-      // Check if tower is attacking (has target)
+      // Check if tower is attacking (has target) - cached for performance
       const entity = world.getEntity(entityId);
       if (entity) {
         const tower = entity.getComponent(Tower);
-        // Show attack animation when tower has a current target
         isAttackingRef.current = tower ? tower.currentTarget != null : false;
       } else {
         isAttackingRef.current = false;
@@ -107,37 +127,27 @@ export default function TowerRenderer({
       }
 
       // Gentle floating animation
-      groupRef.current.position.y += Math.sin(timeRef.current * 2) * 0.1;
+      groupRef.current.position.y = position.y + Math.sin(timeRef.current * 2) * 0.1;
 
       // Only rotate when not attacking
       if (!isAttackingRef.current) {
         groupRef.current.rotation.y += delta * 0.5;
       }
 
-      // Update and show health bar
+      // Update health bar efficiently using cached ref
       if (healthBarRef.current && camera) {
         healthBarRef.current.lookAt(camera.position);
 
-        // Update health bar scale and color
-        // Find the health bar fill mesh by position (y = 4.8, z = 0)
-        let healthBarFill: Mesh | null = null;
-        for (let i = 0; i < healthBarRef.current.children.length; i++) {
-          const child = healthBarRef.current.children[i] as Mesh;
-          if (child && child.isMesh && Math.abs(child.position.y - 4.8) < 0.01 && Math.abs(child.position.z) < 0.005) {
-            healthBarFill = child;
-            break;
-          }
-        }
-
-        if (healthBarFill) {
+        // Use cached health bar fill ref instead of searching children
+        if (healthBarFillRef.current) {
           // Update scale based on health percentage
-          healthBarFill.scale.x = healthPercentage;
+          healthBarFillRef.current.scale.x = healthPercentage;
 
           // Position health bar to align left when scaling (using new width 2.4)
-          healthBarFill.position.x = -(2.4 * (1 - healthPercentage)) / 2;
+          healthBarFillRef.current.position.x = -(2.4 * (1 - healthPercentage)) / 2;
 
           // Update color based on health percentage
-          const material = healthBarFill.material as MeshBasicMaterial;
+          const material = healthBarFillRef.current.material as MeshBasicMaterial;
           if (healthPercentage > 0.6) {
             material.color.setHex(0x00ff00); // Green
           } else if (healthPercentage > 0.3) {
@@ -147,6 +157,36 @@ export default function TowerRenderer({
           }
         }
       }
+
+      // Update orbital tendrils positions
+      const radius = 0.92;
+      const baseY = 2.875;
+
+      // Horizontal tendrils
+      horizontalTendrilsRef.current.forEach((tendril, i) => {
+        if (tendril) {
+          const angle = (i / 8) * Math.PI * 2 + timeRef.current * 1.2;
+          const x = Math.cos(angle) * radius;
+          const y = baseY + Math.sin(angle) * radius;
+          const z = Math.cos(timeRef.current * 1.5 + i) * 0.2;
+
+          tendril.position.set(x, y, z);
+          tendril.rotation.set(Math.PI/2, angle + Math.PI, -Math.PI/2);
+        }
+      });
+
+      // Vertical tendrils
+      verticalTendrilsRef.current.forEach((tendril, i) => {
+        if (tendril) {
+          const angle = (i / 8) * Math.PI * 2 + timeRef.current * 1.2 + Math.PI / 8;
+          const x = Math.cos(angle) * radius;
+          const y = baseY + Math.sin(angle) * radius;
+          const z = Math.cos(timeRef.current * 1.5 + i) * 0.2;
+
+          tendril.position.set(x, y, z);
+          tendril.rotation.set(Math.PI / 2, angle, 0);
+        }
+      });
 
       // Attack animation for "arms" (energy tendrils)
       const leftArm = groupRef.current.getObjectByName('LeftArm') as Mesh;
@@ -305,7 +345,7 @@ export default function TowerRenderer({
       </mesh>
 
       {/* Constant elemental vortex - adapted for tower */}
-      
+      <ElementalVortex parentRef={groupRef} towerColor={towerColor} />
 
       {/* Attack animation - energy spikes when attacking */}
       {isAttackingRef.current && (
@@ -353,69 +393,51 @@ export default function TowerRenderer({
 
       ELEMENTAL VORTEX
 
-      {/* Energy tendrils orbital rings */}
-      {[...Array(8)].map((_, i) => {
-        const angle = (i / 8) * Math.PI * 2 + timeRef.current * 1.2;
-        const radius = 0.92;
-        const x = Math.cos(angle) * radius;
-        const y = 2.875 + Math.sin(angle) * radius;
-        const z = Math.cos(timeRef.current * 1.5 + i) * 0.2;
-
-        return (
-          <group
-            key={`horizontal-${i}`}
-            position={[x, y, z]}
-            rotation={[
-              Math.PI/2,
-              angle + Math.PI ,
-              -Math.PI/2
-            ]}
-          >
-            <mesh>
-              <coneGeometry args={[0.08625, 0.345, 6]} />
-              <meshStandardMaterial
-                color={colorHex}
-                emissive={emissiveHex}
-                emissiveIntensity={0.8}
-                transparent
-                opacity={opacity}
-              />
-            </mesh>
-          </group>
-        );
-      })}
-
-      {/* Vertical Energy tendrils */}
-      {[...Array(8)].map((_, i) => {
-        const angle = (i / 8) * Math.PI * 2 + timeRef.current * 1.2 + Math.PI / 8;
-        const radius = 0.92;
-        const x = Math.cos(angle) * radius;
-        const y = 2.875 + Math.sin(angle) * radius;
-        const z = Math.cos(timeRef.current * 1.5 + i) * 0.2;
-
-        return (
-          <group
-            key={`vertical-${i}`}
-            position={[x, y, z]}
-            rotation={[
-              Math.PI / 2,
-              angle,
-              0
-            ]}
-          >
-            <mesh>
+      {/* Energy tendrils orbital rings - Static refs for performance */}
+      {[...Array(8)].map((_, i) => (
+        <group
+          key={`horizontal-${i}`}
+          ref={el => {
+            if (el && horizontalTendrilsRef.current[i] !== el) {
+              horizontalTendrilsRef.current[i] = el;
+            }
+          }}
+        >
+          <mesh>
             <coneGeometry args={[0.08625, 0.345, 6]} />
-              <meshStandardMaterial
-                color={towerColor.clone().multiplyScalar(0.8).getHex()}
-                emissive={towerColor.clone().multiplyScalar(0.4).getHex()}
-                emissiveIntensity={0.8}
-                transparent
-                opacity={opacity}
-              />
-            </mesh>
-          </group>
-        );
-      })}
+            <meshStandardMaterial
+              color={colorHex}
+              emissive={emissiveHex}
+              emissiveIntensity={0.8}
+              transparent
+              opacity={opacity}
+            />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Vertical Energy tendrils - Static refs for performance */}
+      {[...Array(8)].map((_, i) => (
+        <group
+          key={`vertical-${i}`}
+          ref={el => {
+            if (el && verticalTendrilsRef.current[i] !== el) {
+              verticalTendrilsRef.current[i] = el;
+            }
+          }}
+        >
+          <mesh>
+            <coneGeometry args={[0.08625, 0.345, 6]} />
+            <meshStandardMaterial
+              color={towerColor.clone().multiplyScalar(0.8).getHex()}
+              emissive={towerColor.clone().multiplyScalar(0.4).getHex()}
+              emissiveIntensity={0.8}
+              transparent
+              opacity={opacity}
+            />
+          </mesh>
+        </group>
+      ))}
 
       {/* Point light for glow effect */}
       <pointLight
@@ -479,7 +501,7 @@ export default function TowerRenderer({
         </mesh>
 
         {/* Health bar fill */}
-        <mesh position={[0, 4.8, 0]}>
+        <mesh ref={healthBarFillRef} position={[0, 4.8, 0]}>
           <planeGeometry args={[2.4, 0.28]} />
           <meshBasicMaterial
             color={

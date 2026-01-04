@@ -1,20 +1,23 @@
-import { useRef } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Group, AdditiveBlending } from 'three';
+import { Mesh, Group, AdditiveBlending, Color, SphereGeometry } from 'three';
 import { MeshStandardMaterial } from '@/utils/three-exports';
 
 interface ElementalVortexProps {
   parentRef: React.RefObject<Group>;
+  towerColor: Color;
 }
 
-const createVortexPiece = () => (
+// Shared geometry to prevent memory leaks
+const sharedVortexGeometry = new SphereGeometry(0.13, 8, 8);
+
+const createVortexPiece = (towerColor: Color) => (
   <group>
     {/* Mist-like particle similar to ReaperMistEffect */}
-    <mesh>
-      <sphereGeometry args={[0.125, 8, 8]} />
-      <meshStandardMaterial 
-        color="#4FC3F7"
-        emissive="#4FC3F7"
+    <mesh geometry={sharedVortexGeometry}>
+      <meshStandardMaterial
+        color={towerColor}
+        emissive={towerColor}
         emissiveIntensity={0.35}
         transparent
         opacity={0.7}
@@ -25,11 +28,18 @@ const createVortexPiece = () => (
   </group>
 );
 
-function ElementalVortex({ parentRef }: ElementalVortexProps) {
+function ElementalVortex({ parentRef, towerColor }: ElementalVortexProps) {
   const vortexPiecesRef = useRef<(Group | null)[]>([]);
-  const pieceCount = 40; // More particles for denser effect
-  const baseRadius = 1.25; // Larger radius
+  const pieceCount = 24; // More particles for denser effect
+  const baseRadius = 1.35; // Larger radius
   const groupRef = useRef<Group>(null);
+
+  // Cleanup geometry on unmount
+  useEffect(() => {
+    return () => {
+      sharedVortexGeometry.dispose();
+    };
+  }, []);
   
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -39,7 +49,7 @@ function ElementalVortex({ parentRef }: ElementalVortexProps) {
       
       const time = clock.getElapsedTime();
       const heightOffset = ((i / pieceCount) * 1.5 - 0.175); // Taller vortex
-      const radiusMultiplier = 0.8 - (heightOffset * 0.375); // Gentler taper
+      const radiusMultiplier = 0.8 - (heightOffset * 0.475); // Gentler taper
       
       // More complex spiral motion like mist particles
       const spiralAngle = (i / pieceCount) * Math.PI * 6 + time * 1.5;
@@ -80,12 +90,12 @@ function ElementalVortex({ parentRef }: ElementalVortexProps) {
             if (el) vortexPiecesRef.current[i] = el;
           }}
         >
-          {createVortexPiece()}
+          {createVortexPiece(towerColor)}
         </group>
       ))}
       
-      <pointLight 
-        color="#4FC3F7"
+      <pointLight
+        color={towerColor}
         intensity={12}
         distance={12}
         decay={1.2}

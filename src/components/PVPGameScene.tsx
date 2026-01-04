@@ -30,6 +30,8 @@ interface ServerPillar {
   health: number;
   maxHealth: number;
   isDead?: boolean;
+  isCorrupted?: boolean;
+  corruptedStartTime?: number;
 }
 
 interface ServerTower {
@@ -113,7 +115,7 @@ import PlayerHealthBar from '@/components/ui/PlayerHealthBar';
 import MerchantUI from '@/components/ui/MerchantUI';
 import TowerRenderer from '@/components/towers/TowerRenderer';
 import PillarRenderer from '@/components/environment/PillarRenderer';
-import SummonedUnitRenderer from '@/components/SummonedUnitRenderer';
+import InstancedSummonedUnitRenderer from '@/components/InstancedSummonedUnitRenderer';
 import EnhancedGround from '@/components/environment/EnhancedGround';
 
 
@@ -124,6 +126,7 @@ import { useBowPowershot } from '@/components/projectiles/useBowPowershot';
 import { triggerGlobalViperSting } from '@/components/projectiles/ViperStingManager';
 import PVPSummonTotemManager from '@/components/projectiles/PVPSummonTotemManager';
 import { ExperienceSystem } from '@/utils/ExperienceSystem';
+import SummonedUnitRenderer from './SummonedUnitRenderer';
 
 // Function to calculate rune count based on weapon type and player level
 // Bow, Sword, and Sabres gain 1 critical chance and 1 critical damage rune per level
@@ -715,6 +718,8 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
         if (pillarComponent) {
           pillarComponent.isActive = !pillar.isDead;
           pillarComponent.isDead = pillar.isDead || false;
+          pillarComponent.isCorrupted = pillar.isCorrupted || false;
+          pillarComponent.corruptedStartTime = pillar.corruptedStartTime || 0;
         }
       }
     }

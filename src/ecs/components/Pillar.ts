@@ -13,6 +13,8 @@ export class Pillar extends Component {
   public isActive: boolean;
   public isDead: boolean;
   public deathTime: number;
+  public isCorrupted: boolean; // Whether the pillar has corrupted aura effect
+  public corruptedStartTime: number; // When corruption started
 
   constructor(
     ownerId: string = '',
@@ -27,6 +29,8 @@ export class Pillar extends Component {
     this.isActive = true;
     this.isDead = false;
     this.deathTime = 0;
+    this.isCorrupted = false;
+    this.corruptedStartTime = 0;
   }
 
   public die(currentTime: number): void {
@@ -45,6 +49,8 @@ export class Pillar extends Component {
     this.isActive = true;
     this.isDead = false;
     this.deathTime = 0;
+    this.isCorrupted = false;
+    this.corruptedStartTime = 0;
     this.enabled = true;
   }
 
@@ -53,6 +59,8 @@ export class Pillar extends Component {
     clone.isActive = this.isActive;
     clone.isDead = this.isDead;
     clone.deathTime = this.deathTime;
+    clone.isCorrupted = this.isCorrupted;
+    clone.corruptedStartTime = this.corruptedStartTime;
     return clone;
   }
 }

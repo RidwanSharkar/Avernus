@@ -6,6 +6,8 @@ import { Vector3, Color, Group, Mesh, CylinderGeometry, SphereGeometry, MeshStan
 import { World } from '@/ecs/World';
 import { Transform } from '@/ecs/components/Transform';
 import { Pillar } from '@/ecs/components/Pillar';
+import PillarCorruptedAura from './PillarAura';
+import PillarAura from './PillarAura';
 
 interface PillarRendererProps {
   entityId: number;
@@ -39,6 +41,49 @@ export default function PillarRenderer({
   const energySphereRef = useRef<Mesh>(null);
   const healthBarFillRef = useRef<Mesh>(null);
   const healthBarGlowRef = useRef<Mesh>(null);
+  const corruptedAuraRef = useRef<{ toggle: () => void; isActive: boolean }>(null);
+
+  // Memoized materials to prevent recreation every frame
+  const healthBarMaterials = useMemo(() => ({
+    fill: new MeshBasicMaterial({
+      transparent: true,
+      opacity: 0.95,
+      depthWrite: false,
+    }),
+    glow: new MeshBasicMaterial({
+      transparent: true,
+      depthWrite: false,
+    }),
+    background: new MeshBasicMaterial({
+      color: "#2a2a2a",
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false,
+    }),
+    border: new MeshBasicMaterial({
+      color: "#1a1a1a",
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+    }),
+    shadow: new MeshBasicMaterial({
+      color: "#1a1a1a",
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+    }),
+    highlight: new MeshBasicMaterial({
+      color: "#ffffff",
+      transparent: true,
+      opacity: 0.2,
+      depthWrite: false,
+    }),
+    borderHighlight: new MeshBasicMaterial({
+      transparent: true,
+      opacity: 0.4,
+      depthWrite: false,
+    }),
+  }), []);
   
   // Smooth health interpolation state
   const lerpState = useRef({
@@ -95,7 +140,7 @@ export default function PillarRenderer({
     const energySphereGeometry = new SphereGeometry(1, 16, 16);
     const energySphereMaterial = new MeshStandardMaterial({
       color: pillarColor,
-      emissive: pillarColor.clone().multiplyScalar(0.3),
+      emissive: pillarColor.clone().multiplyScalar(0.4),
       transparent: true,
       opacity: 0.25,
       metalness: 0.8,
@@ -140,8 +185,9 @@ export default function PillarRenderer({
     return () => {
       Object.values(pillarGeometries).forEach(geometry => geometry.dispose());
       Object.values(materials).forEach(material => material.dispose());
+      Object.values(healthBarMaterials).forEach(material => material.dispose());
     };
-  }, [pillarGeometries, materials]);
+  }, [pillarGeometries, materials, healthBarMaterials]);
 
   useFrame((state, delta) => {
     // Smoothly interpolate health changes
@@ -274,15 +320,18 @@ export default function PillarRenderer({
           geometry={pillarGeometries.energySphere}
           material={materials.energySphere}
           position={[0, 1.45, 0]}
-          scale={[1, 1, 1]}
-        >
-          <pointLight
-            color={pillarColor}
-            intensity={2}
-            distance={12}
-            decay={1.5}
-          />
-        </mesh>
+          scale={[0.85, 0.85, 0.85]}
+        />
+      )}
+
+      {/* Player-colored Aura - always visible on all pillars */}
+      {ownerId && (
+        <PillarAura
+          ref={corruptedAuraRef}
+          parentRef={groupRef}
+          isActive={true}
+          pillarColor={pillarColor}
+        />
       )}
 
       {/* Health Bar */}
@@ -312,45 +361,42 @@ export default function PillarRenderer({
         {/* Background (slightly rounded appearance) */}
         <mesh position={[0, 0, 0.002]}>
           <planeGeometry args={[healthBarWidth, healthBarHeight]} />
-          <meshBasicMaterial 
-            color="#2a2a2a" 
-            transparent 
+          <meshBasicMaterial
+            attach="material"
+            color="#2a2a2a"
+            transparent
             opacity={0.85}
             depthWrite={false}
           />
         </mesh>
-        
+
         {/* Inner shadow/depth effect */}
         <mesh position={[0, 0, 0.003]}>
           <planeGeometry args={[healthBarWidth * 0.98, healthBarHeight * 0.7]} />
-          <meshBasicMaterial 
-            color="#1a1a1a" 
-            transparent 
+          <meshBasicMaterial
+            attach="material"
+            color="#1a1a1a"
+            transparent
             opacity={0.5}
             depthWrite={false}
           />
         </mesh>
 
         {/* Health fill with glow */}
-        <mesh 
+        <mesh
           ref={healthBarFillRef}
           position={[0, 0, 0.004]}
-        >
-          <planeGeometry args={[healthBarWidth, healthBarHeight * 0.75]} />
-          <meshBasicMaterial
-            color={pillarColor.clone().lerp(new Color(0x00ff88), 0.3)}
-            transparent
-            opacity={0.95}
-            depthWrite={false}
-          />
-        </mesh>
-        
+          geometry={new PlaneGeometry(healthBarWidth, healthBarHeight * 0.75)}
+          material={healthBarMaterials.fill}
+        />
+
         {/* Top highlight for depth */}
         <mesh position={[0, healthBarHeight * 0.25, 0.005]}>
           <planeGeometry args={[healthBarWidth * 0.98, healthBarHeight * 0.15]} />
-          <meshBasicMaterial 
-            color="#ffffff" 
-            transparent 
+          <meshBasicMaterial
+            attach="material"
+            color="#ffffff"
+            transparent
             opacity={0.2}
             depthWrite={false}
           />
@@ -359,9 +405,10 @@ export default function PillarRenderer({
         {/* Outer border highlight */}
         <mesh position={[0, 0, 0.006]}>
           <planeGeometry args={[healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2]} />
-          <meshBasicMaterial 
-            color={pillarColor} 
-            transparent 
+          <meshBasicMaterial
+            attach="material"
+            color={pillarColor}
+            transparent
             opacity={0.4}
             depthWrite={false}
           />

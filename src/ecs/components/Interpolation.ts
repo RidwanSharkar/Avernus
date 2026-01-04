@@ -35,8 +35,8 @@ export class InterpolationBuffer extends Component {
 
   // Buffer to store recent server states
   private buffer: ServerState[] = [];
-  private readonly maxBufferSize = 10; // Keep last 10 states for interpolation
-  private readonly interpolationDelay = 100; // ms delay for interpolation (100ms = ~6-7 frames at 60fps)
+  private readonly maxBufferSize = 6; // Reduced from 10 - keep last 6 states for interpolation
+  private readonly interpolationDelay = 75; // Reduced from 100ms - 75ms delay for interpolation (~4-5 frames at 60fps)
 
   // Current interpolation state
   private currentState: ServerState | null = null;
@@ -48,7 +48,7 @@ export class InterpolationBuffer extends Component {
   private lastVelocity: Vector3 = new Vector3();
   private lastAngularVelocity: Vector3 = new Vector3();
   private extrapolationStartTime = 0;
-  private maxExtrapolationTime = 500; // Max time to extrapolate before snapping (500ms)
+  private maxExtrapolationTime = 200; // Reduced from 500ms - max time to extrapolate before snapping
 
   constructor() {
     super();
@@ -86,6 +86,13 @@ export class InterpolationBuffer extends Component {
     // Remove old states to maintain buffer size
     while (this.buffer.length > this.maxBufferSize) {
       this.buffer.shift();
+    }
+
+    // Clean up very old states (older than 1 second) to prevent memory buildup
+    const oneSecondAgo = serverTimestamp - 1000;
+    const oldStateIndex = this.buffer.findIndex(state => state.timestamp < oneSecondAgo);
+    if (oldStateIndex > 0) { // Keep at least one old state for interpolation
+      this.buffer.splice(0, oldStateIndex);
     }
 
     // Update interpolation state

@@ -650,7 +650,7 @@ function HomeContent() {
         {/* Main Menu */}
         {gameMode === 'menu' && (
           <div className="absolute inset-0 flex items-center justify-center z-50 overflow-y-auto">
-            <div className="relative max-w-4xl w-11/12">
+            <div className="relative max-w-4xl w-11/12 scale-75 lg:scale-100 transition-transform duration-300">
               {/* Animated background glow */}
               <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20 rounded-xl blur-lg animate-pulse"></div>
 

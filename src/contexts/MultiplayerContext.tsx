@@ -79,6 +79,8 @@ interface Pillar {
   health: number;
   maxHealth: number;
   isDead?: boolean;
+  isCorrupted?: boolean;
+  corruptedStartTime?: number;
 }
 
 interface RoomPreview {
@@ -733,6 +735,8 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
           updated.set(data.pillarId, {
             ...pillar,
             health: data.newHealth,
+            isCorrupted: data.isCorrupted || false,
+            corruptedStartTime: data.corruptedStartTime || 0,
             isDead: data.wasDestroyed
           });
         }

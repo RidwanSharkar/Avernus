@@ -41,9 +41,9 @@ const sharedGeometries = {
   energyTendril: new ConeGeometry(0.024, 0.09, 4), // unitBaseRadius * 0.08, unitBaseRadius * 0.3
   // Energy Aura - Crystal glow effect
   energyAura: new SphereGeometry(0.525, 8, 8), // unitBaseRadius * 1.75
-  // Health Bar components
-  healthBarBg: new PlaneGeometry(1.5, 0.15),
-  healthBarFill: new PlaneGeometry(1.5, 0.12),
+  // Health Bar components (scaled for units)
+  healthBarBg: new PlaneGeometry(0.85, 0.12),
+  healthBarFill: new PlaneGeometry(0.85, 0.09),
   // Death Effect
   deathEffect: new SphereGeometry(1, 6, 4),
   // Crystal Target Indicator
@@ -102,15 +102,17 @@ const sharedMaterials = {
     depthWrite: false,
     blending: AdditiveBlending
   }),
-  // Health Bar components
+  // Health Bar components (pillar-style)
   healthBarBg: new MeshBasicMaterial({
-    color: 0x333333,
+    color: "#2a2a2a",
     transparent: true,
-    opacity: 0.8
+    opacity: 0.85,
+    depthWrite: false
   }),
   healthBarFill: new MeshBasicMaterial({
     transparent: true,
-    opacity: 0.9,
+    opacity: 0.95,
+    depthWrite: false,
     vertexColors: true
   }),
   // Death Effect
@@ -144,11 +146,13 @@ interface UnitInstanceData {
 interface InstancedSummonedUnitRendererProps {
   world: World;
   maxUnits?: number;
+  summonedUnits?: Map<string, any>; // Optional server-authoritative summoned units
 }
 
 export default function InstancedSummonedUnitRenderer({
   world,
-  maxUnits = 100
+  maxUnits = 100,
+  summonedUnits
 }: InstancedSummonedUnitRendererProps) {
   // Refs for instanced meshes - matching SummonedUnitRenderer crystal model
   const bodyMeshRef = useRef<InstancedMesh>(null); // Main Body - Crystal-like Octahedron
@@ -197,40 +201,64 @@ export default function InstancedSummonedUnitRenderer({
     return playerColors[0];
   }, [playerColors]);
 
-  // Update unit instances from world state
+  // Update unit instances from world state or server data
   const updateUnitInstances = useMemo(() => {
     return () => {
-      const entities = world.queryEntities([Transform, SummonedUnit, Health]);
       const newInstances = new Map<number, UnitInstanceData>();
 
-      for (const entity of entities) {
-        const transform = entity.getComponent(Transform);
-        const unit = entity.getComponent(SummonedUnit);
-        const health = entity.getComponent(Health);
+      if (summonedUnits) {
+        // Use server-authoritative summoned units
+        let unitId = 0;
+        for (const unit of Array.from(summonedUnits.values())) {
+          // Filter out dead or inactive units
+          if (!unit.isActive || unit.isDead) continue;
 
-        if (!transform || !unit || !health) continue;
+          const unitData: UnitInstanceData = {
+            entityId: unitId++,
+            position: new Vector3(unit.position.x, unit.position.y, unit.position.z),
+            color: getPlayerColor(unit.ownerId),
+            health: unit.health,
+            maxHealth: unit.maxHealth,
+            isDead: unit.isDead,
+            ownerId: unit.ownerId,
+            lastUpdateTime: Date.now() / 1000
+          };
 
-        // Skip units that are inactive or marked for destruction
-        if (!unit.isActive && (unit.isDead || health.isDead)) continue;
+          newInstances.set(unitData.entityId, unitData);
+        }
+      } else {
+        // Fall back to ECS query
+        const entities = world.queryEntities([Transform, SummonedUnit, Health]);
 
-        const unitData: UnitInstanceData = {
-          entityId: entity.id,
-          position: transform.position.clone(),
-          color: getPlayerColor(unit.ownerId),
-          health: health.currentHealth,
-          maxHealth: health.maxHealth,
-          isDead: health.isDead || unit.isDead,
-          ownerId: unit.ownerId,
-          lastUpdateTime: Date.now() / 1000
-        };
+        for (const entity of entities) {
+          const transform = entity.getComponent(Transform);
+          const unit = entity.getComponent(SummonedUnit);
+          const health = entity.getComponent(Health);
 
-        newInstances.set(entity.id, unitData);
+          if (!transform || !unit || !health) continue;
+
+          // Skip units that are inactive or marked for destruction
+          if (!unit.isActive && (unit.isDead || health.isDead)) continue;
+
+          const unitData: UnitInstanceData = {
+            entityId: entity.id,
+            position: transform.position.clone(),
+            color: getPlayerColor(unit.ownerId),
+            health: health.currentHealth,
+            maxHealth: health.maxHealth,
+            isDead: health.isDead || unit.isDead,
+            ownerId: unit.ownerId,
+            lastUpdateTime: Date.now() / 1000
+          };
+
+          newInstances.set(entity.id, unitData);
+        }
       }
 
       unitInstances.current = newInstances;
       return newInstances.size;
     };
-  }, [world, getPlayerColor]);
+  }, [world, getPlayerColor, summonedUnits]);
 
   // Calculate damage color and opacity
   const getUnitAppearance = (unit: UnitInstanceData) => {
@@ -405,32 +433,40 @@ export default function InstancedSummonedUnitRenderer({
 
       // Health Bar (only if not dead)
       if (!unit.isDead && healthBarBgMeshRef.current && healthBarFillMeshRef.current) {
-        // Background
+        // Background (pillar-style positioning)
         tempObject.current.position.set(
           unit.position.x,
           unit.position.y + 2.0, // unitHeight + 0.8
           unit.position.z
         );
-        tempObject.current.rotation.set(-Math.PI / 2, 0, 0);
+        tempObject.current.rotation.set(0, 0, 0); // No rotation for top-down view
         tempObject.current.updateMatrix();
         healthBarBgMeshRef.current.setMatrixAt(healthBarBgCount, tempObject.current.matrix);
 
-        // Fill
-        tempObject.current.position.x = unit.position.x - (1.5 * (1 - healthPercentage)) / 2;
-        tempObject.current.position.y = unit.position.y + 2.01; // slightly above background
+        // Fill (pillar-style with left alignment)
+        tempObject.current.position.x = unit.position.x - (0.85 * (1 - healthPercentage)) / 2;
+        tempObject.current.position.y = unit.position.y + 2.001; // slightly above background
         tempObject.current.position.z = unit.position.z;
         tempObject.current.scale.set(healthPercentage, 1, 1);
         tempObject.current.updateMatrix();
         healthBarFillMeshRef.current.setMatrixAt(healthBarFillCount, tempObject.current.matrix);
 
-        // Health bar color based on percentage
-        if (healthPercentage > 0.5) {
-          healthBarFillMeshRef.current.setColorAt(healthBarFillCount, new Color(0x00ff00));
-        } else if (healthPercentage > 0.25) {
-          healthBarFillMeshRef.current.setColorAt(healthBarFillCount, new Color(0xffff00));
+        // Health bar color based on percentage (pillar-style)
+        let targetColor: Color;
+        if (healthPercentage > 0.6) {
+          // High health: Use player color with slight green tint
+          targetColor = unit.color.clone().lerp(new Color(0x00ff88), 0.3);
+        } else if (healthPercentage > 0.3) {
+          // Medium health: Blend player color with yellow
+          const t = (healthPercentage - 0.3) / 0.3;
+          targetColor = unit.color.clone().lerp(new Color(0xffff00), 0.5 - t * 0.3);
         } else {
-          healthBarFillMeshRef.current.setColorAt(healthBarFillCount, new Color(0xff0000));
+          // Low health: Blend player color with red
+          const t = healthPercentage / 0.3;
+          targetColor = unit.color.clone().lerp(new Color(0xff4444), 0.6 - t * 0.3);
         }
+
+        healthBarFillMeshRef.current.setColorAt(healthBarFillCount, targetColor);
 
         healthBarBgCount++;
         healthBarFillCount++;

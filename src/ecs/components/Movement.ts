@@ -48,6 +48,7 @@ export class Movement extends Component {
   public dashCharges: Array<{
     isAvailable: boolean;
     cooldownStartTime: number | null;
+    cooldownTimeoutId?: NodeJS.Timeout;
   }>;
   public maxDashCharges: number;
 
@@ -116,7 +117,8 @@ export class Movement extends Component {
     this.maxDashCharges = 3;
     this.dashCharges = Array.from({ length: this.maxDashCharges }, () => ({
       isAvailable: true,
-      cooldownStartTime: null
+      cooldownStartTime: null,
+      cooldownTimeoutId: undefined
     }));
 
     // Initialize sword charge properties
@@ -257,10 +259,15 @@ export class Movement extends Component {
     this.dashCharges[availableChargeIndex].cooldownStartTime = currentTime;
 
     // Set cooldown timer for this specific charge (6 seconds)
-    setTimeout(() => {
+    // Store timeout ID for cleanup
+    if (this.dashCharges[availableChargeIndex].cooldownTimeoutId) {
+      clearTimeout(this.dashCharges[availableChargeIndex].cooldownTimeoutId);
+    }
+    this.dashCharges[availableChargeIndex].cooldownTimeoutId = setTimeout(() => {
       this.dashCharges[availableChargeIndex].isAvailable = true;
       this.dashCharges[availableChargeIndex].cooldownStartTime = null;
-    }, 7750); // 6 second cooldown DASHCOOLDOWN DASH COOLDOWN
+      this.dashCharges[availableChargeIndex].cooldownTimeoutId = undefined;
+    }, 6000); // 6 second cooldown
 
     return true;
   }
@@ -519,11 +526,19 @@ export class Movement extends Component {
     this.dashDistance = 4;
     this.dashStartPosition.set(0, 0, 0);
     
+    // Clear any pending cooldown timeouts
+    this.dashCharges.forEach(charge => {
+      if (charge.cooldownTimeoutId) {
+        clearTimeout(charge.cooldownTimeoutId);
+      }
+    });
+
     // Reset dash charges
     this.maxDashCharges = 3;
     this.dashCharges = Array.from({ length: this.maxDashCharges }, () => ({
       isAvailable: true,
-      cooldownStartTime: null
+      cooldownStartTime: null,
+      cooldownTimeoutId: undefined
     }));
 
     // Reset charge properties
@@ -569,11 +584,12 @@ export class Movement extends Component {
     clone.dashDistance = this.dashDistance;
     clone.dashStartPosition.copy(this.dashStartPosition);
     
-    // Clone dash charges
+    // Clone dash charges (without active timeouts)
     clone.maxDashCharges = this.maxDashCharges;
     clone.dashCharges = this.dashCharges.map(charge => ({
       isAvailable: charge.isAvailable,
-      cooldownStartTime: charge.cooldownStartTime
+      cooldownStartTime: charge.cooldownStartTime,
+      cooldownTimeoutId: undefined
     }));
 
     // Clone charge properties

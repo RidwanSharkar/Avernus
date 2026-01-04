@@ -221,9 +221,8 @@ export class MovementSystem extends System {
 
   // Define pillar positions (same as in Environment.tsx)
   private readonly PILLAR_POSITIONS = [
-    new Vector3(0, 0, -5),        // Front pillar
-    new Vector3(-4.25, 0, 2.5),   // Left pillar
-    new Vector3(4.25, 0, 2.5)     // Right pillar
+    new Vector3(-6, 0, 0),        // Left pillar
+    new Vector3(6, 0, 0)         // Right pillar
   ];
   private readonly PILLAR_RADIUS = 0.7; // Same as PillarCollision.tsx
 

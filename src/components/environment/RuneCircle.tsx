@@ -23,18 +23,16 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
 
   // Animation state
   const rotationRef = useRef(0);
-  const pulsePhaseRef = useRef(0);
-  const expandPhaseRef = useRef(0);
 
   // Create geometries and materials only once using useMemo
   const { geometries, materials } = useMemo(() => {
     // Scale factor to match ScytheAimer dimensions (ScytheAimer uses pixels, we need world units)
     // ScytheAimer outer radius = 22.5, scaled down for 3D world
-    const scaleFactor = 0.4;
+    const scaleFactor = 0.35;
 
-    // Base colors like ScytheAimer
-    const baseColor = hasCryoflame ? '#00bfff' : '#ff4444'; // Deep Sky Blue or Red
-    const glowColor = hasCryoflame ? '#4df7ff' : '#ff8888'; // Lighter variants for glow
+    // Spellcaster mystical colors - purples and magentas for magical atmosphere
+    const baseColor = hasCryoflame ? '#4a90e2' : '#8a2be2'; // Steel Blue for cryoflame, Blue Violet for fire
+    const glowColor = hasCryoflame ? '#87ceeb' : '#dda0dd'; // Sky Blue for cryoflame, Plum for fire
 
     // Create dashed ring geometries (like SVG strokeDasharray)
     const createDashedRingGeometry = (innerRadius: number, outerRadius: number, dashLength: number, gapLength: number, segments: number = 32) => {
@@ -72,56 +70,56 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
     // Arcane runes/dots (6 small circles around inner ring) - small spheres
     const runeGeometry = new CircleGeometry(0.15, 8);
 
-    // Materials
+    // Materials - spellcaster style with steady mystical glow
     const outerRingMaterial = new MeshStandardMaterial({
       color: new Color(baseColor),
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.75,
       emissive: new Color(glowColor),
-      emissiveIntensity: 0.4,
+      emissiveIntensity: 0.5, // Steady, prominent glow
       side: 2, // DoubleSide for visibility from both sides
     });
 
     const innerRingMaterial = new MeshStandardMaterial({
       color: new Color(baseColor),
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.7,
       emissive: new Color(glowColor),
-      emissiveIntensity: 0.3,
+      emissiveIntensity: 0.4, // Steady inner glow
       side: 2,
     });
 
     const centerOrbMaterial = new MeshStandardMaterial({
       color: new Color(baseColor),
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.85,
       emissive: new Color(glowColor),
-      emissiveIntensity: 0.6,
+      emissiveIntensity: 0.8, // Bright, steady center focus
     });
 
     const markerMaterial = new MeshStandardMaterial({
       color: new Color(baseColor),
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.85,
       emissive: new Color(glowColor),
-      emissiveIntensity: 0.5,
+      emissiveIntensity: 0.6, // Steady cardinal markers
     });
 
     const runeMaterial = new MeshStandardMaterial({
       color: new Color(baseColor),
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.95,
       emissive: new Color(glowColor),
-      emissiveIntensity: 0.6,
+      emissiveIntensity: 0.7, // Bright, steady arcane runes
     });
 
-    // Expanding ring material (separate instance for independent animation)
+    // Expanding ring material - subtle mystical aura
     const expandingRingMaterial = new MeshStandardMaterial({
       color: new Color(baseColor),
       transparent: true,
-      opacity: 0.4,
+      opacity: 0.2, // More subtle
       emissive: new Color(glowColor),
-      emissiveIntensity: 0.3,
+      emissiveIntensity: 0.25, // Soft, steady aura
       side: 2,
     });
 
@@ -145,58 +143,20 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
     };
   }, [hasCryoflame]);
 
-  // Animation loop
+  // Animation loop - smooth, spellcaster-like rotation
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    // Continuous rotation (same as ScytheAimer)
-    rotationRef.current += delta * 0.2 * 180 / Math.PI; // Convert to degrees
+    // Smooth continuous rotation for mystical effect
+    rotationRef.current += delta * 0.15 * 180 / Math.PI; // Slower, more elegant rotation
     rotationRef.current = rotationRef.current % 360;
 
-    // Pulse animation (2 pulses per second like ScytheAimer)
-    pulsePhaseRef.current += delta * 2;
-    const pulseIntensity = Math.sin(pulsePhaseRef.current * Math.PI * 2) * 0.5 + 0.5; // 0 to 1
-
-    // Expanding ring animation (slower, more dramatic)
-    expandPhaseRef.current += delta * 0.1;
-    const expandIntensity = Math.sin(expandPhaseRef.current * Math.PI * 2) * 0.5 + 0.5; // 0 to 1
-
-    // Apply rotation to rings
+    // Apply rotation to rings with spellcaster timing
     if (outerRingRef.current) {
       outerRingRef.current.rotation.z = (rotationRef.current * Math.PI) / 180;
     }
     if (innerRingRef.current) {
-      innerRingRef.current.rotation.z = (-rotationRef.current * 1.6 * Math.PI) / 180; // Counter-rotate faster
-    }
-
-    // Animate emissive intensities for pulsing effect
-    if (materials.outerRing) {
-      materials.outerRing.emissiveIntensity = 0.4 + pulseIntensity * 0.6;
-    }
-    if (materials.innerRing) {
-      materials.innerRing.emissiveIntensity = 0.3 + pulseIntensity * 0.7;
-    }
-    if (materials.centerOrb) {
-      materials.centerOrb.emissiveIntensity = 0.6 + pulseIntensity * 1.4;
-    }
-    if (materials.marker) {
-      materials.marker.emissiveIntensity = 0.5 + pulseIntensity * 1.0;
-    }
-    if (materials.rune) {
-      materials.rune.emissiveIntensity = 0.6 + pulseIntensity * 1.2;
-    }
-
-    // Scale animation for center orb (grows and shrinks)
-    if (centerOrbRef.current) {
-      const scaleMultiplier = 1 + pulseIntensity * 0.4;
-      centerOrbRef.current.scale.setScalar(scaleMultiplier);
-    }
-
-    // Expanding ring effect (grows and fades)
-    if (expandingRingRef.current && expandingRingRef.current.material) {
-      const expandScale = 0.7 + expandIntensity * 0.35;
-      expandingRingRef.current.scale.setScalar(expandScale);
-      (expandingRingRef.current.material as THREE.MeshStandardMaterial).opacity = (1 - expandIntensity) * 0.4;
+      innerRingRef.current.rotation.z = (-rotationRef.current * 1.3 * Math.PI) / 180; // Counter-rotate at mystical ratio
     }
   });
 
@@ -220,7 +180,7 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
 
   return (
     <group ref={groupRef} position={position} scale={[scale, scale, scale]}>
-      {/* Expanding outer ring - pulses and grows */}
+      {/* Subtle mystical aura ring */}
       <mesh
         ref={expandingRingRef}
         geometry={geometries.expandingRing}
@@ -293,7 +253,7 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
         );
       })}
 
-      {/* Center spell focus - pulsing orb */}
+      {/* Center spell focus - steady mystical orb */}
       <mesh
         ref={centerOrbRef}
         geometry={geometries.centerOrb}
@@ -302,12 +262,12 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
         position={[0, 0.04, 0]}
       />
 
-      {/* Central point light for atmosphere */}
+      {/* Central point light for mystical atmosphere */}
       <pointLight
         position={[0, 1, 0]}
-        color={hasCryoflame ? 0x00bfff : 0xff4444}
-        intensity={1.2}
-        distance={15}
+        color={hasCryoflame ? 0x4a90e2 : 0x8a2be2}
+        intensity={1.5}
+        distance={18}
         decay={2}
       />
     </group>

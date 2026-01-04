@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Group, Mesh, MathUtils, AdditiveBlending } from '@/utils/three-exports';
+import { Vector3, Group, Mesh, MathUtils, AdditiveBlending, Color } from '@/utils/three-exports';
 import { World } from '@/ecs/World';
 import { Enemy } from '@/ecs/components/Enemy';
 import { Transform } from '@/ecs/components/Transform';
@@ -218,7 +218,7 @@ export default function EliteRenderer({
       </mesh>
 
       {/* Constant subtle elemental vortex - always visible */}
-      <ElementalVortex parentRef={groupRef} />
+      <ElementalVortex parentRef={groupRef} towerColor={new Color("#4FC3F7")} />
 
       {/* Attack animation - ice spikes when attacking */}
       {isAttackingRef.current && (

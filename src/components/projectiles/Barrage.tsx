@@ -1,5 +1,5 @@
-import React from 'react';
-import { Vector3, AdditiveBlending } from '@/utils/three-exports';
+import React, { useMemo, useEffect } from 'react';
+import { Vector3, AdditiveBlending, CylinderGeometry, TorusGeometry } from '@/utils/three-exports';
 
 interface BarrageProjectile {
   id: number;
@@ -20,7 +20,22 @@ interface BarrageProps {
   projectiles: BarrageProjectile[];
 }
 
+// Shared geometries to prevent memory leaks
+const sharedGeometries = {
+  arrow: new CylinderGeometry(0.025, 0.1, 1.8, 6),
+  ring0: new TorusGeometry(0.1, 0.04, 6, 10),
+  ring1: new TorusGeometry(0.13, 0.04, 6, 10)
+};
+
 export default function Barrage({ projectiles }: BarrageProps) {
+  // Cleanup geometries on unmount
+  useEffect(() => {
+    return () => {
+      sharedGeometries.arrow.dispose();
+      sharedGeometries.ring0.dispose();
+      sharedGeometries.ring1.dispose();
+    };
+  }, []);
   return (
     <>
       {projectiles.map(projectile => {
@@ -45,8 +60,7 @@ export default function Barrage({ projectiles }: BarrageProps) {
               ]}
             >
             {/* Base arrow - slightly smaller than regular bow arrows */}
-            <mesh rotation={[Math.PI/2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.1, 1.8, 6]} />
+            <mesh rotation={[Math.PI/2, 0, 0]} geometry={sharedGeometries.arrow}>
               <meshStandardMaterial
                 color="#0088ff"
                 emissive="#0088ff"
@@ -57,13 +71,13 @@ export default function Barrage({ projectiles }: BarrageProps) {
             </mesh>
 
             {/* Arrow Rings - fewer rings for barrage arrows */}
-            {[...Array(2)].map((_, i) => ( 
+            {[...Array(2)].map((_, i) => (
               <mesh
                 key={`barrage-ring-${i}`}
                 position={[0, 0, -i * 0.4 + 0.4]}
                 rotation={[Math.PI, 0, Date.now() * 0.004 + i * Math.PI / 2]}
+                geometry={i === 0 ? sharedGeometries.ring0 : sharedGeometries.ring1}
               >
-                <torusGeometry args={[0.1 + i * 0.03, 0.04, 6, 10]} />
                 <meshStandardMaterial
                   color="#0088ff"
                   emissive="#0088ff"

@@ -52,33 +52,34 @@ export default function EntropicBolt({
 
     let finalPosition = idealPosition;
 
-    // Only add chaotic movement if NOT Cryoflame (Cryoflame bolts move in straight lines)
-    if (!isCryoflame) {
-      // Add chaotic movement with multiple sine waves for entropic effect
-      const time = timeElapsed.current;
-      const seed = randomSeed.current;
+    // Add chaotic movement for both normal and Cryoflame bolts (less intense for Cryoflame)
+    // Add chaotic movement with multiple sine waves for entropic effect
+    const time = timeElapsed.current;
+    const seed = randomSeed.current;
 
-      // Multiple overlapping sine waves for chaotic movement
-      const chaoticX = Math.sin(time * 8 + seed) * 0.3 * Math.sin(time * 3 + seed * 0.5) * 3.25;
-      const chaoticY = Math.cos(time * 6 + seed * 1.5) * 0.4 * Math.sin(time * 4 + seed * 0.8) * 2.5;
-      const chaoticZ = Math.sin(time * 7 + seed * 2) * 0.25 * Math.cos(time * 5 + seed * 1.2) * 7.25;
+    // Intensity multiplier - Cryoflame has less chaotic movement
+    const intensityMultiplier = isCryoflame ? 0.5 : 1.0;
 
-      // Add some random jitter that decreases as we get closer to target
-      const jitterIntensity = (1 - progress) * 0.15;
-      const jitterX = (Math.random() - 0.5) * jitterIntensity;
-      const jitterY = (Math.random() - 0.5) * jitterIntensity;
-      const jitterZ = (Math.random() - 0.5) * jitterIntensity;
+    // Multiple overlapping sine waves for chaotic movement
+    const chaoticX = Math.sin(time * 8 + seed) * 0.3 * Math.sin(time * 3 + seed * 0.5) * 3.25 * intensityMultiplier;
+    const chaoticY = Math.cos(time * 6 + seed * 1.5) * 0.4 * Math.sin(time * 4 + seed * 0.8) * 2.5 * intensityMultiplier;
+    const chaoticZ = Math.sin(time * 7 + seed * 2) * 0.25 * Math.cos(time * 5 + seed * 1.2) * 7.25 * intensityMultiplier;
 
-      // Combine chaotic movement with jitter
-      chaoticOffset.current.set(
-        chaoticX + jitterX,
-        chaoticY + jitterY,
-        chaoticZ + jitterZ
-      );
+    // Add some random jitter that decreases as we get closer to target
+    const jitterIntensity = (1 - progress) * 0.15;
+    const jitterX = (Math.random() - 0.5) * jitterIntensity;
+    const jitterY = (Math.random() - 0.5) * jitterIntensity;
+    const jitterZ = (Math.random() - 0.5) * jitterIntensity;
 
-      // Apply the chaotic offset to the ideal position
-      finalPosition = idealPosition.clone().add(chaoticOffset.current);
-    }
+    // Combine chaotic movement with jitter
+    chaoticOffset.current.set(
+      chaoticX + jitterX,
+      chaoticY + jitterY,
+      chaoticZ + jitterZ
+    );
+
+    // Apply the chaotic offset to the ideal position
+    finalPosition = idealPosition.clone().add(chaoticOffset.current);
 
     boltRef.current.position.copy(finalPosition);
 

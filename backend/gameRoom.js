@@ -390,6 +390,8 @@ class GameRoom {
       maxHealth: 4000,
       isDead: false,
       isActive: true,
+      isCorrupted: false, // Whether pillar has corrupted aura effect
+      corruptedStartTime: 0, // When corruption started
       createdAt: Date.now()
     };
     pillars.push(leftPillar);
@@ -410,6 +412,8 @@ class GameRoom {
       maxHealth: 4000,
       isDead: false,
       isActive: true,
+      isCorrupted: false, // Whether pillar has corrupted aura effect
+      corruptedStartTime: 0, // When corruption started
       createdAt: Date.now()
     };
     pillars.push(centerPillar);
@@ -430,6 +434,8 @@ class GameRoom {
       maxHealth: 4000,
       isDead: false,
       isActive: true,
+      isCorrupted: false, // Whether pillar has corrupted aura effect
+      corruptedStartTime: 0, // When corruption started
       createdAt: Date.now()
     };
     pillars.push(rightPillar);
@@ -489,6 +495,17 @@ class GameRoom {
     pillar.health = Math.max(0, pillar.health - damage);
     const wasDestroyed = pillar.health <= 0 && oldHealth > 0;
 
+    // Handle corruption state - activate when health drops below 50%
+    const healthPercent = pillar.health / pillar.maxHealth;
+    if (!pillar.isCorrupted && healthPercent < 0.5 && pillar.health > 0) {
+      pillar.isCorrupted = true;
+      pillar.corruptedStartTime = Date.now();
+    } else if (pillar.isCorrupted && healthPercent >= 0.5) {
+      // Remove corruption if health is restored above 50%
+      pillar.isCorrupted = false;
+      pillar.corruptedStartTime = 0;
+    }
+
     if (wasDestroyed) {
       pillar.isDead = true;
 
@@ -506,6 +523,8 @@ class GameRoom {
         damage: damage,
         sourcePlayerId: sourcePlayerId,
         newHealth: pillar.health,
+        isCorrupted: pillar.isCorrupted,
+        corruptedStartTime: pillar.corruptedStartTime,
         wasDestroyed: wasDestroyed
       });
 

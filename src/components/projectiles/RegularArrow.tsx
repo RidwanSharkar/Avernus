@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Group, DoubleSide, AdditiveBlending } from '@/utils/three-exports';
+import { Vector3, Group, DoubleSide, AdditiveBlending, ConeGeometry, CylinderGeometry, PlaneGeometry, SphereGeometry } from '@/utils/three-exports';
 
 interface RegularArrowProps {
   position: Vector3;
@@ -11,7 +11,24 @@ interface RegularArrowProps {
   projectileType?: string; // Add projectile type to support different colors
 }
 
+// Shared geometries to prevent memory leaks
+const sharedGeometries = {
+  head: new ConeGeometry(0.08, 0.25, 8),
+  shaft: new CylinderGeometry(0.02, 0.03, 0.4, 8),
+  fletching: new PlaneGeometry(0.08, 0.12),
+  aura: new SphereGeometry(0.15 * 1.5, 16, 16)
+};
+
 export default function RegularArrow({ position, direction, onImpact, distanceTraveled = 0, maxDistance = 25, projectileType }: RegularArrowProps) {
+  // Cleanup geometries on unmount
+  useEffect(() => {
+    return () => {
+      sharedGeometries.head.dispose();
+      sharedGeometries.shaft.dispose();
+      sharedGeometries.fletching.dispose();
+      sharedGeometries.aura.dispose();
+    };
+  }, []);
 
   const arrowRef = useRef<Group>(null);
 
@@ -47,8 +64,7 @@ export default function RegularArrow({ position, direction, onImpact, distanceTr
     <group name="regular-arrow-group">
       <group ref={arrowRef} position={position}>
         {/* Arrow Head */}
-        <mesh position={[0, 0, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
-          <coneGeometry args={[0.08, 0.25, 8]} />
+        <mesh position={[0, 0, 0.2]} rotation={[Math.PI / 2, 0, 0]} geometry={sharedGeometries.head}>
           <meshStandardMaterial
             color={color}
             emissive={emissiveColor}
@@ -63,8 +79,7 @@ export default function RegularArrow({ position, direction, onImpact, distanceTr
         </mesh>
         
         {/* Arrow Shaft */}
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.02, 0.03, 0.4, 8]} />
+        <mesh rotation={[Math.PI / 2, 0, 0]} geometry={sharedGeometries.shaft}>
           <meshStandardMaterial
             color={color}
             emissive={shaftEmissiveColor}
@@ -81,7 +96,7 @@ export default function RegularArrow({ position, direction, onImpact, distanceTr
         <group position={[0, 0, -0.15]}>
           {/* Three fletching vanes */}
           {[0, 120, 240].map((angle, index) => (
-            <mesh 
+            <mesh
               key={index}
               position={[
                 Math.cos((angle * Math.PI) / 180) * 0.04,
@@ -89,8 +104,8 @@ export default function RegularArrow({ position, direction, onImpact, distanceTr
                 0
               ]}
               rotation={[0, 0, (angle * Math.PI) / 180]}
+              geometry={sharedGeometries.fletching}
             >
-              <planeGeometry args={[0.08, 0.12]} />
               <meshStandardMaterial
                 color={fletchingColor}
                 emissive={fletchingEmissiveColor}
@@ -106,8 +121,7 @@ export default function RegularArrow({ position, direction, onImpact, distanceTr
         </group>
         
         {/* Energy Aura around arrow */}
-        <mesh>
-          <sphereGeometry args={[size * 1.5, 16, 16]} />
+        <mesh geometry={sharedGeometries.aura}>
           <meshStandardMaterial
             color={auraColor}
             emissive={color}

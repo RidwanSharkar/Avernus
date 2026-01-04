@@ -52,16 +52,15 @@ const Environment: React.FC<EnvironmentProps> = ({
   // Generate mountains once and memoize for performance
   const mountains = useMemo(() => generateMountains(), []);
 
-  // Define pillar positions - use PVP positions if provided, otherwise default triangle
+  // Define pillar positions - use PVP positions if provided, otherwise default opposite sides
   const pillarPositions: Array<[number, number, number]> = useMemo(() => {
     if (isPVP && pvpPillarPositions) {
       return pvpPillarPositions;
     }
-    // Default triangle formation for regular gameplay
+    // Default two pillars at opposite sides
     return [
-      [0, 0.0, -5],        // Front pillar (raised so base sits on ground)
-      [-4.25, 0.05, 2.5],   // Left pillar (raised so base sits on ground)
-      [4.25, 0.05, 2.5]     // Right pillar (raised so base sits on ground)
+      [-6, 0.0, 0],        // Left pillar (raised so base sits on ground)
+      [6, 0.0, 0]          // Right pillar (raised so base sits on ground)
     ];
   }, [isPVP, pvpPillarPositions]);
 
@@ -120,7 +119,7 @@ const Environment: React.FC<EnvironmentProps> = ({
         size={0.02}
       />
 
-      {/* Three pillars in triangle formation */}
+      {/* Two pillars at opposite sides */}
       {pillarPositions.map((pillarPos, index) => (
         <group key={`pillar-group-${index}`}>
           <Pillar position={pillarPos} />

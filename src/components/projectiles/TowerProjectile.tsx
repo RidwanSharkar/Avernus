@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Color, Group, Mesh, AdditiveBlending, MathUtils } from '@/utils/three-exports';
+import { Vector3, Color, Group, Mesh, AdditiveBlending, MathUtils, OctahedronGeometry, SphereGeometry, ConeGeometry } from '@/utils/three-exports';
 
 interface TowerProjectileProps {
   position: Vector3;
@@ -11,6 +11,15 @@ interface TowerProjectileProps {
   ownerId?: string;
   opacity?: number;
 }
+
+// Shared geometries to prevent memory leaks
+const sharedGeometries = {
+  main: new OctahedronGeometry(0.2, 0),
+  core: new OctahedronGeometry(0.12, 0),
+  aura: new SphereGeometry(0.35, 12, 12),
+  trail: new ConeGeometry(0.03, 0.15, 4),
+  particle: new SphereGeometry(0.02, 6, 6)
+};
 
 export default function TowerProjectile({
   position,
@@ -21,6 +30,17 @@ export default function TowerProjectile({
 }: TowerProjectileProps) {
   const groupRef = useRef<Group>(null);
   const timeRef = useRef(0);
+
+  // Cleanup geometries on unmount
+  useEffect(() => {
+    return () => {
+      sharedGeometries.main.dispose();
+      sharedGeometries.core.dispose();
+      sharedGeometries.aura.dispose();
+      sharedGeometries.trail.dispose();
+      sharedGeometries.particle.dispose();
+    };
+  }, []);
 
   // Determine color based on owner ID - match tower colors exactly
   const projectileColor = useMemo(() => {
@@ -99,8 +119,7 @@ export default function TowerProjectile({
   return (
     <group ref={groupRef}>
       {/* Main projectile body - crystalline energy shard */}
-      <mesh>
-        <octahedronGeometry args={[0.2, 0]} />
+      <mesh geometry={sharedGeometries.main}>
         <meshStandardMaterial
           color={projectileColor}
           emissive={emissiveColor}
@@ -114,8 +133,7 @@ export default function TowerProjectile({
 
       {/* Energy core - spinning inner crystal */}
       <group name="CoreSpinner">
-        <mesh>
-          <octahedronGeometry args={[0.12, 0]} />
+        <mesh geometry={sharedGeometries.core}>
           <meshStandardMaterial
             color={projectileColor.clone().multiplyScalar(1.5)}
             emissive={projectileColor.clone().multiplyScalar(0.8)}
@@ -129,8 +147,7 @@ export default function TowerProjectile({
       </group>
 
       {/* Outer glow sphere */}
-      <mesh name="GlowSphere">
-        <sphereGeometry args={[0.35, 12, 12]} />
+      <mesh name="GlowSphere" geometry={sharedGeometries.aura}>
         <meshStandardMaterial
           color={projectileColor}
           emissive={emissiveColor}
@@ -154,8 +171,8 @@ export default function TowerProjectile({
             key={`tendril-${i}`}
             position={[x, 0, z]}
             rotation={[0, angle, 0]}
+            geometry={sharedGeometries.trail}
           >
-            <coneGeometry args={[0.03, 0.15, 4]} />
             <meshStandardMaterial
               color={projectileColor.clone().multiplyScalar(1.3)}
               emissive={emissiveColor}
@@ -182,8 +199,8 @@ export default function TowerProjectile({
             <mesh
               key={`particle-${i}`}
               position={[x, y, z]}
+              geometry={sharedGeometries.particle}
             >
-              <sphereGeometry args={[0.02, 6, 6]} />
               <meshStandardMaterial
                 color={projectileColor}
                 emissive={emissiveColor}

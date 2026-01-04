@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import { BufferGeometry, CylinderGeometry, MeshStandardMaterial, Group, Mesh, Vector3, Quaternion, Color, InstancedMesh, Matrix4, PerspectiveCamera, ConeGeometry } from '../../utils/three-exports';
+import { useFrame, useThree } from '@react-three/fiber';
 
 
 // Function to create foliage cone geometry (deterministic based on position)
@@ -38,10 +39,16 @@ export interface DetailedTree {
 
 interface DetailedTreesProps {
   trees: DetailedTree[];
+  camera?: PerspectiveCamera;
+  lodDistances?: {
+    high: number;    // Full detail trees (default 35)
+    medium: number;  // Reduced detail trees (default 75)
+    low: number;     // Minimal detail trees (default 150)
+  };
 }
 
-// Function to generate a natural tree structure
-const generateTreeStructure = (): TreeBranch[] => {
+// Function to generate a natural tree structure with LOD support
+const generateTreeStructure = (lod: 'high' | 'medium' | 'low' = 'high'): TreeBranch[] => {
   const trunkHeight = 3 + Math.random() * 2; // 3-5 units tall
   const trunkRadius = 0.15 + Math.random() * 0.1; // 0.15-0.25 radius
 
@@ -67,10 +74,14 @@ const generateTreeStructure = (): TreeBranch[] => {
     rotation: new Vector3(0, 0, 0)
   };
 
-  // Generate main branches from trunk
+  // Generate main branches from trunk (LOD-dependent)
   let mainBranchCount = 4 + Math.floor(Math.random() * 4); // 4-7 main branches (increased)
   if (isSparse) mainBranchCount = Math.max(3, mainBranchCount - 2); // Fewer branches for sparse trees
   if (isDense) mainBranchCount = mainBranchCount + 3; // More branches for dense trees
+
+  // Reduce branch count for lower LOD levels
+  if (lod === 'medium') mainBranchCount = Math.max(2, Math.floor(mainBranchCount * 0.6));
+  if (lod === 'low') mainBranchCount = Math.max(1, Math.floor(mainBranchCount * 0.3));
 
   const branchStartHeight = trunkHeight * (0.5 + Math.random() * 0.2); // Start branching at 50-70% of trunk height
 
@@ -102,8 +113,10 @@ const generateTreeStructure = (): TreeBranch[] => {
       )
     };
 
-    // Generate secondary branches
-    const secondaryCount = 3 + Math.floor(Math.random() * 4); // 3-6 secondary branches (increased)
+    // Generate secondary branches (LOD-dependent)
+    let secondaryCount = 3 + Math.floor(Math.random() * 4); // 3-6 secondary branches (increased)
+    if (lod === 'medium') secondaryCount = Math.max(1, Math.floor(secondaryCount * 0.5));
+    if (lod === 'low') secondaryCount = 0; // No secondary branches for low LOD
     for (let j = 0; j < secondaryCount; j++) {
       const secAngle = angle + (Math.random() - 0.5) * 2.0;
       const secLength = length * (0.3 + Math.random() * 0.5); // 30-80% of main branch
@@ -166,16 +179,25 @@ const createBranchGeometry = (branch: TreeBranch, isTerminal: boolean = false): 
   return geometry;
 };
 
-const DetailedTrees: React.FC<DetailedTreesProps> = ({ trees }) => {
+const DetailedTrees: React.FC<DetailedTreesProps> = ({
+  trees,
+  camera,
+  lodDistances = { high: 35, medium: 75, low: 150 }
+}) => {
   const treeGroupsRef = useRef<Group[]>([]);
+  const [treeLODs, setTreeLODs] = useState<Map<number, 'high' | 'medium' | 'low'>>(new Map());
+  const lastLODUpdate = useRef(0);
 
-  // Generate tree structures
+  // Generate tree structures with LOD support
   const treeStructures = useMemo(() => {
-    return trees.map(tree => ({
-      ...tree,
-      branches: generateTreeStructure()
-    }));
-  }, [trees]);
+    return trees.map((tree, index) => {
+      const lod = treeLODs.get(index) || 'high';
+      return {
+        ...tree,
+        branches: generateTreeStructure(lod)
+      };
+    });
+  }, [trees, treeLODs]);
 
   useEffect(() => {
     // Clear previous trees
@@ -281,6 +303,37 @@ const DetailedTrees: React.FC<DetailedTreesProps> = ({ trees }) => {
       treeGroupsRef.current.push(treeGroup);
     });
   }, [treeStructures]);
+
+  // Update LOD levels based on camera distance
+  useFrame(() => {
+    if (!camera || !(camera as PerspectiveCamera).isPerspectiveCamera) return;
+
+    const perspectiveCamera = camera as PerspectiveCamera;
+    const currentTime = Date.now();
+
+    // Throttle LOD updates to every 2 seconds to avoid excessive calculations
+    if (currentTime - lastLODUpdate.current < 2000) return;
+    lastLODUpdate.current = currentTime;
+
+    const newLODs = new Map<number, 'high' | 'medium' | 'low'>();
+
+    trees.forEach((tree, index) => {
+      const distance = perspectiveCamera.position.distanceTo(tree.position);
+      let newLod: 'high' | 'medium' | 'low';
+
+      if (distance < lodDistances.high) {
+        newLod = 'high';
+      } else if (distance < lodDistances.medium) {
+        newLod = 'medium';
+      } else {
+        newLod = 'low';
+      }
+
+      newLODs.set(index, newLod);
+    });
+
+    setTreeLODs(newLODs);
+  });
 
   return (
     <group>

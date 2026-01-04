@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { World } from '@/ecs/World';
 import { Transform } from '@/ecs/components/Transform';
@@ -6,6 +6,8 @@ import { Projectile } from '@/ecs/components/Projectile';
 import { Renderer } from '@/ecs/components/Renderer';
 import { Enemy } from '@/ecs/components/Enemy';
 import { Health } from '@/ecs/components/Health';
+import { SpatialHash } from '@/utils/SpatialHash';
+import { Vector3, Color, Box3 } from '@/utils/three-exports';
 
 // Import individual projectile components
 import CrossentropyBolt from '@/components/projectiles/CrossentropyBolt';
@@ -16,7 +18,6 @@ import Barrage from '@/components/projectiles/Barrage';
 import TowerProjectile from '@/components/projectiles/TowerProjectile';
 import ExplosionEffect from '@/components/projectiles/ExplosionEffect';
 import CrossentropyExplosion from '@/components/projectiles/CrossentropyExplosion';
-import { Vector3, Color } from '@/utils/three-exports';
 
 // Data interfaces for each projectile type
 interface ProjectileData {
@@ -88,17 +89,31 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
   // Throttling
   const lastUpdateTime = useRef(0);
 
-  // Collision detection for EntropicBolt
-  const checkEntropicBoltCollisions = (boltId: number, position: Vector3): boolean => {
-    if (!world) return false;
+  // Spatial hash for optimized collision detection
+  const spatialHashRef = useRef<SpatialHash | null>(null);
 
-    // Get all enemy entities
-    const allEntities = world.getAllEntities();
-    
-    for (const entity of allEntities) {
-      const enemy = entity.getComponent(Enemy);
-      const health = entity.getComponent(Health);
-      const transform = entity.getComponent(Transform);
+  // Initialize spatial hash
+  useEffect(() => {
+    spatialHashRef.current = new SpatialHash(8); // 8 unit cell size for good balance
+
+    return () => {
+      if (spatialHashRef.current) {
+        spatialHashRef.current.clear();
+      }
+    };
+  }, []);
+
+  // Collision detection for EntropicBolt using spatial partitioning
+  const checkEntropicBoltCollisions = (boltId: number, position: Vector3): boolean => {
+    if (!world || !spatialHashRef.current) return false;
+
+    // Use spatial hash to find nearby enemies
+    const nearbyEntries = spatialHashRef.current.queryRadius(position, 2.0); // Slightly larger than hit radius
+
+    for (const entry of nearbyEntries) {
+      const enemy = entry.entity.getComponent(Enemy);
+      const health = entry.entity.getComponent(Health);
+      const transform = entry.entity.getComponent(Transform);
 
       // Skip if not an enemy or if dead
       if (!enemy || !health || !transform || health.isDead) continue;
@@ -116,17 +131,17 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
     return false; // No collision
   };
 
-  // Collision detection for CrossentropyBolt
+  // Collision detection for CrossentropyBolt using spatial partitioning
   const checkCrossentropyBoltCollisions = (boltId: number, position: Vector3): boolean => {
-    if (!world) return false;
+    if (!world || !spatialHashRef.current) return false;
 
-    // Get all enemy entities
-    const allEntities = world.getAllEntities();
-    
-    for (const entity of allEntities) {
-      const enemy = entity.getComponent(Enemy);
-      const health = entity.getComponent(Health);
-      const transform = entity.getComponent(Transform);
+    // Use spatial hash to find nearby enemies
+    const nearbyEntries = spatialHashRef.current.queryRadius(position, 2.1); // Slightly larger than hit radius
+
+    for (const entry of nearbyEntries) {
+      const enemy = entry.entity.getComponent(Enemy);
+      const health = entry.entity.getComponent(Health);
+      const transform = entry.entity.getComponent(Transform);
 
       // Skip if not an enemy or if dead
       if (!enemy || !health || !transform || health.isDead) continue;
@@ -150,7 +165,30 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
     if (currentTime - lastUpdateTime.current < 0.016) return; // ~60fps
     lastUpdateTime.current = currentTime;
 
-    if (!world) return;
+    if (!world || !spatialHashRef.current) return;
+
+    // Update spatial hash with current enemy positions
+    const allEnemyEntities = world.queryEntities([Transform, Enemy, Health]);
+    for (const entity of allEnemyEntities) {
+      const transform = entity.getComponent(Transform);
+      const enemy = entity.getComponent(Enemy);
+      const health = entity.getComponent(Health);
+
+      if (!transform || !enemy || !health || health.isDead) {
+        // Remove dead or invalid entities from spatial hash
+        spatialHashRef.current.remove(entity);
+        continue;
+      }
+
+      // Create bounding box for enemy (using a reasonable size)
+      const enemySize = 2.0; // 2 unit radius for collision detection
+      const bounds = new Box3(
+        new Vector3(transform.position.x - enemySize, transform.position.y - enemySize, transform.position.z - enemySize),
+        new Vector3(transform.position.x + enemySize, transform.position.y + enemySize, transform.position.z + enemySize)
+      );
+
+      spatialHashRef.current.insert(entity, bounds);
+    }
 
     // SINGLE QUERY FOR ALL PROJECTILES - This is the key optimization!
     const allProjectileEntities = world.queryEntities([Transform, Projectile, Renderer]);
