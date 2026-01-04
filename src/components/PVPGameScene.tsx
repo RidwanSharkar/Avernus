@@ -4195,7 +4195,22 @@ const hasMana = useCallback((amount: number) => {
         player.userData = player.userData || {};
         player.userData.playerId = socket.id;
       }
-      
+
+      // Sync local player position from server state to ECS entity
+      if (socket?.id) {
+        const localPlayerData = players.get(socket.id);
+        if (localPlayerData) {
+          const playerTransform = player.getComponent(Transform);
+          if (playerTransform) {
+            playerTransform.setPosition(
+              localPlayerData.position.x,
+              localPlayerData.position.y,
+              localPlayerData.position.z
+            );
+          }
+        }
+      }
+
       setPlayerEntity(player);
       playerEntityRef.current = player.id;
       controlSystemRef.current = controlSystem;

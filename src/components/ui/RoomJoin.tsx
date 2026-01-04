@@ -237,7 +237,7 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
   if (showRoomList && !showPreview) {
     return (
       <div className="fixed inset-0 flex items-center justify-center z-50 overflow-y-auto">
-        <div className="relative max-w-4xl w-11/12 mx-auto">
+        <div className="relative max-w-2xl w-11/12 mx-auto">
           {/* Animated background glow */}
           <div className={`absolute -inset-4 rounded-xl blur-lg animate-pulse ${gameMode === 'pvp' ? 'bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20' : 'bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20'}`}></div>
 
@@ -283,9 +283,9 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
                   .map((room) => (
                     <div
                       key={room.roomId}
-                      className={`relative overflow-hidden rounded-xl transition-all duration-300 transform ${room.playerCount < room.maxPlayers && !room.gameStarted && !isJoining ? 'hover:scale-[1.02] cursor-pointer' : 'cursor-not-allowed opacity-60'} bg-gradient-to-br from-gray-800/80 via-gray-900/90 to-gray-800/80 backdrop-blur-sm border ${room.gameStarted ? 'border-yellow-500/50' : room.playerCount >= room.maxPlayers ? 'border-red-500/50' : room.playerCount < room.maxPlayers && !room.gameStarted && !isJoining ? 'border-green-500/50' : 'border-gray-600/50'} p-4`}
+                      className={`relative overflow-hidden rounded-xl transition-all duration-300 transform ${room.playerCount < room.maxPlayers && !isJoining ? 'hover:scale-[1.02] cursor-pointer' : 'cursor-not-allowed opacity-60'} bg-gradient-to-br from-gray-800/80 via-gray-900/90 to-gray-800/80 backdrop-blur-sm border ${room.gameStarted ? 'border-yellow-500/50' : room.playerCount >= room.maxPlayers ? 'border-red-500/50' : room.playerCount < room.maxPlayers && !isJoining ? 'border-green-500/50' : 'border-gray-600/50'} p-4`}
                       onClick={() => {
-                        if (room.playerCount < room.maxPlayers && !room.gameStarted && !isJoining) {
+                        if (room.playerCount < room.maxPlayers && !isJoining) {
                           // Pre-fill the room ID and switch to join form for name entry
                           setRoomId(room.roomId);
                           setRoomPreselected(true);

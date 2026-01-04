@@ -134,6 +134,16 @@ export default function SummonedUnitRenderer({
     lastHealth: health
   });
 
+  // Sync lerpState when health prop changes significantly (e.g., on mount with different value)
+  useEffect(() => {
+    const healthDiff = Math.abs(health - lerpState.current.currentHealth);
+    // If health differs significantly, sync immediately (handles initial mount with wrong value)
+    if (healthDiff > maxHealth * 0.1) {
+      lerpState.current.currentHealth = health;
+      lerpState.current.lastHealth = health;
+    }
+  }, [health, maxHealth]);
+
   // Elite units are 1.15x larger
   const eliteScale = isElite ? 1.15 : 1.0;
 
@@ -221,8 +231,9 @@ export default function SummonedUnitRenderer({
     const currentHealthPercent = Math.max(0, Math.min(1, lerpState.current.currentHealth / maxHealth));
 
     if (healthBarFillRef.current) {
-      // Update health bar scale
-      healthBarFillRef.current.scale.x = currentHealthPercent;
+      // Update health bar scale - ensure it's always set correctly
+      // Use setScalar to ensure y and z scales remain 1
+      healthBarFillRef.current.scale.set(currentHealthPercent, 1, 1);
       // Position to align left when scaling
       healthBarFillRef.current.position.x = -(healthBarWidth * (1 - currentHealthPercent)) / 2;
 
