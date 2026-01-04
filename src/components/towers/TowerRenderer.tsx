@@ -168,7 +168,7 @@ export default function TowerRenderer({
 
       // Only rotate when not attacking
       if (!isAttackingRef.current) {
-        groupRef.current.rotation.y += delta * 0.5;
+        groupRef.current.rotation.y += delta * 0.2;
       }
 
       // Update health bar efficiently using cached ref

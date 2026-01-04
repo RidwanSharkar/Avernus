@@ -4180,7 +4180,7 @@ const hasMana = useCallback((amount: number) => {
         }
       };
       
-      const { player, controlSystem, towerSystem, pillarSystem } = setupPVPGame(engine, scene, camera as PerspectiveCamera, gl, damagePlayerWithMapping, damageTower, damagePillar, damageSummonedUnit, damageEnemy, selectedWeapons, cameraSystemRef);
+      const { player, controlSystem, towerSystem, pillarSystem } = setupPVPGame(engine, scene, camera as PerspectiveCamera, gl, damagePlayerWithMapping, damageTower, damagePillar, damageSummonedUnit, damageEnemy, selectedWeapons, cameraSystemRef, socket?.id);
 
       // Initialize merchant system
       const merchantPosition = new Vector3(16, 0, 8); // Same position as in Environment.tsx
@@ -6281,7 +6281,8 @@ function setupPVPGame(
     secondary: WeaponType;
     tertiary?: WeaponType;
   } | null,
-  cameraSystemRef?: React.MutableRefObject<CameraSystem | null>
+  cameraSystemRef?: React.MutableRefObject<CameraSystem | null>,
+  localPlayerSocketId?: string
 ): { player: any; controlSystem: ControlSystem; towerSystem: TowerSystem; pillarSystem: PillarSystem } {
   const world = engine.getWorld();
   const inputManager = engine.getInputManager();
@@ -6293,7 +6294,7 @@ function setupPVPGame(
   // Create systems
   const physicsSystem = new PhysicsSystem();
   const collisionSystem = new CollisionSystem(5); // 5 unit cell size for spatial hash
-  const combatSystem = new CombatSystem(world);
+  const combatSystem = new CombatSystem(world, localPlayerSocketId);
   const renderSystem = new RenderSystem(scene, camera, renderer);
   const projectileSystem = new ProjectileSystem(world);
   const towerSystem = new TowerSystem(world);

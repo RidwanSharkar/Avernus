@@ -9,6 +9,7 @@ import DamageNumbers from '../components/DamageNumbers';
 import GameUI from '../components/ui/GameUI';
 import BowAimer from '../components/ui/BowAimer';
 import ScytheAimer from '../components/ui/ScytheAimer';
+import StrikeIndicator from '../components/ui/StrikeIndicator';
 import { getGlobalRuneCounts, getCriticalChance, getCriticalDamageMultiplier } from '../core/DamageCalculator';
 import ExperienceBar from '../components/ui/ExperienceBar';
 import EssenceDisplay from '../components/ui/EssenceDisplay';
@@ -1109,6 +1110,15 @@ function HomeContent() {
               hasCryoflame={scytheAimerState.hasCryoflame}
               verticalAim={scytheAimerState.verticalAim}
               cameraDistance={scytheAimerState.cameraDistance}
+            />
+
+            {/* Strike Indicator - Shows when landing damaging strikes */}
+            <StrikeIndicator
+              isVisible={bowAimerState.isBowEquipped || scytheAimerState.isScytheEquipped}
+              isBowEquipped={bowAimerState.isBowEquipped}
+              isScytheEquipped={scytheAimerState.isScytheEquipped}
+              verticalAim={bowAimerState.isBowEquipped ? bowAimerState.verticalAim : scytheAimerState.verticalAim}
+              cameraDistance={bowAimerState.isBowEquipped ? bowAimerState.cameraDistance : scytheAimerState.cameraDistance}
             />
             
             {/* Controls Panel */}

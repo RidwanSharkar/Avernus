@@ -65,11 +65,14 @@ export class CombatSystem extends System {
 
   // Local player entity ID for distinguishing caster vs target damage numbers
   private localPlayerEntityId: number | null = null;
+  // Local player socket ID for strike indicator
+  private localPlayerSocketId: string | null = null;
 
-  constructor(world: World) {
+  constructor(world: World, localPlayerSocketId?: string) {
     super();
     this.world = world;
     this.damageNumberManager = new DamageNumberManager();
+    this.localPlayerSocketId = localPlayerSocketId || null;
     this.priority = 25; // Run after collision detection
   }
 
@@ -424,6 +427,10 @@ export class CombatSystem extends System {
           if (transform) {
             const position = transform.getWorldPosition();
             audioSystem.playHitBoxSound(position);
+            // Dispatch event for strike indicator only for local player attacks
+            if (sourcePlayerId === this.localPlayerSocketId) {
+              window.dispatchEvent(new CustomEvent('strikeIndicator'));
+            }
           }
         }
       }
@@ -585,6 +592,10 @@ export class CombatSystem extends System {
           if (transform) {
             const position = transform.getWorldPosition();
             audioSystem.playHitBoxSound(position);
+            // Dispatch event for strike indicator only for local player attacks
+            if (sourcePlayerId === this.localPlayerSocketId) {
+              window.dispatchEvent(new CustomEvent('strikeIndicator'));
+            }
           }
         }
       }
@@ -837,6 +848,10 @@ export class CombatSystem extends System {
           if (transform) {
             const position = transform.getWorldPosition();
             audioSystem.playHitBoxSound(position);
+            // Dispatch event for strike indicator only for local player attacks
+            if (sourcePlayerId === this.localPlayerSocketId) {
+              window.dispatchEvent(new CustomEvent('strikeIndicator'));
+            }
           }
         }
       }
