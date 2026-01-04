@@ -224,9 +224,22 @@ export default function PillarRenderer({
       lerpState.current.currentHealth += (health - lerpState.current.currentHealth) * Math.min(1, delta * lerpSpeed);
     }
     
+    // DIAGNOSTIC: Log camera and health bar state
+    if (!camera) {
+      // console.warn(`[PillarRenderer] Camera is undefined for pillar ${pillarIndex}`);
+    }
+    if (!healthBarRef.current) {
+      // console.warn(`[PillarRenderer] healthBarRef is null for pillar ${pillarIndex}`);
+    }
+    
     // Update health bar to always face camera
     if (healthBarRef.current && camera) {
       healthBarRef.current.lookAt(camera.position);
+      
+      // DIAGNOSTIC: Log rotation to verify it's working
+      if (Math.random() < 0.01) { // Log 1% of the time to avoid spam
+        // console.log(`[PillarRenderer ${pillarIndex}] Health: ${health}/${maxHealth}, Camera pos: (${camera.position.x.toFixed(1)}, ${camera.position.y.toFixed(1)}, ${camera.position.z.toFixed(1)}), HealthBar rotation: (${healthBarRef.current.rotation.x.toFixed(2)}, ${healthBarRef.current.rotation.y.toFixed(2)}, ${healthBarRef.current.rotation.z.toFixed(2)})`);
+      }
     }
 
     // Pulse the energy sphere
@@ -240,11 +253,19 @@ export default function PillarRenderer({
     const currentHealthPercent = Math.max(0, Math.min(1, lerpState.current.currentHealth / maxHealth));
     
     if (healthBarFillRef.current) {
-      // Update health bar scale - ensure it's always set correctly
-      // Use setScalar to ensure y and z scales remain 1
+      // FIX: Update both scale AND position in a way that works from all camera angles
+      // Reset position to centered first
+      healthBarFillRef.current.position.set(0, 0, 0.004);
+      // Apply scale
       healthBarFillRef.current.scale.set(currentHealthPercent, 1, 1);
-      // Position to align left when scaling
-      healthBarFillRef.current.position.x = -(healthBarWidth * (1 - currentHealthPercent)) / 2;
+      // Offset position AFTER scale to align left edge
+      // Use a simpler approach that doesn't rely on local X coordinates
+      const xOffset = -(healthBarWidth * (1 - currentHealthPercent)) / 2;
+      healthBarFillRef.current.position.x = xOffset;
+      
+      // Force matrix update to ensure changes are applied immediately
+      healthBarFillRef.current.updateMatrix();
+
       
       // Update color based on health with smooth transitions
       const material = healthBarFillRef.current.material as MeshBasicMaterial;
@@ -408,6 +429,7 @@ export default function PillarRenderer({
           position={[0, 0, 0.004]}
           geometry={healthBarGeometries.fill}
           material={healthBarMaterials.fill}
+          scale={[1, 1, 1]}
         />
 
         {/* Top highlight for depth */}

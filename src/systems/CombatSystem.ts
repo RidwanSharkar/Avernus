@@ -411,8 +411,13 @@ export class CombatSystem extends System {
         }
       }
 
-      // Play HitBox sound locally for damage to enemy summoned units
-      if (source) {
+      // Skip damage numbers for tower projectiles or summoned units - players will see their own damage taken display
+      const isTowerProjectile = source && (source as any).isTowerProjectile === true;
+      const sourceSummonedUnit = source ? source.getComponent(SummonedUnit) : null;
+      const shouldShowDamageNumbers = !sourceSummonedUnit && !isTowerProjectile; // Show numbers unless source is a summoned unit or tower projectile
+
+      // Play HitBox sound locally for damage to enemy summoned units (except tower projectiles)
+      if (source && !isTowerProjectile) {
         const audioSystem = (window as any).audioSystem;
         if (audioSystem && audioSystem.playHitBoxSound) {
           const transform = target.getComponent(Transform);
@@ -422,11 +427,6 @@ export class CombatSystem extends System {
           }
         }
       }
-
-      // Skip damage numbers for tower projectiles or summoned units - players will see their own damage taken display
-      const isTowerProjectile = source && (source as any).isTowerProjectile === true;
-      const sourceSummonedUnit = source ? source.getComponent(SummonedUnit) : null;
-      const shouldShowDamageNumbers = !sourceSummonedUnit && !isTowerProjectile; // Show numbers unless source is a summoned unit or tower projectile
 
       if (shouldShowDamageNumbers) {
         const transform = target.getComponent(Transform);

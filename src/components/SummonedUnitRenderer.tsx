@@ -161,14 +161,14 @@ export default function SummonedUnitRenderer({
     }
 
     // Debug logging
-    console.log(`SummonedUnitRenderer: ownerId = "${ownerId}", playerNumber = ${playerNumber}, effectivePlayerNumber = ${effectivePlayerNumber}`);
+    //console.log(`SummonedUnitRenderer: ownerId = "${ownerId}", playerNumber = ${playerNumber}, effectivePlayerNumber = ${effectivePlayerNumber}`);
 
     // Player 1 = Light Blue, Player 2 = Fire Red
     if (effectivePlayerNumber === 1) {
-      console.log(`SummonedUnitRenderer: using LIGHT BLUE color for player ${effectivePlayerNumber}`);
+      //console.log(`SummonedUnitRenderer: using LIGHT BLUE color for player ${effectivePlayerNumber}`);
       return new Color(0x4444FF); // Light Blue
     } else {
-      console.log(`SummonedUnitRenderer: using FIRE RED color for player ${effectivePlayerNumber}`);
+      //console.log(`SummonedUnitRenderer: using FIRE RED color for player ${effectivePlayerNumber}`);
       return new Color(0xFF4444); // Fire Red
     }
   }, [ownerId, playerNumber]);
@@ -222,20 +222,38 @@ export default function SummonedUnitRenderer({
       lerpState.current.currentHealth += (health - lerpState.current.currentHealth) * Math.min(1, deltaTime * lerpSpeed);
     }
 
+    // DIAGNOSTIC: Check for missing refs
+    if (!state.camera) {
+      console.warn(`[SummonedUnitRenderer] Camera is undefined for unit ${ownerId}`);
+    }
+    if (!healthBarRef.current) {
+      console.warn(`[SummonedUnitRenderer] healthBarRef is null for unit ${ownerId}`);
+    }
+    
     // Update health bar to always face camera
     if (healthBarRef.current && state.camera) {
       healthBarRef.current.lookAt(state.camera.position);
+
     }
 
     // Update health bar visuals
     const currentHealthPercent = Math.max(0, Math.min(1, lerpState.current.currentHealth / maxHealth));
 
     if (healthBarFillRef.current) {
-      // Update health bar scale - ensure it's always set correctly
-      // Use setScalar to ensure y and z scales remain 1
+      // FIX: Update both scale AND position in a way that works from all camera angles
+      // Reset position to centered first
+      healthBarFillRef.current.position.set(0, 0, 0.004);
+      // Apply scale
       healthBarFillRef.current.scale.set(currentHealthPercent, 1, 1);
-      // Position to align left when scaling
-      healthBarFillRef.current.position.x = -(healthBarWidth * (1 - currentHealthPercent)) / 2;
+      // Offset position AFTER scale to align left edge
+      // Use a simpler approach that doesn't rely on local X coordinates
+      const xOffset = -(healthBarWidth * (1 - currentHealthPercent)) / 2;
+      healthBarFillRef.current.position.x = xOffset;
+      
+      // Force matrix update to ensure changes are applied immediately
+      healthBarFillRef.current.updateMatrix();
+      
+
 
       // Update color based on health with smooth transitions
       const material = healthBarFillRef.current.material as MeshBasicMaterial;
@@ -415,6 +433,7 @@ export default function SummonedUnitRenderer({
             position={[0, 0, 0.004]}
             geometry={geometries.healthBarFill}
             material={healthBarMaterials.fill}
+            scale={[1, 1, 1]}
           />
 
           {/* Top highlight for depth */}
