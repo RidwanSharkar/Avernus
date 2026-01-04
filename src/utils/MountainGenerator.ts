@@ -12,7 +12,7 @@ export interface MountainData {
 export const generateMountains = (): MountainData[] => {
   const mountains: MountainData[] = [];
   const numberOfMountains = 21;
-  const radius = 46.75;
+  const radius = 48.5;
   
   // Create evenly spaced mountains around the perimeter
   for (let i = 0; i < numberOfMountains; i++) {

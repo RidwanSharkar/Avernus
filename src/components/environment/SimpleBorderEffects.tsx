@@ -6,6 +6,7 @@ import {
   PlaneGeometry,
   CircleGeometry,
   BoxGeometry,
+  ConeGeometry,
   Matrix4,
   Vector3,
   Group,
@@ -32,6 +33,7 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
 }) => {
   const particleRef = useRef<InstancedMesh>(null);
   const glowRef = useRef<InstancedMesh>(null);
+  const coneRef = useRef<InstancedMesh>(null);
   const archwayRef = useRef<InstancedMesh>(null);
   const middlePolesRef = useRef<InstancedMesh>(null);
   const groupRef = useRef<Group>(null);
@@ -194,25 +196,35 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
     alphaTest: 0.1,
   }), []);
 
+  const coneMaterial = useMemo(() => new MeshBasicMaterial({
+    color: 0xF74F4F, // Match the pillar color
+    transparent: true,
+    opacity: 0.4,
+    alphaTest: 0.1,
+  }), []);
+
   // Geometries
   const particleGeometry = useMemo(() => new PlaneGeometry(0.05, 0.05), []);
-  const glowGeometry = useMemo(() => new BoxGeometry(0.0625, 1.5, 0.0625), []); // 3D pillars visible from all angles
-  const middlePolesGeometry = useMemo(() => new BoxGeometry(0.0625, 2.35, 0.0625), []); // Taller poles for middle positions
-  const archwayGeometry = useMemo(() => new BoxGeometry(0.08, 0.15, 0.08), []); // Thicker segments for archways
+  const glowGeometry = useMemo(() => new BoxGeometry(0.0725, 1.5, 0.0725), []); // 3D pillars visible from all angles
+  const coneGeometry = useMemo(() => new ConeGeometry(0.1, 0.35, 8), []); // Small cone on top of pillars
+  const middlePolesGeometry = useMemo(() => new BoxGeometry(0.0725, 2.35, 0.0725), []); // Taller poles for middle positions
+  const archwayGeometry = useMemo(() => new BoxGeometry(0.07, 0.15, 0.07), []); // Thicker segments for archways
 
   // Cleanup geometries and materials on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
       particleGeometry.dispose();
       glowGeometry.dispose();
+      coneGeometry.dispose();
       middlePolesGeometry.dispose();
       archwayGeometry.dispose();
       particleMaterial.dispose();
       glowMaterial.dispose();
+      coneMaterial.dispose();
       archwayMaterial.dispose();
       middlePolesMaterial.dispose();
     };
-  }, [particleGeometry, glowGeometry, middlePolesGeometry, archwayGeometry, particleMaterial, glowMaterial, archwayMaterial, middlePolesMaterial]);
+  }, [particleGeometry, glowGeometry, coneGeometry, middlePolesGeometry, archwayGeometry, particleMaterial, glowMaterial, coneMaterial, archwayMaterial, middlePolesMaterial]);
 
   // Update instanced matrices
   useEffect(() => {
@@ -236,6 +248,15 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       glowRef.current.instanceMatrix.needsUpdate = true;
     }
 
+    // Update cone instances (positioned on top of pillars)
+    if (coneRef.current) {
+      glowPositions.forEach((position, i) => {
+        matrix.makeTranslation(position.x, position.y + 1.5 - 0.55, position.z); // Top of pillar + half cone height
+        coneRef.current?.setMatrixAt(i, matrix);
+      });
+      coneRef.current.instanceMatrix.needsUpdate = true;
+    }
+
     // Update archway instances
     if (archwayRef.current) {
       archwayData.forEach((segment, i) => {
@@ -254,7 +275,7 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       });
       middlePolesRef.current.instanceMatrix.needsUpdate = true;
     }
-  }, [particlePositions, glowPositions, archwayData, middlePolesPositions]);
+  }, [particlePositions, glowPositions, archwayData, middlePolesPositions, count]);
 
   // Animate particles
   useFrame((state) => {
@@ -296,6 +317,13 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       <instancedMesh
         ref={glowRef}
         args={[glowGeometry, glowMaterial, count]}
+        frustumCulled={false}
+      />
+
+      {/* Cone caps on top of pillars */}
+      <instancedMesh
+        ref={coneRef}
+        args={[coneGeometry, coneMaterial, count]}
         frustumCulled={false}
       />
 
