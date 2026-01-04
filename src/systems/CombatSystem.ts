@@ -419,18 +419,16 @@ export class CombatSystem extends System {
       const sourceSummonedUnit = source ? source.getComponent(SummonedUnit) : null;
       const shouldShowDamageNumbers = !sourceSummonedUnit && !isTowerProjectile; // Show numbers unless source is a summoned unit or tower projectile
 
-      // Play HitBox sound locally for damage to enemy summoned units (except tower projectiles)
-      if (source && !isTowerProjectile) {
+      // Play HitBox sound locally only for damage dealt by the local player
+      if (source && !isTowerProjectile && sourcePlayerId === this.localPlayerSocketId) {
         const audioSystem = (window as any).audioSystem;
         if (audioSystem && audioSystem.playHitBoxSound) {
           const transform = target.getComponent(Transform);
           if (transform) {
             const position = transform.getWorldPosition();
             audioSystem.playHitBoxSound(position);
-            // Dispatch event for strike indicator only for local player attacks
-            if (sourcePlayerId === this.localPlayerSocketId) {
-              window.dispatchEvent(new CustomEvent('strikeIndicator'));
-            }
+            // Dispatch event for strike indicator
+            window.dispatchEvent(new CustomEvent('strikeIndicator'));
           }
         }
       }
@@ -584,18 +582,16 @@ export class CombatSystem extends System {
 
       this.onPillarDamageCallback(serverPillarId, actualDamage, finalSourcePlayerId);
 
-      // Play HitBox sound locally for damage to enemy pillars
-      if (source) {
+      // Play HitBox sound locally only for damage dealt by the local player
+      if (source && sourcePlayerId === this.localPlayerSocketId) {
         const audioSystem = (window as any).audioSystem;
         if (audioSystem && audioSystem.playHitBoxSound) {
           const transform = target.getComponent(Transform);
           if (transform) {
             const position = transform.getWorldPosition();
             audioSystem.playHitBoxSound(position);
-            // Dispatch event for strike indicator only for local player attacks
-            if (sourcePlayerId === this.localPlayerSocketId) {
-              window.dispatchEvent(new CustomEvent('strikeIndicator'));
-            }
+            // Dispatch event for strike indicator
+            window.dispatchEvent(new CustomEvent('strikeIndicator'));
           }
         }
       }
@@ -840,18 +836,16 @@ export class CombatSystem extends System {
         }
       }
 
-      // Play HitBox sound locally for damage to enemy players
-      if (source) {
+      // Play HitBox sound locally only for damage dealt by the local player
+      if (source && sourcePlayerId === this.localPlayerSocketId) {
         const audioSystem = (window as any).audioSystem;
         if (audioSystem && audioSystem.playHitBoxSound) {
           const transform = target.getComponent(Transform);
           if (transform) {
             const position = transform.getWorldPosition();
             audioSystem.playHitBoxSound(position);
-            // Dispatch event for strike indicator only for local player attacks
-            if (sourcePlayerId === this.localPlayerSocketId) {
-              window.dispatchEvent(new CustomEvent('strikeIndicator'));
-            }
+            // Dispatch event for strike indicator
+            window.dispatchEvent(new CustomEvent('strikeIndicator'));
           }
         }
       }

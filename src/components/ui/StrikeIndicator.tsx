@@ -81,12 +81,12 @@ const StrikeIndicator = memo(function StrikeIndicator({
         overflow: 'visible'
       }}
     >
-      {/* Strike indicator - a bright flash with impact symbols */}
+      {/* Strike indicator - dotted X symbol */}
       <div
         className="relative"
         style={{
-          width: isBowEquipped ? '56px' : '70px', // Slightly larger than aimers
-          height: isBowEquipped ? '56px' : '70px',
+          width: isBowEquipped ? '48px' : '60px', // Reduced size, matches aimer containers
+          height: isBowEquipped ? '48px' : '60px',
           overflow: 'visible',
           background: 'transparent',
           border: 'none',
@@ -95,79 +95,78 @@ const StrikeIndicator = memo(function StrikeIndicator({
           isolation: 'isolate'
         }}
       >
-        {/* Outer flash ring */}
+        {/* Dotted X symbol - diagonal lines made of dots */}
+        <svg
+          width={isBowEquipped ? '48' : '60'}
+          height={isBowEquipped ? '48' : '60'}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            opacity: opacity,
+            background: 'transparent',
+            overflow: 'visible'
+          }}
+        >
+          {/* Top-left to bottom-right diagonal dots */}
+          {[1, 2, 3, 4].map((i) => {
+            const size = isBowEquipped ? 48 : 60;
+            const spacing = size / 6;
+            const x = (i + 0.5) * spacing;
+            const y = (i + 0.5) * spacing;
+
+            return (
+              <circle
+                key={`diag1-${i}`}
+                cx={x}
+                cy={y}
+                r="2"
+                fill="#cccccc"
+                style={{
+                  filter: 'drop-shadow(0 0 4px #cccccc)'
+                }}
+              />
+            );
+          })}
+
+          {/* Top-right to bottom-left diagonal dots */}
+          {[1, 2, 3, 4,].map((i) => {
+            const size = isBowEquipped ? 48 : 60;
+            const spacing = size / 6;
+            const x = size - (i + 0.5) * spacing;
+            const y = (i + 0.5) * spacing;
+
+            return (
+              <circle
+                key={`diag2-${i}`}
+                cx={x}
+                cy={y}
+                r="2"
+                fill="#cccccc"
+                style={{
+                  filter: 'drop-shadow(0 0 4px #cccccc)'
+                }}
+              />
+            );
+          })}
+        </svg>
+
+        {/* Center impact dot */}
         <div
           className="absolute rounded-full"
           style={{
-            width: '100%',
-            height: '100%',
+            width: '6px',
+            height: '6px',
+            backgroundColor: '#cccccc',
+            boxShadow: '0 0 8px #cccccc',
+            opacity: opacity * 0.9,
             transform: 'translate(-50%, -50%)',
             left: '50%',
             top: '50%',
-            border: `3px solid ${isScytheEquipped ? '#00bfff' : '#ff4444'}`,
-            boxShadow: `0 0 30px ${isScytheEquipped ? '#00bfff' : '#ff4444'}`,
-            opacity: opacity * 0.8,
             transition: 'all 0.05s ease-out'
           }}
         />
-
-        {/* Inner impact symbol */}
-        <div
-          className="absolute flex items-center justify-center"
-          style={{
-            width: '100%',
-            height: '100%',
-            transform: 'translate(-50%, -50%)',
-            left: '50%',
-            top: '50%',
-            opacity: opacity,
-            transition: 'all 0.05s ease-out'
-          }}
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            style={{
-              filter: `drop-shadow(0 0 8px ${isScytheEquipped ? '#00bfff' : '#ff4444'})`,
-              background: 'transparent',
-              overflow: 'visible'
-            }}
-          >
-            {/* Impact starburst symbol */}
-            <path
-              d="M12 2L13.09 8.26L19.35 7.17L15.17 12L19.35 16.83L13.09 15.74L12 22L10.91 15.74L4.65 16.83L8.83 12L4.65 7.17L10.91 8.26L12 2Z"
-              fill={isScytheEquipped ? '#00bfff' : '#ff4444'}
-              stroke="none"
-            />
-          </svg>
-        </div>
-
-        {/* Additional flash particles */}
-        {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
-          const rad = (angle * Math.PI) / 180;
-          const distance = 30;
-          const x = Math.cos(rad) * distance;
-          const y = Math.sin(rad) * distance;
-
-          return (
-            <div
-              key={i}
-              className="absolute rounded-full"
-              style={{
-                width: '5px',
-                height: '5px',
-                backgroundColor: isScytheEquipped ? '#00bfff' : '#ff4444',
-                boxShadow: `0 0 4px ${isScytheEquipped ? '#00bfff' : '#ff4444'}`,
-                opacity: opacity * 0.6,
-                transform: `translate(${x - 50}%, ${y - 50}%)`,
-                left: '50%',
-                top: '50%',
-                transition: 'all 0.05s ease-out'
-              }}
-            />
-          );
-        })}
       </div>
     </div>
   );
