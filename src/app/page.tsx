@@ -1113,7 +1113,7 @@ function HomeContent() {
             
             {/* Controls Panel */}
             <div className="absolute top-4 left-4">
-              <ControlsPanel />
+              <ControlsPanel onShowRules={() => setShowRulesPanel(true)} />
             </div>
             
             {/* Performance Stats */}

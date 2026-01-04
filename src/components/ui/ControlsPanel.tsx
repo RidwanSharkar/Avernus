@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 
 interface ControlsPanelProps {
   className?: string;
+  onShowRules?: () => void;
 }
 
-export default function ControlsPanel({ className = '' }: ControlsPanelProps) {
+export default function ControlsPanel({ className = '', onShowRules }: ControlsPanelProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   // Auto-minimize after 10 seconds
@@ -30,7 +31,8 @@ export default function ControlsPanel({ className = '' }: ControlsPanelProps) {
     { key: 'Right Click (Hold)', description: 'Rotate', icon: '🖱️' },
     { key: 'Left Click (Hold)', description: 'Attack', icon: '⚔️' },
     { key: 'Scoll Wheel', description: 'Zoom Camera', icon: '🖱️' },
-    { key: 'Space Bar', description: 'Jump', icon: '⌨️' }
+    { key: 'Space Bar', description: 'Jump', icon: '⌨️' },
+    { key: 'Rulebook', description: 'Game Rules', icon: '📜', onClick: onShowRules }
   ];
 
   return (
@@ -98,14 +100,21 @@ export default function ControlsPanel({ className = '' }: ControlsPanelProps) {
               {controls.map((control, index) => (
                 <div
                   key={control.key}
-                  className="px-3 py-2 rounded-lg bg-black/10 border border-white/5 hover:bg-indigo-500/10 transition-all duration-200 flex items-center justify-between group"
+                  className={`px-3 py-2 rounded-lg bg-black/10 border border-white/5 hover:bg-indigo-500/10 transition-all duration-200 flex items-center justify-between group ${
+                    control.onClick ? 'cursor-pointer hover:scale-105' : ''
+                  }`}
                   style={{
                     animationDelay: `${index * 50}ms`
                   }}
+                  onClick={control.onClick}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="text-sm">{control.icon}</span>
-                    <span className="text-xs font-bold text-indigo-300 tracking-wide">
+                    <span className={`text-sm ${control.onClick ? 'text-yellow-400 group-hover:text-yellow-300' : ''}`}>
+                      {control.icon}
+                    </span>
+                    <span className={`text-xs font-bold tracking-wide ${
+                      control.onClick ? 'text-yellow-400 group-hover:text-yellow-300' : 'text-indigo-300'
+                    }`}>
                       {control.key}
                     </span>
                   </div>
