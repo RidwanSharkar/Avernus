@@ -66,7 +66,8 @@ export class AudioSystem extends System {
       { id: 'runeblade_void_grasp', file: 'runeblade/void_grasp.mp3' },
       { id: 'ui_selection', file: 'ui/selection.mp3' },
       { id: 'ui_interface', file: 'ui/interface.mp3' },
-      { id: 'ui_dash', file: 'ui/dash.mp3' }
+      { id: 'ui_dash', file: 'ui/dash.mp3' },
+      { id: 'hit_box', file: 'ui/HitBox.mp3' }
       // Removed background_music from preload - loaded lazily
     ];
 
@@ -503,6 +504,11 @@ export class AudioSystem extends System {
   // Play UI dash sound (when dashing)
   public playUIDashSound() {
     return this.playWeaponSound('ui_dash', new Vector3(0, 0, 0), { volume: 0.8 });
+  }
+
+  // Play hit box sound (when any weapon deals damage to enemy players/summoned units/pillars)
+  public playHitBoxSound(position: Vector3) {
+    return this.playWeaponSound('hit_box', position, { volume: 0.7 });
   }
 
   // Background music controls (local only, 50% volume)

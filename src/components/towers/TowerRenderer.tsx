@@ -3,7 +3,7 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
-import { Vector3, Color, Group, Mesh, MeshBasicMaterial, AdditiveBlending, MathUtils } from '@/utils/three-exports';
+import { Vector3, Color, Group, Mesh, MeshBasicMaterial, AdditiveBlending, MathUtils, OctahedronGeometry, SphereGeometry, TorusGeometry, CylinderGeometry, PlaneGeometry } from '@/utils/three-exports';
 import { World } from '@/ecs/World';
 import { Transform } from '@/ecs/components/Transform';
 import { Tower } from '@/ecs/components/Tower';
@@ -59,6 +59,37 @@ export default function TowerRenderer({
     new Color("#4FC3F7"), // Blue - Elite color (Player 1)
     new Color("#FF6B6B"), // Brighter Red - matches pillar color (Player 2)
   ], []);
+
+  // Memoized geometries to prevent recreation every frame
+  const geometries = useMemo(() => ({
+    mainBody: new OctahedronGeometry(0.92, 0),
+    head: new OctahedronGeometry(0.46, 0),
+    shoulderLeft: new SphereGeometry(0.37375, 16, 16),
+    shoulderRight: new SphereGeometry(0.37375, 16, 16),
+    ringLeft: new TorusGeometry(0.46, 0.0575, 8, 16),
+    ringRight: new TorusGeometry(0.46, 0.0575, 8, 16),
+    armLeft: new CylinderGeometry(0.1725, 0.1725, 1.15, 6),
+    armRight: new CylinderGeometry(0.1725, 0.1725, 1.15, 6),
+    tendrilOrb: new SphereGeometry(0.0575, 8, 8),
+    tendrilConnector: new CylinderGeometry(0.02, 0.02, 1, 6),
+    base: new CylinderGeometry(0.75, 0.85, 0.4, 8),
+    baseRing: new TorusGeometry(0.8, 0.05, 8, 16),
+    energyCore: new SphereGeometry(0.15, 12, 12),
+    healthBarBg: new PlaneGeometry(2.4, 0.28),
+    healthBarFill: new PlaneGeometry(2.4, 0.28),
+    healthBarBorder: new PlaneGeometry(2.4, 0.28),
+    healthBarHighlight: new PlaneGeometry(2.4, 0.01),
+    deathEffect: new SphereGeometry(2.3, 8, 8),
+  }), []);
+
+  // Cleanup geometries on unmount
+  React.useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(geometry => {
+        geometry.dispose();
+      });
+    };
+  }, [geometries]);
 
   const towerColor = color || playerColors[towerIndex % playerColors.length];
 
@@ -215,8 +246,7 @@ export default function TowerRenderer({
   return (
     <group ref={groupRef}>
       {/* Main body - crystal structure adapted for tower */}
-      <mesh position={[0, 2.3, 0]}>
-        <octahedronGeometry args={[0.92, 0]} />
+      <mesh position={[0, 2.3, 0]} geometry={geometries.mainBody}>
         <meshStandardMaterial
           color={colorHex}
           emissive={emissiveHex}
@@ -229,8 +259,7 @@ export default function TowerRenderer({
       </mesh>
 
       {/* Head */}
-      <mesh position={[0, 3.105, 0]}>
-        <octahedronGeometry args={[0.46, 0]} />
+      <mesh position={[0, 3.105, 0]} geometry={geometries.head}>
         <meshStandardMaterial
           color={colorHex}
           emissive={emissiveHex}
@@ -243,8 +272,7 @@ export default function TowerRenderer({
       </mesh>
 
       {/* Left Shoulder */}
-      <mesh position={[-0.805, 2.7025, 0]}>
-        <sphereGeometry args={[0.37375, 16, 16]} />
+      <mesh position={[-0.805, 2.7025, 0]} geometry={geometries.shoulderLeft}>
         <meshStandardMaterial
           color={colorHex}
           emissive={emissiveHex}
@@ -257,8 +285,7 @@ export default function TowerRenderer({
       </mesh>
 
       {/* Left Shoulder Ring */}
-      <mesh position={[-0.805, 2.7025, 0]} rotation={[Math.PI / 2, -Math.PI / 4, 0]}>
-        <torusGeometry args={[0.46, 0.0575, 8, 16]} />
+      <mesh position={[-0.805, 2.7025, 0]} rotation={[Math.PI / 2, -Math.PI / 4, 0]} geometry={geometries.ringLeft}>
         <meshStandardMaterial
           color={towerColor.clone().multiplyScalar(1.2).getHex()}
           emissive={towerColor.clone().multiplyScalar(0.6).getHex()}
@@ -275,8 +302,8 @@ export default function TowerRenderer({
         name="LeftArm"
         position={[-0.805, 2.3, 0]}
         rotation={[0, 0, 0]}
+        geometry={geometries.armLeft}
       >
-        <cylinderGeometry args={[0.1725, 0.1725, 1.15, 6]} />
         <meshStandardMaterial
           color={colorHex}
           emissive={emissiveHex}
@@ -289,8 +316,7 @@ export default function TowerRenderer({
       </mesh>
 
       {/* Right Shoulder */}
-      <mesh position={[0.805, 2.7025, 0]}>
-        <sphereGeometry args={[0.37375, 16, 16]} />
+      <mesh position={[0.805, 2.7025, 0]} geometry={geometries.shoulderRight}>
         <meshStandardMaterial
           color={colorHex}
           emissive={emissiveHex}
@@ -303,8 +329,7 @@ export default function TowerRenderer({
       </mesh>
 
       {/* Right Shoulder Ring */}
-      <mesh position={[0.805, 2.7025, 0]} rotation={[Math.PI / 2,  Math.PI / 4, 0]}>
-        <torusGeometry args={[0.46, 0.0575, 8, 16]} />
+      <mesh position={[0.805, 2.7025, 0]} rotation={[Math.PI / 2,  Math.PI / 4, 0]} geometry={geometries.ringRight}>
         <meshStandardMaterial
           color={towerColor.clone().multiplyScalar(1.2).getHex()}
           emissive={towerColor.clone().multiplyScalar(0.6).getHex()}
@@ -317,8 +342,7 @@ export default function TowerRenderer({
       </mesh>
 
       {/* Right Arm - stays down */}
-      <mesh position={[0.805, 2.3, 0]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[0.1725, 0.1725, 1.15, 6]} />
+      <mesh position={[0.805, 2.3, 0]} rotation={[0, 0, 0]} geometry={geometries.armRight}>
         <meshStandardMaterial
           color={colorHex}
           emissive={emissiveHex}
@@ -490,8 +514,7 @@ export default function TowerRenderer({
         </Html>
 
         {/* Health bar background - metallic style */}
-        <mesh position={[0, 4.8, -0.01]}>
-          <planeGeometry args={[2.4, 0.28]} />
+        <mesh position={[0, 4.8, -0.01]} geometry={geometries.healthBarBg}>
           <meshBasicMaterial
             color={0x3c3c46}
             transparent
@@ -501,8 +524,7 @@ export default function TowerRenderer({
         </mesh>
 
         {/* Health bar fill */}
-        <mesh ref={healthBarFillRef} position={[0, 4.8, 0]}>
-          <planeGeometry args={[2.4, 0.28]} />
+        <mesh ref={healthBarFillRef} position={[0, 4.8, 0]} geometry={geometries.healthBarFill}>
           <meshBasicMaterial
             color={
               healthPercentage > 0.6 ? 0x00ff00 :
@@ -515,8 +537,7 @@ export default function TowerRenderer({
         </mesh>
 
         {/* Health bar border - metallic style similar to GameUI */}
-        <mesh position={[0, 4.8, 0.01]}>
-          <planeGeometry args={[2.4, 0.28]} />
+        <mesh position={[0, 4.8, 0.01]} geometry={geometries.healthBarBorder}>
           <meshBasicMaterial
             color={0xc8c8dc}
             transparent
@@ -527,8 +548,7 @@ export default function TowerRenderer({
         </mesh>
 
         {/* Health bar border highlight - top edge */}
-        <mesh position={[0, 4.8 + 0.14, 0.02]}>
-          <planeGeometry args={[2.4, 0.01]} />
+        <mesh position={[0, 4.8 + 0.14, 0.02]} geometry={geometries.healthBarHighlight}>
           <meshBasicMaterial
             color={0xffffff}
             transparent
@@ -541,8 +561,7 @@ export default function TowerRenderer({
       {/* Death Effect */}
       {isDead && (
         <group>
-          <mesh position={[0, 2.3, 0]}>
-            <sphereGeometry args={[2.3, 8, 8]} />
+          <mesh position={[0, 2.3, 0]} geometry={geometries.deathEffect}>
             <meshBasicMaterial
               color={0x666666}
               transparent

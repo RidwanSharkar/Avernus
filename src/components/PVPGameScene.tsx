@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useThree, useFrame } from '@react-three/fiber';
 import { Vector3, Matrix4, Camera, PerspectiveCamera, Scene, WebGLRenderer, PCFSoftShadowMap, Color, Quaternion, Euler, Group, AdditiveBlending } from '@/utils/three-exports';
 import DragonRenderer from './dragon/DragonRenderer';
+import SummonTotemEffect from './SummonTotemEffect';
 import { useMultiplayer, Player } from '@/contexts/MultiplayerContext';
 import { SkillPointData } from '@/utils/SkillPointSystem';
 
@@ -6227,92 +6228,14 @@ const hasMana = useCallback((amount: number) => {
           {/* PVP Summon Totem Effects */}
           {pvpSummonTotemEffects.map(effect => {
             if (effect.type === 'summonExplosion') {
-              const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
-              const duration = effect.duration || 0.2;
-              const fade = Math.max(0, 1 - (elapsed / duration));
-
               return (
-                <group key={effect.id} position={effect.position.toArray()}>
-                  <mesh>
-                    <sphereGeometry args={[0.35 * (1 + elapsed * 2), 32, 32]} />
-                    <meshStandardMaterial
-                      color="#0099ff"
-                      emissive="#0088cc"
-                      emissiveIntensity={0.5 * fade}
-                      transparent
-                      opacity={0.8 * fade}
-                      depthWrite={false}
-                      blending={AdditiveBlending}
-                    />
-                  </mesh>
-
-                  <mesh>
-                    <sphereGeometry args={[0.25 * (1 + elapsed * 3), 24, 24]} />
-                    <meshStandardMaterial
-                      color="#0077aa"
-                      emissive="#cceeff"
-                      emissiveIntensity={0.5 * fade}
-                      transparent
-                      opacity={0.9 * fade}
-                      depthWrite={false}
-                      blending={AdditiveBlending}
-                    />
-                  </mesh>
-
-                  {[0.45, 0.65, 0.85].map((size, i) => (
-                    <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-                      <torusGeometry args={[size * (1 + elapsed * 3), 0.045, 16, 32]} />
-                      <meshStandardMaterial
-                        color="#0099ff"
-                        emissive="#0088cc"
-                        emissiveIntensity={1 * fade}
-                        transparent
-                        opacity={0.6 * fade * (1 - i * 0.2)}
-                        depthWrite={false}
-                        blending={AdditiveBlending}
-                      />
-                    </mesh>
-                  ))}
-
-                  {[...Array(4)].map((_, i) => {
-                    const angle = (i / 4) * Math.PI * 2;
-                    const radius = 0.5 * (1 + elapsed * 2);
-                    return (
-                      <mesh
-                        key={`spark-${i}`}
-                        position={[
-                          Math.sin(angle) * radius,
-                          Math.cos(angle) * radius,
-                          0
-                        ]}
-                      >
-                        <sphereGeometry args={[0.05, 8, 8]} />
-                        <meshStandardMaterial
-                          color="#0077aa"
-                          emissive="#cceeff"
-                          emissiveIntensity={2 * fade}
-                          transparent
-                          opacity={0.8 * fade}
-                          depthWrite={false}
-                          blending={AdditiveBlending}
-                        />
-                      </mesh>
-                    );
-                  })}
-
-                  <pointLight
-                    color="#0099ff"
-                    intensity={1 * fade}
-                    distance={4}
-                    decay={2}
-                  />
-                  <pointLight
-                    color="#0077aa"
-                    intensity={1 * fade}
-                    distance={6}
-                    decay={1}
-                  />
-                </group>
+                <SummonTotemEffect
+                  key={effect.id}
+                  id={effect.id}
+                  position={effect.position}
+                  startTime={effect.startTime}
+                  duration={effect.duration}
+                />
               );
             }
             return null;

@@ -411,6 +411,18 @@ export class CombatSystem extends System {
         }
       }
 
+      // Play HitBox sound locally for damage to enemy summoned units
+      if (source) {
+        const audioSystem = (window as any).audioSystem;
+        if (audioSystem && audioSystem.playHitBoxSound) {
+          const transform = target.getComponent(Transform);
+          if (transform) {
+            const position = transform.getWorldPosition();
+            audioSystem.playHitBoxSound(position);
+          }
+        }
+      }
+
       // Skip damage numbers for tower projectiles or summoned units - players will see their own damage taken display
       const isTowerProjectile = source && (source as any).isTowerProjectile === true;
       const sourceSummonedUnit = source ? source.getComponent(SummonedUnit) : null;
@@ -564,6 +576,18 @@ export class CombatSystem extends System {
       }
 
       this.onPillarDamageCallback(serverPillarId, actualDamage, finalSourcePlayerId);
+
+      // Play HitBox sound locally for damage to enemy pillars
+      if (source) {
+        const audioSystem = (window as any).audioSystem;
+        if (audioSystem && audioSystem.playHitBoxSound) {
+          const transform = target.getComponent(Transform);
+          if (transform) {
+            const position = transform.getWorldPosition();
+            audioSystem.playHitBoxSound(position);
+          }
+        }
+      }
 
       // Create damage number for visual feedback
       const transform = target.getComponent(Transform);
@@ -801,6 +825,18 @@ export class CombatSystem extends System {
             );
           } else {
             // console.warn('⚠️ Skipping PVP damage number creation - invalid position:', position);
+          }
+        }
+      }
+
+      // Play HitBox sound locally for damage to enemy players
+      if (source) {
+        const audioSystem = (window as any).audioSystem;
+        if (audioSystem && audioSystem.playHitBoxSound) {
+          const transform = target.getComponent(Transform);
+          if (transform) {
+            const position = transform.getWorldPosition();
+            audioSystem.playHitBoxSound(position);
           }
         }
       }

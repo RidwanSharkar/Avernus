@@ -2,7 +2,7 @@
 
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Color, Group, Mesh, MeshBasicMaterial, PlaneGeometry, AdditiveBlending, MathUtils } from '@/utils/three-exports';
+import { Vector3, Color, Group, Mesh, MeshBasicMaterial, PlaneGeometry, OctahedronGeometry, SphereGeometry, CylinderGeometry, AdditiveBlending, MathUtils } from '@/utils/three-exports';
 import { World } from '@/ecs/World';
 
 interface SummonedUnitRendererProps {
@@ -42,6 +42,34 @@ export default function SummonedUnitRenderer({
   const healthBarRef = useRef<Group>(null);
   const healthBarFillRef = useRef<Mesh>(null);
   const healthBarGlowRef = useRef<Mesh>(null);
+
+  // Unit dimensions (simple and small to maintain framerate)
+  const unitHeight = 1.2;
+  const unitBaseRadius = 0.3;
+
+  // Health bar dimensions (scaled down for units)
+  const healthBarWidth = 0.85;
+  const healthBarHeight = 0.12;
+  const healthBarY = unitHeight + 0.8; // Above the unit
+  const healthBarBorderWidth = 0.02;
+
+  // Memoized geometries to prevent recreation every frame
+  const geometries = useMemo(() => ({
+    body: new OctahedronGeometry(unitBaseRadius * 1.25, 0),
+    head: new OctahedronGeometry(unitBaseRadius * 0.6, 0),
+    shoulder: new SphereGeometry(unitBaseRadius * 0.4, 8, 8),
+    arm: new CylinderGeometry(unitBaseRadius * 0.25, unitBaseRadius * 0.15, unitHeight * 0.3, 6),
+    energyAura: new SphereGeometry(unitBaseRadius * 1.675, 8, 8),
+    healthBarBg: new PlaneGeometry(healthBarWidth, healthBarHeight),
+    healthBarFill: new PlaneGeometry(healthBarWidth, healthBarHeight * 0.75),
+    healthBarGlow: new PlaneGeometry(healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2),
+    healthBarBorder: new PlaneGeometry(healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2),
+    healthBarShadow: new PlaneGeometry(healthBarWidth * 0.98, healthBarHeight * 0.7),
+    healthBarHighlight: new PlaneGeometry(healthBarWidth * 0.98, healthBarHeight * 0.15),
+    healthBarHighlightTop: new PlaneGeometry(healthBarWidth * 0.98, healthBarHeight * 0.15),
+    healthBarOuterHighlight: new PlaneGeometry(healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2),
+    deathEffect: new SphereGeometry(1, 6, 4),
+  }), []);
 
   // Memoized materials to prevent recreation every frame
   const healthBarMaterials = useMemo(() => ({
@@ -86,21 +114,20 @@ export default function SummonedUnitRenderer({
     }),
   }), []);
 
+  // Cleanup geometries on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(geometry => {
+        geometry.dispose();
+      });
+    };
+  }, [geometries]);
+
   // Smooth health interpolation state
   const lerpState = useRef({
     currentHealth: health,
     lastHealth: health
   });
-
-  // Unit dimensions (simple and small to maintain framerate)
-  const unitHeight = 1.2;
-  const unitBaseRadius = 0.3;
-
-  // Health bar dimensions (scaled down for units)
-  const healthBarWidth = 0.85;
-  const healthBarHeight = 0.12;
-  const healthBarY = unitHeight + 0.8; // Above the unit
-  const healthBarBorderWidth = 0.02;
 
   // Elite units are 1.15x larger
   const eliteScale = isElite ? 1.15 : 1.0;
@@ -244,8 +271,8 @@ export default function SummonedUnitRenderer({
         position={[0, unitHeight * 0.725, 0]}
         castShadow
         receiveShadow
+        geometry={geometries.body}
       >
-        <octahedronGeometry args={[unitBaseRadius * 1.25, 0]} />
         <meshStandardMaterial
           color={currentDamageColorRef.current}
           metalness={0.7}
@@ -259,8 +286,8 @@ export default function SummonedUnitRenderer({
       <mesh
         position={[0, unitHeight * 1, 0]}
         castShadow
+        geometry={geometries.head}
       >
-        <octahedronGeometry args={[unitBaseRadius * 0.6, 0]} />
         <meshStandardMaterial
           color={currentDamageColorRef.current.clone().multiplyScalar(1.2)}
           metalness={0.8}
@@ -276,8 +303,8 @@ export default function SummonedUnitRenderer({
           key={`shoulder-${side}`}
           position={[side * unitBaseRadius * 1.2, unitHeight * 0.9, 0]}
           castShadow
+          geometry={geometries.shoulder}
         >
-          <sphereGeometry args={[unitBaseRadius * 0.4, 8, 8]} />
           <meshStandardMaterial
             color={currentDamageColorRef.current.clone().multiplyScalar(1.1)}
             metalness={0.7}
@@ -296,8 +323,8 @@ export default function SummonedUnitRenderer({
           position={[side * unitBaseRadius * 1.4, unitHeight * 0.7, side * unitBaseRadius * 0.1]}
           rotation={[0, 0, side * 0.3]}
           castShadow
+          geometry={geometries.arm}
         >
-          <cylinderGeometry args={[unitBaseRadius * 0.25, unitBaseRadius * 0.15, unitHeight * 0.3, 6]} />
           <meshStandardMaterial
             color={currentDamageColorRef.current.clone().multiplyScalar(0.9)}
             metalness={0.6}
@@ -311,8 +338,7 @@ export default function SummonedUnitRenderer({
 
 
       {/* Energy Aura - Crystal glow effect */}
-      <mesh position={[0, unitHeight * 0.75, 0]}>
-        <sphereGeometry args={[unitBaseRadius * 1.675, 8, 8]} />
+      <mesh position={[0, unitHeight * 0.75, 0]} geometry={geometries.energyAura}>
         <meshBasicMaterial
           color={currentDamageColorRef.current}
           transparent
@@ -326,8 +352,7 @@ export default function SummonedUnitRenderer({
       {!isDead && (
         <group ref={healthBarRef} position={[0, healthBarY, 0]}>
           {/* Outer glow effect (behind everything) */}
-          <mesh ref={healthBarGlowRef} position={[0, 0, -0.01]}>
-            <planeGeometry args={[healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2]} />
+          <mesh ref={healthBarGlowRef} position={[0, 0, -0.01]} geometry={geometries.healthBarGlow}>
             <meshBasicMaterial
               color={unitColor}
               transparent
@@ -337,8 +362,7 @@ export default function SummonedUnitRenderer({
           </mesh>
 
           {/* Outer border (dark) */}
-          <mesh position={[0, 0, 0.001]}>
-            <planeGeometry args={[healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2]} />
+          <mesh position={[0, 0, 0.001]} geometry={geometries.healthBarBorder}>
             <meshBasicMaterial
               color="#1a1a1a"
               transparent
@@ -348,8 +372,7 @@ export default function SummonedUnitRenderer({
           </mesh>
 
           {/* Background (slightly rounded appearance) */}
-          <mesh position={[0, 0, 0.002]}>
-            <planeGeometry args={[healthBarWidth, healthBarHeight]} />
+          <mesh position={[0, 0, 0.002]} geometry={geometries.healthBarBg}>
             <meshBasicMaterial
               attach="material"
               color="#2a2a2a"
@@ -360,8 +383,7 @@ export default function SummonedUnitRenderer({
           </mesh>
 
           {/* Inner shadow/depth effect */}
-          <mesh position={[0, 0, 0.003]}>
-            <planeGeometry args={[healthBarWidth * 0.98, healthBarHeight * 0.7]} />
+          <mesh position={[0, 0, 0.003]} geometry={geometries.healthBarShadow}>
             <meshBasicMaterial
               attach="material"
               color="#1a1a1a"
@@ -375,13 +397,12 @@ export default function SummonedUnitRenderer({
           <mesh
             ref={healthBarFillRef}
             position={[0, 0, 0.004]}
-            geometry={new PlaneGeometry(healthBarWidth, healthBarHeight * 0.75)}
+            geometry={geometries.healthBarFill}
             material={healthBarMaterials.fill}
           />
 
           {/* Top highlight for depth */}
-          <mesh position={[0, healthBarHeight * 0.25, 0.005]}>
-            <planeGeometry args={[healthBarWidth * 0.98, healthBarHeight * 0.15]} />
+          <mesh position={[0, healthBarHeight * 0.25, 0.005]} geometry={geometries.healthBarHighlight}>
             <meshBasicMaterial
               attach="material"
               color="#ffffff"
@@ -392,8 +413,7 @@ export default function SummonedUnitRenderer({
           </mesh>
 
           {/* Outer border highlight */}
-          <mesh position={[0, 0, 0.006]}>
-            <planeGeometry args={[healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2]} />
+          <mesh position={[0, 0, 0.006]} geometry={geometries.healthBarOuterHighlight}>
             <meshBasicMaterial
               attach="material"
               color={unitColor}
@@ -409,8 +429,7 @@ export default function SummonedUnitRenderer({
       {isDead && (
         <group>
           {/* Simple death particles */}
-          <mesh position={[0, unitHeight * 0.4, 0]}>
-            <sphereGeometry args={[1, 6, 4]} />
+          <mesh position={[0, unitHeight * 0.4, 0]} geometry={geometries.deathEffect}>
             <meshBasicMaterial
               color={0x666666}
               transparent
