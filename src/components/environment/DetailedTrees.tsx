@@ -205,6 +205,21 @@ const DetailedTrees: React.FC<DetailedTreesProps> = ({
       if (group.parent) {
         group.parent.remove(group);
       }
+      // Dispose all geometries and materials in the group
+      group.traverse((child) => {
+        if (child instanceof Mesh) {
+          if (child.geometry) {
+            child.geometry.dispose();
+          }
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach(material => material.dispose());
+            } else {
+              child.material.dispose();
+            }
+          }
+        }
+      });
     });
     treeGroupsRef.current = [];
 
@@ -303,6 +318,30 @@ const DetailedTrees: React.FC<DetailedTreesProps> = ({
       treeGroupsRef.current.push(treeGroup);
     });
   }, [treeStructures]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Dispose all remaining tree groups
+      treeGroupsRef.current.forEach(group => {
+        group.traverse((child) => {
+          if (child instanceof Mesh) {
+            if (child.geometry) {
+              child.geometry.dispose();
+            }
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach(material => material.dispose());
+              } else {
+                child.material.dispose();
+              }
+            }
+          }
+        });
+      });
+      treeGroupsRef.current = [];
+    };
+  }, []);
 
   // Update LOD levels based on camera distance
   useFrame(() => {

@@ -3409,7 +3409,7 @@ export class ControlSystem extends System {
 
   public applyBurningStack(entityId: number, currentTime: number, isEntropicBolt: boolean = true): { damageBonus: number; stackCount: number } {
     const stackDuration = 5.0; // 5 seconds
-    const maxStacks = 15; // Maximum 15 stacks
+    const maxStacks = 5; // Maximum 5 stacks (reduced from 15)
     let currentStacks = this.burningStacks.get(entityId);
     
     // Clean up expired stacks or initialize new entry
@@ -3420,11 +3420,11 @@ export class ControlSystem extends System {
     // Calculate damage bonus based on current stack count (before adding new stack)
     let damageBonus = 0;
     if (isEntropicBolt) {
-      // Entropic Bolt: +1 damage per stack
-      damageBonus = currentStacks.stacks;
+      // Entropic Bolt: +3 damage per stack (increased from +1 to compensate for max 5 stacks instead of 15)
+      damageBonus = currentStacks.stacks * 2;
     } else {
-      // Crossentropy Bolt: +10 damage per stack
-      damageBonus = currentStacks.stacks * 10;
+      // Crossentropy Bolt: +20 damage per stack (increased from +10 to match CombatSystem calculation)
+      damageBonus = currentStacks.stacks * 20;
     }
     
     let newStackCount = currentStacks.stacks;

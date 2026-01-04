@@ -18,23 +18,28 @@ interface RoomJoinProps {
 }
 
 export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, currentSubclass, gameMode = 'multiplayer' }: RoomJoinProps) {
-  const { 
-    joinRoom, 
-    isConnected, 
-    isInRoom, 
-    connectionError, 
-    players, 
-    previewRoom, 
-    clearPreview, 
+  const {
+    joinRoom,
+    isConnected,
+    isInRoom,
+    connectionError,
+    players,
+    previewRoom,
+    clearPreview,
     currentPreview,
     startGame,
-    gameStarted
+    gameStarted,
+    roomList,
+    requestRoomList
   } = useMultiplayer();
   const [roomId, setRoomId] = useState('default');
   const [playerName, setPlayerName] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [showRoomList, setShowRoomList] = useState(true); // Start with room list view
+  const [roomListLoading, setRoomListLoading] = useState(false);
+  const [roomPreselected, setRoomPreselected] = useState(false); // Track if room was selected from list
 
   // Clear preview loading when preview is received
   useEffect(() => {
@@ -42,6 +47,27 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
       setPreviewLoading(false);
     }
   }, [currentPreview]);
+
+  // Request room list when component mounts and is connected
+  useEffect(() => {
+    if (isConnected && showRoomList) {
+      setRoomListLoading(true);
+      requestRoomList();
+      // Set loading to false after a short delay to show loading state briefly
+      setTimeout(() => setRoomListLoading(false), 500);
+    }
+  }, [isConnected, showRoomList, requestRoomList]);
+
+  // Auto-refresh room list every 10 seconds when showing room list
+  useEffect(() => {
+    if (!showRoomList || !isConnected) return;
+
+    const interval = setInterval(() => {
+      requestRoomList();
+    }, 10000); // Refresh every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [showRoomList, isConnected, requestRoomList]);
 
   const handlePreview = () => {
     if (!roomId.trim()) {
@@ -96,6 +122,7 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
     }
   };
 
+
   const handleBackToForm = () => {
     // Play interface sound
     if (window.audioSystem) {
@@ -113,6 +140,18 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
     }
 
     onBack();
+  };
+
+  const handleBackToRoomList = () => {
+    // Play interface sound
+    if (window.audioSystem) {
+      window.audioSystem.playUIInterfaceSound();
+    }
+
+    setShowRoomList(true);
+    setShowPreview(false);
+    setRoomPreselected(false);
+    clearPreview();
   };
 
   const handleStartGame = () => {
@@ -186,6 +225,158 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
               {/* Subtle hint text */}
               <div className="text-center">
 
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show room list first
+  if (showRoomList && !showPreview) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-50 overflow-y-auto">
+        <div className="relative max-w-4xl w-11/12 mx-auto">
+          {/* Animated background glow */}
+          <div className={`absolute -inset-4 rounded-xl blur-lg animate-pulse ${gameMode === 'pvp' ? 'bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20' : 'bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20'}`}></div>
+
+          {/* Main panel with glassmorphism */}
+          <div className={`relative bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 backdrop-blur-xl p-6 rounded-xl border ${gameMode === 'pvp' ? 'border-red-500/30 shadow-2xl shadow-red-500/10' : 'border-blue-500/30 shadow-2xl shadow-blue-500/10'} text-white`}>
+            {/* Enhanced title section */}
+            <div className="text-center mb-6 relative">
+              {/* Decorative background elements */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className={`w-24 h-px bg-gradient-to-r from-transparent via-${gameMode === 'pvp' ? 'red' : 'blue'}-400 to-transparent opacity-50`}></div>
+              </div>
+
+              <h1 className={`text-xl font-black mb-2 bg-gradient-to-r ${gameMode === 'pvp' ? 'from-red-400 via-orange-400 to-red-400' : 'from-blue-400 via-purple-400 to-blue-400'} bg-clip-text text-transparent relative`}>
+                {gameMode === 'pvp' ? 'PVP' : 'MULTIPLAYER'} ROOMS
+              </h1>
+
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className={`w-8 h-px bg-gradient-to-r from-transparent to-${gameMode === 'pvp' ? 'red' : 'blue'}-400/60`}></div>
+                <div className={`text-xs font-medium text-${gameMode === 'pvp' ? 'red' : 'blue'}-300/80 tracking-wider uppercase`}>
+                  Active Rooms - {roomList.length} found
+                </div>
+                <div className={`w-8 h-px bg-gradient-to-l from-transparent to-${gameMode === 'pvp' ? 'red' : 'blue'}-400/60`}></div>
+              </div>
+            </div>
+
+            {roomListLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
+                <p className="text-gray-300">Loading rooms...</p>
+              </div>
+            ) : roomList.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-300 mb-4">No active rooms found.</p>
+                <p className="text-gray-400 text-sm">Be the first to create one!</p>
+              </div>
+            ) : (
+              <div className="space-y-3 mb-6 max-h-96 overflow-y-auto">
+                {(() => {
+                  const filteredRooms = roomList.filter(room => room.gameMode === gameMode);
+                  console.log('Room list state:', { roomList, gameMode, isJoining, filteredRooms });
+                  return filteredRooms;
+                })()
+                  .map((room) => (
+                    <div
+                      key={room.roomId}
+                      className={`relative overflow-hidden rounded-xl transition-all duration-300 transform ${room.playerCount < room.maxPlayers && !room.gameStarted && !isJoining ? 'hover:scale-[1.02] cursor-pointer' : 'cursor-not-allowed opacity-60'} bg-gradient-to-br from-gray-800/80 via-gray-900/90 to-gray-800/80 backdrop-blur-sm border ${room.gameStarted ? 'border-yellow-500/50' : room.playerCount >= room.maxPlayers ? 'border-red-500/50' : room.playerCount < room.maxPlayers && !room.gameStarted && !isJoining ? 'border-green-500/50' : 'border-gray-600/50'} p-4`}
+                      onClick={() => {
+                        if (room.playerCount < room.maxPlayers && !room.gameStarted && !isJoining) {
+                          // Pre-fill the room ID and switch to join form for name entry
+                          setRoomId(room.roomId);
+                          setRoomPreselected(true);
+                          setShowRoomList(false);
+                        }
+                      }}
+                    >
+                      {/* Room status indicator */}
+                      <div className="absolute top-3 right-3">
+                        <div className={`w-3 h-3 rounded-full ${room.gameStarted ? 'bg-yellow-500 animate-pulse' : room.playerCount >= room.maxPlayers ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`}></div>
+                      </div>
+
+
+                      {/* Room header */}
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-bold text-white text-lg">{room.roomId}</h3>
+                        <div className={`px-2 py-1 rounded-full text-xs font-semibold ${room.gameStarted ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : room.playerCount >= room.maxPlayers ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-green-500/20 text-green-400 border border-green-500/30'}`}>
+                          {room.playerCount}/{room.maxPlayers}
+                        </div>
+                      </div>
+
+                      {/* Room status */}
+                      <div className="text-sm text-gray-300 mb-2">
+                        {room.gameStarted ? 'In Progress' : room.playerCount >= room.maxPlayers ? 'Full' : 'Waiting for Players'}
+                      </div>
+
+                      {/* Players in room */}
+                      {room.players.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="text-xs text-gray-400 font-medium">PLAYERS:</div>
+                          {room.players.map(player => (
+                            <div key={player.id} className="flex justify-between items-center text-sm">
+                              <span className="text-green-400 font-medium">{player.name}</span>
+                              <span className="text-orange-400 capitalize">({player.weapon})</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex gap-3">
+              <div className="flex-1 relative group">
+                <div className={`absolute -inset-1.5 rounded-lg blur-md transition-all duration-500 ${gameMode === 'pvp' ? 'bg-gradient-to-r from-red-500/30 via-orange-500/30 to-red-500/30 opacity-75 group-hover:opacity-100' : 'bg-gradient-to-r from-green-500/30 via-blue-500/30 to-green-500/30 opacity-75 group-hover:opacity-100'}`}></div>
+                <button
+                  className={`relative w-full px-5 py-3 text-base font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 ${gameMode === 'pvp' ? 'bg-gradient-to-r from-red-600 via-red-500 to-orange-600 text-white border-red-400/50 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:from-red-500 hover:via-red-400 hover:to-orange-500 hover:border-red-300/70' : 'bg-gradient-to-r from-green-600 via-green-500 to-blue-600 text-white border-green-400/50 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:from-green-500 hover:via-green-400 hover:to-blue-500 hover:border-green-300/70'} ${isJoining ? 'opacity-50 cursor-not-allowed transform-none' : ''}`}
+                  onClick={() => {
+                    // Generate a random room ID for creating new room
+                    const randomRoomId = `room_${Math.floor(Math.random() * 10000)}`;
+                    setRoomId(randomRoomId);
+                    setRoomPreselected(false); // Not pre-selected from list
+                    setShowRoomList(false);
+                  }}
+                  disabled={isJoining}
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    <span className="text-white">CREATE NEW ROOM</span>
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  </div>
+                </button>
+              </div>
+
+              <div className="flex-1 relative group">
+                <div className="absolute -inset-1.5 rounded-lg blur-md transition-all duration-500 bg-gradient-to-r from-gray-500/30 via-gray-600/30 to-gray-500/30 opacity-75 group-hover:opacity-100"></div>
+                <button
+                  className={`relative w-full px-5 py-3 text-base font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 bg-gradient-to-r from-gray-700 to-gray-600 text-white border-gray-600/50 shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 hover:from-gray-600 hover:to-gray-500 hover:border-gray-500/70 ${isJoining ? 'opacity-50 cursor-not-allowed transform-none' : ''}`}
+                  onClick={() => {
+                    // Refresh room list
+                    setRoomListLoading(true);
+                    requestRoomList();
+                    setTimeout(() => setRoomListLoading(false), 500);
+                  }}
+                  disabled={isJoining}
+                >
+                  REFRESH
+                </button>
+              </div>
+
+              <div className="relative group">
+                <div className="absolute -inset-1.5 rounded-lg blur-md transition-all duration-500 bg-gradient-to-r from-gray-500/30 via-gray-600/30 to-gray-500/30 opacity-75 group-hover:opacity-100"></div>
+                <button
+                  className={`relative px-5 py-3 text-base font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 bg-gradient-to-r from-gray-700 to-gray-600 text-white border-gray-600/50 shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 hover:from-gray-600 hover:to-gray-500 hover:border-gray-500/70 ${isJoining ? 'opacity-50 cursor-not-allowed transform-none' : ''}`}
+                  onClick={handleBack}
+                  disabled={isJoining}
+                >
+                  BACK
+                </button>
               </div>
             </div>
           </div>
@@ -323,13 +514,13 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
             </div>
 
             <h1 className={`text-xl font-black mb-2 bg-gradient-to-r ${gameMode === 'pvp' ? 'from-red-400 via-orange-400 to-red-400' : 'from-blue-400 via-purple-400 to-blue-400'} bg-clip-text text-transparent relative`}>
-              {gameMode === 'pvp' ? 'CREATE ROOM' : 'JOIN MULTIPLAYER'}
+              {roomPreselected ? 'JOIN ROOM' : (gameMode === 'pvp' ? 'CREATE ROOM' : 'JOIN MULTIPLAYER')}
             </h1>
 
             <div className="flex items-center justify-center gap-2 mb-4">
               <div className={`w-8 h-px bg-gradient-to-r from-transparent to-${gameMode === 'pvp' ? 'red' : 'blue'}-400/60`}></div>
               <div className={`text-xs font-medium text-${gameMode === 'pvp' ? 'red' : 'blue'}-300/80 tracking-wider uppercase`}>
-                {gameMode === 'pvp' ? 'Share Room ID to invite an opponent' : 'Choose Your Room'}
+                {roomPreselected ? 'Enter your name to join' : (gameMode === 'pvp' ? 'Share Room ID to invite an opponent' : 'Choose Your Room')}
               </div>
               <div className={`w-8 h-px bg-gradient-to-l from-transparent to-${gameMode === 'pvp' ? 'red' : 'blue'}-400/60`}></div>
             </div>
@@ -393,10 +584,10 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
                 <div className="absolute -inset-1.5 rounded-lg blur-md transition-all duration-500 bg-gradient-to-r from-gray-500/30 via-gray-600/30 to-gray-500/30 opacity-75 group-hover:opacity-100"></div>
                 <button
                   className="relative px-5 py-2 text-base font-bold rounded-lg border-2 transition-all duration-300 transform hover:scale-105 active:scale-95 w-full min-w-[200px] max-w-[280px] bg-gradient-to-r from-gray-700 to-gray-600 text-white border-gray-600/50 shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 hover:from-gray-600 hover:to-gray-500 hover:border-gray-500/70 disabled:bg-gradient-to-r disabled:from-gray-800 disabled:to-gray-700 disabled:text-gray-500 disabled:border-gray-700/50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none"
-                  onClick={handleBack}
+                  onClick={handleBackToRoomList}
                   disabled={isJoining}
                 >
-                  BACK
+                  BACK TO ROOMS
                 </button>
               </div>
 

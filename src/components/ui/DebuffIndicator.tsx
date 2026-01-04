@@ -179,12 +179,10 @@ export default function DebuffIndicator({
           
           {/* Stack count text representation using small spheres */}
           <group position={[0, 0, 0.01]}>
-            {/* Display up to 15 stacks as small dots arranged in a pattern */}
-            {[...Array(Math.min(stackCount, 15))].map((_, i) => {
-              const row = Math.floor(i / 5);
-              const col = i % 5;
-              const x = (col - 2) * 0.05;
-              const y = (1 - row) * 0.05;
+            {/* Display up to 5 stacks as small dots arranged in a single row */}
+            {[...Array(Math.min(stackCount, 5))].map((_, i) => {
+              const x = (i - 2) * 0.05; // Center the 5 dots
+              const y = 0;
               
               return (
                 <mesh

@@ -3,7 +3,7 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
-import { Vector3, Color, Group, Mesh, MeshBasicMaterial, AdditiveBlending, MathUtils, OctahedronGeometry, SphereGeometry, TorusGeometry, CylinderGeometry, PlaneGeometry } from '@/utils/three-exports';
+import { Vector3, Color, Group, Mesh, MeshBasicMaterial, AdditiveBlending, MathUtils, OctahedronGeometry, SphereGeometry, TorusGeometry, CylinderGeometry, PlaneGeometry, ConeGeometry } from '@/utils/three-exports';
 import { World } from '@/ecs/World';
 import { Transform } from '@/ecs/components/Transform';
 import { Tower } from '@/ecs/components/Tower';
@@ -80,6 +80,12 @@ export default function TowerRenderer({
     healthBarBorder: new PlaneGeometry(2.4, 0.28),
     healthBarHighlight: new PlaneGeometry(2.4, 0.01),
     deathEffect: new SphereGeometry(2.3, 8, 8),
+    // CRITICAL FIX: Memoize inline geometries to prevent recreation every frame
+    energyAura: new SphereGeometry(1.6675, 16, 16),
+    attackSpike: new ConeGeometry(0.115, 0.92, 6),
+    attackSpikeLeft: new ConeGeometry(0.092, 0.69, 6),
+    attackSpikeRight: new ConeGeometry(0.092, 0.69, 6),
+    tendrilCone: new ConeGeometry(0.08625, 0.345, 6),
   }), []);
 
   // Cleanup geometries on unmount
@@ -355,8 +361,7 @@ export default function TowerRenderer({
       </mesh>
 
       {/* Energy aura effect */}
-      <mesh position={[0, 2.3, 0]}>
-        <sphereGeometry args={[1.6675, 16, 16]} />
+      <mesh position={[0, 2.3, 0]} geometry={geometries.energyAura}>
         <meshStandardMaterial
           color={colorHex}
           emissive={emissiveHex}
@@ -374,8 +379,7 @@ export default function TowerRenderer({
       {/* Attack animation - energy spikes when attacking */}
       {isAttackingRef.current && (
         <>
-          <mesh position={[0, 2.53, 1.725]} rotation={[Math.PI / 2, 0, 0]}>
-            <coneGeometry args={[0.115, 0.92, 6]} />
+          <mesh position={[0, 2.53, 1.725]} rotation={[Math.PI / 2, 0, 0]} geometry={geometries.attackSpike}>
             <meshStandardMaterial
               color={towerColor.clone().multiplyScalar(1.5).getHex()}
               emissive={towerColor.clone().multiplyScalar(0.8).getHex()}
@@ -387,8 +391,7 @@ export default function TowerRenderer({
             />
           </mesh>
 
-          <mesh position={[0.575, 2.53, 1.495]} rotation={[Math.PI / 2, 0, Math.PI / 6]}>
-            <coneGeometry args={[0.092, 0.69, 6]} />
+          <mesh position={[0.575, 2.53, 1.495]} rotation={[Math.PI / 2, 0, Math.PI / 6]} geometry={geometries.attackSpikeLeft}>
             <meshStandardMaterial
               color={towerColor.clone().multiplyScalar(1.5).getHex()}
               emissive={towerColor.clone().multiplyScalar(0.8).getHex()}
@@ -400,8 +403,7 @@ export default function TowerRenderer({
             />
           </mesh>
 
-          <mesh position={[-0.575, 2.53, 1.495]} rotation={[Math.PI / 2, 0, -Math.PI / 6]}>
-            <coneGeometry args={[0.092, 0.69, 6]} />
+          <mesh position={[-0.575, 2.53, 1.495]} rotation={[Math.PI / 2, 0, -Math.PI / 6]} geometry={geometries.attackSpikeRight}>
             <meshStandardMaterial
               color={towerColor.clone().multiplyScalar(1.5).getHex()}
               emissive={towerColor.clone().multiplyScalar(0.8).getHex()}
@@ -427,8 +429,7 @@ export default function TowerRenderer({
             }
           }}
         >
-          <mesh>
-            <coneGeometry args={[0.08625, 0.345, 6]} />
+          <mesh geometry={geometries.tendrilCone}>
             <meshStandardMaterial
               color={colorHex}
               emissive={emissiveHex}
@@ -450,8 +451,7 @@ export default function TowerRenderer({
             }
           }}
         >
-          <mesh>
-            <coneGeometry args={[0.08625, 0.345, 6]} />
+          <mesh geometry={geometries.tendrilCone}>
             <meshStandardMaterial
               color={towerColor.clone().multiplyScalar(0.8).getHex()}
               emissive={towerColor.clone().multiplyScalar(0.4).getHex()}

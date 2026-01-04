@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Group, Mesh, MathUtils, AdditiveBlending, Color } from '@/utils/three-exports';
+import { Vector3, Group, Mesh, MathUtils, AdditiveBlending, Color, OctahedronGeometry, SphereGeometry, TorusGeometry, CylinderGeometry, ConeGeometry } from '@/utils/three-exports';
 import { World } from '@/ecs/World';
 import { Enemy } from '@/ecs/components/Enemy';
 import { Transform } from '@/ecs/components/Transform';
@@ -22,6 +22,26 @@ export default function EliteRenderer({
   const groupRef = useRef<Group>(null);
   const timeRef = useRef(0);
   const isAttackingRef = useRef(false);
+
+  // CRITICAL FIX: Memoize geometries to prevent recreation every frame
+  const geometries = useMemo(() => ({
+    mainBody: new OctahedronGeometry(0.8, 0),
+    head: new OctahedronGeometry(0.4, 0),
+    shoulder: new SphereGeometry(0.325, 16, 16),
+    shoulderRing: new TorusGeometry(0.4, 0.05, 8, 16),
+    arm: new CylinderGeometry(0.15, 0.15, 1.0, 6),
+    aura: new SphereGeometry(1.35, 16, 16),
+    attackSpike: new ConeGeometry(0.1, 0.8, 6),
+    attackSpikeSmall: new ConeGeometry(0.08, 0.6, 6),
+    orbitalIcicle: new ConeGeometry(0.075, 0.3, 6),
+  }), []);
+
+  // Cleanup geometries on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(geometry => geometry.dispose());
+    };
+  }, [geometries]);
 
   useFrame((_, delta) => {
     timeRef.current += delta;
@@ -88,8 +108,7 @@ export default function EliteRenderer({
   return (
     <group ref={groupRef}>
       {/* Main body - ice crystal structure */}
-      <mesh position={[0, 2.0, 0]}>
-        <octahedronGeometry args={[0.8, 0]} />
+      <mesh position={[0, 2.0, 0]} geometry={geometries.mainBody}>
         <meshStandardMaterial
           color="#4FC3F7"
           emissive="#29B6F6"
@@ -102,8 +121,7 @@ export default function EliteRenderer({
       </mesh>
 
       {/* Head */}
-      <mesh position={[0, 2.7, 0]}>
-        <octahedronGeometry args={[0.4, 0]} />
+      <mesh position={[0, 2.7, 0]} geometry={geometries.head}>
         <meshStandardMaterial
           color="#81D4FA"
           emissive="#4FC3F7"
@@ -116,8 +134,7 @@ export default function EliteRenderer({
       </mesh>
 
       {/* Left Shoulder */}
-      <mesh position={[-0.7, 2.35, 0]}>
-        <sphereGeometry args={[0.325, 16, 16]} />
+      <mesh position={[-0.7, 2.35, 0]} geometry={geometries.shoulder}>
         <meshStandardMaterial
           color="#81D4FA"
           emissive="#4FC3F7"
@@ -130,8 +147,7 @@ export default function EliteRenderer({
       </mesh>
 
       {/* Left Shoulder Ring */}
-      <mesh position={[-0.7, 2.35, 0]} rotation={[Math.PI / 2, -Math.PI / 4, 0]}>
-        <torusGeometry args={[0.4, 0.05, 8, 16]} />
+      <mesh position={[-0.7, 2.35, 0]} rotation={[Math.PI / 2, -Math.PI / 4, 0]} geometry={geometries.shoulderRing}>
         <meshStandardMaterial
           color="#E1F5FE"
           emissive="#B3E5FC"
@@ -147,9 +163,9 @@ export default function EliteRenderer({
       <mesh 
         name="LeftArm"
         position={[-0.7, 2.0, 0.2]} 
-        rotation={[0, 0, 0]} // Default down position
+        rotation={[0, 0, 0]}
+        geometry={geometries.arm}
       >
-        <cylinderGeometry args={[0.15, 0.15, 1.0, 6]} />
         <meshStandardMaterial
           color="#4FC3F7"
           emissive="#29B6F6"
@@ -162,8 +178,7 @@ export default function EliteRenderer({
       </mesh>
 
       {/* Right Shoulder */}
-      <mesh position={[0.7, 2.35, 0]}>
-        <sphereGeometry args={[0.325, 16, 16]} />
+      <mesh position={[0.7, 2.35, 0]} geometry={geometries.shoulder}>
         <meshStandardMaterial
           color="#81D4FA"
           emissive="#4FC3F7"
@@ -176,8 +191,7 @@ export default function EliteRenderer({
       </mesh>
 
       {/* Right Shoulder Ring */}
-      <mesh position={[0.7, 2.35, 0]} rotation={[Math.PI / 2,  Math.PI / 4, 0]}>
-        <torusGeometry args={[0.4, 0.05, 8, 16]} />
+      <mesh position={[0.7, 2.35, 0]} rotation={[Math.PI / 2,  Math.PI / 4, 0]} geometry={geometries.shoulderRing}>
         <meshStandardMaterial
           color="#E1F5FE"
           emissive="#B3E5FC"
@@ -190,8 +204,7 @@ export default function EliteRenderer({
       </mesh>
 
       {/* Right Arm - stays down */}
-      <mesh position={[0.7, 2.0, 0]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[0.15, 0.15, 1.0, 6]} />
+      <mesh position={[0.7, 2.0, 0]} rotation={[0, 0, 0]} geometry={geometries.arm}>
         <meshStandardMaterial
           color="#4FC3F7"
           emissive="#29B6F6"
@@ -204,8 +217,7 @@ export default function EliteRenderer({
       </mesh>
 
       {/* Water aura effect */}
-      <mesh position={[0, 2.0, 0]}>
-        <sphereGeometry args={[1.35, 16, 16]} />
+      <mesh position={[0, 2.0, 0]} geometry={geometries.aura}>
         <meshStandardMaterial
           color="#29B6F6"
           emissive="#0277BD"
@@ -223,8 +235,7 @@ export default function EliteRenderer({
       {/* Attack animation - ice spikes when attacking */}
       {isAttackingRef.current && (
         <>
-          <mesh position={[0, 2.2, 1.5]} rotation={[Math.PI / 2, 0, 0]}>
-            <coneGeometry args={[0.1, 0.8, 6]} />
+          <mesh position={[0, 2.2, 1.5]} rotation={[Math.PI / 2, 0, 0]} geometry={geometries.attackSpike}>
             <meshStandardMaterial
               color="#E1F5FE"
               emissive="#81D4FA"
@@ -236,8 +247,7 @@ export default function EliteRenderer({
             />
           </mesh>
           
-          <mesh position={[0.5, 2.2, 1.3]} rotation={[Math.PI / 2, 0, Math.PI / 6]}>
-            <coneGeometry args={[0.08, 0.6, 6]} />
+          <mesh position={[0.5, 2.2, 1.3]} rotation={[Math.PI / 2, 0, Math.PI / 6]} geometry={geometries.attackSpikeSmall}>
             <meshStandardMaterial
               color="#E1F5FE"
               emissive="#81D4FA"
@@ -249,8 +259,7 @@ export default function EliteRenderer({
             />
           </mesh>
           
-          <mesh position={[-0.5, 2.2, 1.3]} rotation={[Math.PI / 2, 0, -Math.PI / 6]}>
-            <coneGeometry args={[0.08, 0.6, 6]} />
+          <mesh position={[-0.5, 2.2, 1.3]} rotation={[Math.PI / 2, 0, -Math.PI / 6]} geometry={geometries.attackSpikeSmall}>
             <meshStandardMaterial
               color="#E1F5FE"
               emissive="#81D4FA"
@@ -282,8 +291,7 @@ export default function EliteRenderer({
               -Math.PI/2
             ]}
           >
-            <mesh>
-              <coneGeometry args={[0.075, 0.3, 6]} />
+            <mesh geometry={geometries.orbitalIcicle}>
               <meshStandardMaterial
                 color="#CCFFFF"
                 emissive="#CCFFFF"
@@ -314,8 +322,7 @@ export default function EliteRenderer({
               0
             ]}
           >
-            <mesh>
-            <coneGeometry args={[0.075, 0.3, 6]} />
+            <mesh geometry={geometries.orbitalIcicle}>
               <meshStandardMaterial
                 color="#AAEEFF"
                 emissive="#AAEEFF"

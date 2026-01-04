@@ -114,14 +114,19 @@ export default function SummonedUnitRenderer({
     }),
   }), []);
 
-  // Cleanup geometries on unmount
+  // Cleanup geometries and materials on unmount
   useEffect(() => {
     return () => {
+      // Dispose geometries
       Object.values(geometries).forEach(geometry => {
         geometry.dispose();
       });
+      // Dispose materials
+      Object.values(healthBarMaterials).forEach(material => {
+        material.dispose();
+      });
     };
-  }, [geometries]);
+  }, [geometries, healthBarMaterials]);
 
   // Smooth health interpolation state
   const lerpState = useRef({

@@ -94,6 +94,15 @@ interface RoomPreview {
   summonedUnits: SummonedUnit[];
 }
 
+interface RoomListItem {
+  roomId: string;
+  gameMode: 'multiplayer' | 'pvp';
+  playerCount: number;
+  maxPlayers: number;
+  gameStarted: boolean;
+  players: Player[];
+}
+
 interface ChatMessage {
   id: string;
   playerId: string;
@@ -174,6 +183,10 @@ interface MultiplayerContextType {
 
   // Room preview
   currentPreview: RoomPreview | null;
+
+  // Room list
+  roomList: RoomListItem[];
+  requestRoomList: () => void;
   
   // Actions
   joinRoom: (roomId: string, playerName: string, weapon: WeaponType, subclass?: WeaponSubclass, gameMode?: 'multiplayer' | 'pvp') => Promise<void>;
@@ -272,6 +285,10 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
   const [gameMode, setGameMode] = useState<'multiplayer' | 'pvp'>('multiplayer');
   const [winner, setWinner] = useState<'Red' | 'Blue' | null>(null);
   const [currentPreview, setCurrentPreview] = useState<RoomPreview | null>(null);
+
+  // Room list
+  const [roomList, setRoomList] = useState<RoomListItem[]>([]);
+
   const [selectedWeapons, setSelectedWeaponsState] = useState<{
     primary: WeaponType;
     secondary: WeaponType;
@@ -365,6 +382,9 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
       setKillCount(data.killCount);
       setGameStarted(data.gameStarted);
       setGameMode(data.gameMode || 'multiplayer'); // Set game mode from server
+
+      // Refresh room list for other players to see updated room status
+      setTimeout(() => requestRoomList(), 1000);
 
       // Update players
       const playersMap = new Map();
@@ -651,6 +671,11 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
       setCurrentPreview(data);
     });
 
+    addEventHandler('room-list', (data) => {
+      console.log('Room list received:', data);
+      setRoomList(data);
+    });
+
     // Player action event handlers
     addEventHandler('player-attack', (data) => {
       // console.log('⚔️ Player attack received:', data);
@@ -905,6 +930,12 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
   const clearPreview = useCallback(() => {
     setCurrentPreview(null);
   }, []);
+
+  const requestRoomList = useCallback(() => {
+    if (socket && isConnected) {
+      socket.emit('request-room-list');
+    }
+  }, [socket, isConnected]);
 
   const startGame = useCallback(() => {
     if (socket && currentRoomId) {
@@ -1316,6 +1347,8 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     gameMode,
     winner,
     currentPreview,
+    roomList,
+    requestRoomList,
     joinRoom,
     leaveRoom,
     previewRoom,

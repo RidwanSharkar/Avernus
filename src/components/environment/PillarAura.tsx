@@ -1,5 +1,5 @@
-import { useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
-import { Group, Vector3, Color } from '@/utils/three-exports';
+import { useRef, useImperativeHandle, forwardRef, useState, useEffect, useMemo } from 'react';
+import { Group, Vector3, Color, RingGeometry, CylinderGeometry } from '@/utils/three-exports';
 import { useFrame } from '@react-three/fiber';
 
 interface PillarAuraProps {
@@ -18,6 +18,19 @@ const PillarAura = forwardRef<{ toggle: () => void; isActive: boolean }, PillarA
   const auraRef = useRef<Group>(null);
   const rotationSpeed = 0.08; // Slower rotation for pillars
   const [internalActive, setInternalActive] = useState(false);
+
+  // CRITICAL FIX: Memoize geometries to prevent recreation every frame
+  const geometries = useMemo(() => ({
+    ring: new RingGeometry(0.7, 0.85, 4),
+    cylinder: new CylinderGeometry(0.75, 0.5, -0.05, 16),
+  }), []);
+
+  // Cleanup geometries on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(geometry => geometry.dispose());
+    };
+  }, [geometries]);
 
   // Sync with external isActive prop
   useEffect(() => {
@@ -52,8 +65,7 @@ const PillarAura = forwardRef<{ toggle: () => void; isActive: boolean }, PillarA
       {/* Rotating inner elements - Player color theme */}
       <group rotation={[0, 0, 0]} position={[0, 0.05, 0]} scale={[1.1, 1.1, 1.1]}>
         {[0, Math.PI/2, Math.PI, Math.PI*1.5].map((rotation, i) => (
-          <mesh key={i} rotation={[-Math.PI / 2, 0, rotation]}>
-            <ringGeometry args={[0.7, 0.85, 4]} />
+          <mesh key={i} rotation={[-Math.PI / 2, 0, rotation]} geometry={geometries.ring}>
             <meshStandardMaterial
               color={pillarColor}
               emissive={pillarColor}
@@ -67,8 +79,7 @@ const PillarAura = forwardRef<{ toggle: () => void; isActive: boolean }, PillarA
       </group>
 
       {/* Circle base - Player color theme */}
-      <mesh position={[0, 0, 0]} scale={[1.175, 1.175, 1.175]}>
-        <cylinderGeometry args={[0.75, 0.5, -0.05, 16]} />
+      <mesh position={[0, 0, 0]} scale={[1.175, 1.175, 1.175]} geometry={geometries.cylinder}>
         <meshStandardMaterial
           color={pillarColor}
           emissive={pillarColor}

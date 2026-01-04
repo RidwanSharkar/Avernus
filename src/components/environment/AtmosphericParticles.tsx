@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Color, BufferGeometry, BufferAttribute, AdditiveBlending } from '@/utils/three-exports';
 
@@ -86,6 +86,13 @@ const AtmosphericParticles: React.FC<AtmosphericParticlesProps> = ({
       pointsRef.current.rotation.y += delta * 0.1; // Slow rotation
     }
   });
+
+  // Cleanup geometry on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+    };
+  }, [geometry]);
 
   return (
     <group position={position}>

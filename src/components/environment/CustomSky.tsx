@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Color, BackSide, SphereGeometry } from '@/utils/three-exports';
 
 interface SkyProps {}
@@ -70,6 +70,13 @@ const CustomSky: React.FC<SkyProps> = () => {
 
   // Memoize geometry for performance
   const skyGeometry = useMemo(() => new SphereGeometry(500, 32, 32), []);
+
+  // Cleanup geometry on unmount
+  useEffect(() => {
+    return () => {
+      skyGeometry.dispose();
+    };
+  }, [skyGeometry]);
 
   return (
     <mesh geometry={skyGeometry}>

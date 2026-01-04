@@ -89,9 +89,10 @@ io.on('connection', (socket) => {
     }
     
     const room = gameRooms.get(roomId);
-    
-    // Check room capacity (max 5 players)
-    if (room.getPlayerCount() >= 5) {
+    const maxPlayers = room.gameMode === 'pvp' ? 2 : 5; // PVP rooms are 2-player, multiplayer are 5-player
+
+    // Check room capacity based on game mode
+    if (room.getPlayerCount() >= maxPlayers) {
       socket.emit('room-full');
       return;
     }
@@ -194,6 +195,37 @@ io.on('connection', (socket) => {
     } else {
       socket.emit('start-game-failed', { error: 'Game already started' });
     }
+  });
+
+  // Handle room list request
+  socket.on('request-room-list', () => {
+    const roomList = [];
+
+    console.log(`Room list requested. Current rooms: ${gameRooms.size}`);
+    for (const [roomId, room] of gameRooms) {
+      const playerCount = room.getPlayerCount();
+      const maxPlayers = room.gameMode === 'pvp' ? 2 : 5; // PVP rooms are 2-player, multiplayer are 5-player
+
+      const roomData = {
+        roomId,
+        gameMode: room.gameMode,
+        playerCount,
+        maxPlayers,
+        gameStarted: room.getGameStarted(),
+        players: Array.from(room.getPlayers().values()).map(player => ({
+          id: player.id,
+          name: player.name,
+          weapon: player.weapon,
+          subclass: player.subclass,
+          health: player.health,
+          maxHealth: player.maxHealth
+        }))
+      };
+
+      roomList.push(roomData);
+    }
+
+    socket.emit('room-list', roomList);
   });
 
   // Handle chat messages

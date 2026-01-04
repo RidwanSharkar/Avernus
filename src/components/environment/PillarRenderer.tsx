@@ -108,7 +108,7 @@ export default function PillarRenderer({
   const healthBarBorderWidth = 0.04;
 
   // Create geometries and materials only once using useMemo
-  const { pillarGeometries, materials } = useMemo(() => {
+  const { pillarGeometries, healthBarGeometries, materials } = useMemo(() => {
     // Base geometry
     const baseGeometry = new CylinderGeometry(2, 2.2, 1, 8);
 
@@ -147,6 +147,17 @@ export default function PillarRenderer({
       roughness: 0.2,
     });
 
+    // CRITICAL FIX: Health bar geometries - memoize to prevent recreation every frame
+    const healthBarGeoms = {
+      glow: new PlaneGeometry(healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2),
+      border: new PlaneGeometry(healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2),
+      background: new PlaneGeometry(healthBarWidth, healthBarHeight),
+      shadow: new PlaneGeometry(healthBarWidth * 0.98, healthBarHeight * 0.7),
+      fill: new PlaneGeometry(healthBarWidth, healthBarHeight * 0.75),
+      highlight: new PlaneGeometry(healthBarWidth * 0.98, healthBarHeight * 0.15),
+      outerHighlight: new PlaneGeometry(healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2),
+    };
+
     return {
       pillarGeometries: {
         base: baseGeometry,
@@ -155,6 +166,7 @@ export default function PillarRenderer({
         orb: orbGeometry,
         energySphere: energySphereGeometry,
       },
+      healthBarGeometries: healthBarGeoms,
       materials: {
         stone: stoneMaterial,
         orb: orbMaterial,
@@ -184,10 +196,11 @@ export default function PillarRenderer({
   React.useEffect(() => {
     return () => {
       Object.values(pillarGeometries).forEach(geometry => geometry.dispose());
+      Object.values(healthBarGeometries).forEach(geometry => geometry.dispose());
       Object.values(materials).forEach(material => material.dispose());
       Object.values(healthBarMaterials).forEach(material => material.dispose());
     };
-  }, [pillarGeometries, materials, healthBarMaterials]);
+  }, [pillarGeometries, healthBarGeometries, materials, healthBarMaterials]);
 
   useFrame((state, delta) => {
     // Smoothly interpolate health changes
@@ -337,8 +350,7 @@ export default function PillarRenderer({
       {/* Health Bar */}
       <group ref={healthBarRef} position={[0, healthBarY, 0]}>
         {/* Outer glow effect (behind everything) */}
-        <mesh ref={healthBarGlowRef} position={[0, 0, -0.01]}>
-          <planeGeometry args={[healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2]} />
+        <mesh ref={healthBarGlowRef} position={[0, 0, -0.01]} geometry={healthBarGeometries.glow}>
           <meshBasicMaterial 
             color={pillarColor} 
             transparent 
@@ -348,8 +360,7 @@ export default function PillarRenderer({
         </mesh>
         
         {/* Outer border (dark) */}
-        <mesh position={[0, 0, 0.001]}>
-          <planeGeometry args={[healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2]} />
+        <mesh position={[0, 0, 0.001]} geometry={healthBarGeometries.border}>
           <meshBasicMaterial 
             color="#1a1a1a" 
             transparent 
@@ -359,8 +370,7 @@ export default function PillarRenderer({
         </mesh>
         
         {/* Background (slightly rounded appearance) */}
-        <mesh position={[0, 0, 0.002]}>
-          <planeGeometry args={[healthBarWidth, healthBarHeight]} />
+        <mesh position={[0, 0, 0.002]} geometry={healthBarGeometries.background}>
           <meshBasicMaterial
             attach="material"
             color="#2a2a2a"
@@ -371,8 +381,7 @@ export default function PillarRenderer({
         </mesh>
 
         {/* Inner shadow/depth effect */}
-        <mesh position={[0, 0, 0.003]}>
-          <planeGeometry args={[healthBarWidth * 0.98, healthBarHeight * 0.7]} />
+        <mesh position={[0, 0, 0.003]} geometry={healthBarGeometries.shadow}>
           <meshBasicMaterial
             attach="material"
             color="#1a1a1a"
@@ -386,13 +395,12 @@ export default function PillarRenderer({
         <mesh
           ref={healthBarFillRef}
           position={[0, 0, 0.004]}
-          geometry={new PlaneGeometry(healthBarWidth, healthBarHeight * 0.75)}
+          geometry={healthBarGeometries.fill}
           material={healthBarMaterials.fill}
         />
 
         {/* Top highlight for depth */}
-        <mesh position={[0, healthBarHeight * 0.25, 0.005]}>
-          <planeGeometry args={[healthBarWidth * 0.98, healthBarHeight * 0.15]} />
+        <mesh position={[0, healthBarHeight * 0.25, 0.005]} geometry={healthBarGeometries.highlight}>
           <meshBasicMaterial
             attach="material"
             color="#ffffff"
@@ -403,8 +411,7 @@ export default function PillarRenderer({
         </mesh>
 
         {/* Outer border highlight */}
-        <mesh position={[0, 0, 0.006]}>
-          <planeGeometry args={[healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2]} />
+        <mesh position={[0, 0, 0.006]} geometry={healthBarGeometries.outerHighlight}>
           <meshBasicMaterial
             attach="material"
             color={pillarColor}

@@ -34,12 +34,8 @@ function ElementalVortex({ parentRef, towerColor }: ElementalVortexProps) {
   const baseRadius = 1.35; // Larger radius
   const groupRef = useRef<Group>(null);
 
-  // Cleanup geometry on unmount
-  useEffect(() => {
-    return () => {
-      sharedVortexGeometry.dispose();
-    };
-  }, []);
+  // CRITICAL FIX: Don't dispose shared geometry! It's used by all ElementalVortex instances
+  // The shared geometry will be disposed when the module unloads or app closes
   
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
