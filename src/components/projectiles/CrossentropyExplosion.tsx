@@ -21,7 +21,7 @@ export default function CrossentropyExplosion({
   const normalizedCharge = Math.min(chargeTime / 4, 1.0);
   const scale = 0.5 + (normalizedCharge * 1.0); // Increased base scale for more impact
   const intensity = 2.5 + (normalizedCharge * 4); // Higher intensity for Crossentropy
-  const sparkCount = 16; // More sparks for dramatic effect
+  const sparkCount = 10; // Reduced sparks while maintaining boldness
   
   useEffect(() => {
     // Animation timer
@@ -150,7 +150,7 @@ export default function CrossentropyExplosion({
       })}
 
       {/* Secondary smaller sparks for more detail */}
-      {[...Array(sparkCount * 2)].map((_, i) => {
+      {[...Array(12)].map((_, i) => {
         const angle = (i / (sparkCount * 2)) * Math.PI * 2 + Math.random() * 0.5;
         const randomOffset = Math.random() * 0.3;
         const radius = scale * 0.7 * (1 + elapsed * (expansionRate + 1)) * (1 + randomOffset);

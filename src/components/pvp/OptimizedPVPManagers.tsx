@@ -780,17 +780,17 @@ export function OptimizedPVPCrossentropyManager({
             hitTracker.current.add(hitKey);
             
             // Apply burning stacks for Crossentropy bolt
-            let finalDamage = 140; // Base Crossentropy damage
+            let finalDamage = projectile.damage; // Use projectile's configured damage
             const controlSystemRef = (window as any).controlSystemRef;
             if (controlSystemRef && controlSystemRef.current) {
               const controlSystem = controlSystemRef.current;
               const currentTime = Date.now() / 1000;
-              
+
               // Apply burning stack and get damage bonus (false = Crossentropy bolt)
               const { damageBonus } = controlSystem.applyBurningStack(playerEntityId, currentTime, false);
 
               // No PVP damage cap - allow full burning damage bonus
-              finalDamage = 140 + damageBonus;
+              finalDamage = projectile.damage + damageBonus;
               
             }
             

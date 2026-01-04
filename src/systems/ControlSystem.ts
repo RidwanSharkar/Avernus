@@ -1381,9 +1381,9 @@ export class ControlSystem extends System {
     // Create CrossentropyBolt projectile using the existing method
     const crossentropyConfig = {
       speed: 25, // Slower than EntropicBolt
-      damage: 90, // Higher damage for R ability
+      damage: 140, // Base Crossentropy damage (matches PVP calculation)
       lifetime: 2.5, // Longer lifetime
-      piercing: false, // 
+      piercing: false, //
       explosive: false, // Disabled explosion effect for performance
       explosionRadius: 0, // No explosion radius
       subclass: this.currentSubclass,
@@ -3420,7 +3420,7 @@ export class ControlSystem extends System {
     // Calculate damage bonus based on current stack count (before adding new stack)
     let damageBonus = 0;
     if (isEntropicBolt) {
-      // Entropic Bolt: +3 damage per stack (increased from +1 to compensate for max 5 stacks instead of 15)
+      // Entropic Bolt: +2 damage per stack (5 max stacks = 20-30 damage range)
       damageBonus = currentStacks.stacks * 2;
     } else {
       // Crossentropy Bolt: +20 damage per stack (increased from +10 to match CombatSystem calculation)

@@ -703,7 +703,7 @@ export class CombatSystem extends System {
             const { damageBonus } = controlSystem.applyBurningStack(target.id, currentTime, isEntropicBolt);
 
             // Cap burning damage in PVP to prevent extreme values that cause desync
-            const maxBurningBonus = isEntropicBolt ? 15 : 100; // Max +15 for Entropic, +100 for Crossentropy in PVP (now with max 5 stacks)
+            const maxBurningBonus = isEntropicBolt ? 10 : 100; // Max +10 for Entropic (5 stacks × 2), +100 for Crossentropy in PVP (now with max 5 stacks)
             const cappedBonus = Math.min(damageBonus, maxBurningBonus);
             finalDamage = baseDamage + cappedBonus;
 
@@ -714,10 +714,10 @@ export class CombatSystem extends System {
           } else {
             // Use existing burning stack bonus without incrementing
             const existingStacks = controlSystem.getBurningStacks(target.id);
-            const rawDamageBonus = isEntropicBolt ? existingStacks * 3 : existingStacks * 20;
+            const rawDamageBonus = isEntropicBolt ? existingStacks * 2 : existingStacks * 20;
 
             // Cap burning damage in PVP to prevent extreme values that cause desync
-            const maxBurningBonus = isEntropicBolt ? 15 : 100; // Max +15 for Entropic, +100 for Crossentropy in PVP (now with max 5 stacks)
+            const maxBurningBonus = isEntropicBolt ? 10 : 100; // Max +10 for Entropic (5 stacks × 2), +100 for Crossentropy in PVP (now with max 5 stacks)
             const cappedBonus = Math.min(rawDamageBonus, maxBurningBonus);
             finalDamage = baseDamage + cappedBonus;
 
