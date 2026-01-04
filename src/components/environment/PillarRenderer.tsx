@@ -364,8 +364,8 @@ export default function PillarRenderer({
           ref={energySphereRef}
           geometry={pillarGeometries.energySphere}
           material={materials.energySphere}
-          position={[0, 1.45, 0]}
-          scale={[0.85, 0.85, 0.85]}
+          position={[0, 1.4, 0]}
+          scale={[0.80, 0.80, 0.80]}
         />
       )}
 

@@ -5,11 +5,12 @@ import React from 'react';
 interface ExperienceBarProps {
   experience: number;
   level: number;
+  essence?: number;
   playerId?: string;
   isLocalPlayer?: boolean;
 }
 
-export default function ExperienceBar({ experience, level, playerId, isLocalPlayer = false }: ExperienceBarProps) {
+export default function ExperienceBar({ experience, level, essence, playerId, isLocalPlayer = false }: ExperienceBarProps) {
   // Calculate EXP needed for next level
   const getExpForNextLevel = (currentLevel: number): number => {
     switch (currentLevel) {
@@ -136,6 +137,19 @@ export default function ExperienceBar({ experience, level, playerId, isLocalPlay
               </div>
             </div>
           </div>
+
+          {/* Essence Display */}
+          {essence !== undefined && (
+            <div className="flex items-center space-x-1 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-purple-600/30">
+              {/* Essence icon/symbol */}
+              <div className="text-purple-400 text-xs">⚡</div>
+
+              {/* Essence amount */}
+              <div className={`text-xs font-bold ${isLocalPlayer ? 'text-purple-400' : 'text-purple-300'}`}>
+                {essence}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

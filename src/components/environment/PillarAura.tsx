@@ -63,7 +63,7 @@ const PillarAura = forwardRef<{ toggle: () => void; isActive: boolean }, PillarA
   return (
     <group ref={auraRef}>
       {/* Rotating inner elements - Player color theme */}
-      <group rotation={[0, 0, 0]} position={[0, 0.05, 0]} scale={[1.1, 1.1, 1.1]}>
+      <group rotation={[0, 0, 0]} position={[0, 0.05, 0]} scale={[1.05, 1.05, 1.05]}>
         {[0, Math.PI/2, Math.PI, Math.PI*1.5].map((rotation, i) => (
           <mesh key={i} rotation={[-Math.PI / 2, 0, rotation]} geometry={geometries.ring}>
             <meshStandardMaterial

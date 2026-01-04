@@ -12,7 +12,6 @@ import ScytheAimer from '../components/ui/ScytheAimer';
 import StrikeIndicator from '../components/ui/StrikeIndicator';
 import { getGlobalRuneCounts, getCriticalChance, getCriticalDamageMultiplier } from '../core/DamageCalculator';
 import ExperienceBar from '../components/ui/ExperienceBar';
-import EssenceDisplay from '../components/ui/EssenceDisplay';
 import ControlsPanel from '../components/ui/ControlsPanel';
 import { MultiplayerProvider, useMultiplayer } from '../contexts/MultiplayerContext';
 import RoomJoin from '../components/ui/RoomJoin';
@@ -1189,6 +1188,7 @@ function HomeContent() {
               <ExperienceBar
                 experience={playerExperience}
                 level={playerLevel}
+                essence={playerEssence}
                 isLocalPlayer={true}
               />
             )}

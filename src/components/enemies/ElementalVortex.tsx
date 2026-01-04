@@ -9,7 +9,7 @@ interface ElementalVortexProps {
 }
 
 // Shared geometry to prevent memory leaks
-const sharedVortexGeometry = new SphereGeometry(0.13, 8, 8);
+const sharedVortexGeometry = new SphereGeometry(0.15, 8, 8);
 
 const createVortexPiece = (towerColor: Color) => (
   <group>
@@ -30,8 +30,8 @@ const createVortexPiece = (towerColor: Color) => (
 
 function ElementalVortex({ parentRef, towerColor }: ElementalVortexProps) {
   const vortexPiecesRef = useRef<(Group | null)[]>([]);
-  const pieceCount = 24; // More particles for denser effect
-  const baseRadius = 1.35; // Larger radius
+  const pieceCount = 25; // More particles for denser effect
+  const baseRadius = 1.15; // Larger radius
   const groupRef = useRef<Group>(null);
 
   // CRITICAL FIX: Don't dispose shared geometry! It's used by all ElementalVortex instances
@@ -45,7 +45,7 @@ function ElementalVortex({ parentRef, towerColor }: ElementalVortexProps) {
       
       const time = clock.getElapsedTime();
       const heightOffset = ((i / pieceCount) * 1.5 - 0.175); // Taller vortex
-      const radiusMultiplier = 0.8 - (heightOffset * 0.475); // Gentler taper
+      const radiusMultiplier = 0.8 - (heightOffset * 0.425); // Gentler taper
       
       // More complex spiral motion like mist particles
       const spiralAngle = (i / pieceCount) * Math.PI * 6 + time * 1.5;
@@ -54,7 +54,7 @@ function ElementalVortex({ parentRef, towerColor }: ElementalVortexProps) {
       
       const x = Math.cos(spiralAngle) * radius;
       const z = Math.sin(spiralAngle) * radius;
-      const y = heightOffset + Math.sin(time * 2 + i) * 0.3 + 0.2; // Start from ground level, swirl up around Elite
+      const y = heightOffset + Math.sin(time * 2 + i) * 0.3 + 0.3; // Start from ground level, swirl up around Elite
       
       piece.position.set(x, y, z);
       
