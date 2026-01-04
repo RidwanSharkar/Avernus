@@ -33,6 +33,7 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
   const particleRef = useRef<InstancedMesh>(null);
   const glowRef = useRef<InstancedMesh>(null);
   const archwayRef = useRef<InstancedMesh>(null);
+  const middlePolesRef = useRef<InstancedMesh>(null);
   const groupRef = useRef<Group>(null);
 
   // CRITICAL: Cache Matrix4 to prevent memory leak from creating new ones every frame
@@ -108,10 +109,13 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
         const y1 = archProgress1 * archHeight;
         const y2 = archProgress2 * archHeight;
 
-        // Position segment at the midpoint between the two points
-        const midX = (x1 + x2) / 2;
-        const midY = (y1 + y2) / 2;
-        const midZ = (z1 + z2) / 2;
+        // Position segment at the midpoint angle along the circle (not the straight-line midpoint)
+        const midAngle = (angle1 + angle2) / 2;
+        const midX = Math.cos(midAngle) * archRadius;
+        const midZ = Math.sin(midAngle) * archRadius;
+        const midT = (t1 + t2) / 2;
+        const midArchProgress = Math.sin(midT * Math.PI);
+        const midY = midArchProgress * archHeight;
 
         // Calculate direction vector for rotation
         const dirX = x2 - x1;
@@ -129,6 +133,36 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
     }
 
     return segments;
+  }, [radius, count]);
+
+  // Generate middle poles at the highest points of archways (2 per archway segment)
+  const middlePolesPositions = useMemo(() => {
+    const positions: Vector3[] = [];
+    const angleStep = (Math.PI * 2) / count;
+    const archHeight = 2.5; // Height of the arch peak
+
+    for (let i = 0; i < count; i++) {
+      const startAngle = i * angleStep;
+      const endAngle = ((i + 1) % count) * angleStep;
+
+      // Position 2 poles at the highest middle nodes (very close together at t = 0.45 and t = 0.55)
+      for (let poleIndex = 0; poleIndex < 2; poleIndex++) {
+        const t = 0.45 + poleIndex * 0.1; // t = 0.45 and t = 0.55 (very close together)
+        const angle = startAngle + (endAngle - startAngle) * t;
+        
+        // Calculate position along the circle
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        
+        // Calculate height at this position on the archway (parabolic curve)
+        const archProgress = Math.sin(t * Math.PI);
+        const y = archProgress * archHeight - 1.5; // Reduced base offset to lower the poles slightly
+
+        positions.push(new Vector3(x, y, z));
+      }
+    }
+
+    return positions;
   }, [radius, count]);
 
   // Materials
@@ -153,9 +187,17 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
     alphaTest: 0.1,
   }), []);
 
+  const middlePolesMaterial = useMemo(() => new MeshBasicMaterial({
+    color: 0xF74F4F, // Red to match the theme
+    transparent: true,
+    opacity: 0.4, // Same intensity as regular poles
+    alphaTest: 0.1,
+  }), []);
+
   // Geometries
   const particleGeometry = useMemo(() => new PlaneGeometry(0.05, 0.05), []);
   const glowGeometry = useMemo(() => new BoxGeometry(0.0625, 1.5, 0.0625), []); // 3D pillars visible from all angles
+  const middlePolesGeometry = useMemo(() => new BoxGeometry(0.0625, 2.35, 0.0625), []); // Taller poles for middle positions
   const archwayGeometry = useMemo(() => new BoxGeometry(0.08, 0.15, 0.08), []); // Thicker segments for archways
 
   // Cleanup geometries and materials on unmount to prevent memory leaks
@@ -163,12 +205,14 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
     return () => {
       particleGeometry.dispose();
       glowGeometry.dispose();
+      middlePolesGeometry.dispose();
       archwayGeometry.dispose();
       particleMaterial.dispose();
       glowMaterial.dispose();
       archwayMaterial.dispose();
+      middlePolesMaterial.dispose();
     };
-  }, [particleGeometry, glowGeometry, archwayGeometry, particleMaterial, glowMaterial, archwayMaterial]);
+  }, [particleGeometry, glowGeometry, middlePolesGeometry, archwayGeometry, particleMaterial, glowMaterial, archwayMaterial, middlePolesMaterial]);
 
   // Update instanced matrices
   useEffect(() => {
@@ -201,7 +245,16 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       });
       archwayRef.current.instanceMatrix.needsUpdate = true;
     }
-  }, [particlePositions, glowPositions, archwayData]);
+
+    // Update middle poles instances
+    if (middlePolesRef.current) {
+      middlePolesPositions.forEach((position, i) => {
+        matrix.makeTranslation(position.x, position.y, position.z);
+        middlePolesRef.current?.setMatrixAt(i, matrix);
+      });
+      middlePolesRef.current.instanceMatrix.needsUpdate = true;
+    }
+  }, [particlePositions, glowPositions, archwayData, middlePolesPositions]);
 
   // Animate particles
   useFrame((state) => {
@@ -243,6 +296,13 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       <instancedMesh
         ref={glowRef}
         args={[glowGeometry, glowMaterial, count]}
+        frustumCulled={false}
+      />
+
+      {/* Middle poles at highest archway points */}
+      <instancedMesh
+        ref={middlePolesRef}
+        args={[middlePolesGeometry, middlePolesMaterial, middlePolesPositions.length]}
         frustumCulled={false}
       />
 

@@ -64,7 +64,7 @@ const ScytheAimer = memo(function ScytheAimer({
     if (!isVisible) return;
 
     let rotationFrame: number;
-    const rotationSpeed = 0.2; // degrees per frame
+    const rotationSpeed = 0.1; // degrees per frame
 
     const rotateCircles = () => {
       setRotation(prev => (prev + rotationSpeed) % 360);
@@ -107,7 +107,7 @@ const ScytheAimer = memo(function ScytheAimer({
   
   // Calculate vertical offset based on camera pitch and zoom (same as BowAimer)
   // verticalAim: -1 (looking up) to 1 (looking down)
-  const compensationOffset = -27.25; // Base offset - negative moves it up from center
+  const compensationOffset = -26.5; // Base offset - negative moves it up from center
   const aimRange = 16; // How much the aimer moves based on vertical aim (percentage)
   const verticalOffset = compensationOffset + (verticalAim * aimRange) + zoomAdjustment;
   
