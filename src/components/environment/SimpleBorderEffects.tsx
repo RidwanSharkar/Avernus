@@ -110,8 +110,8 @@ const SimpleBorderEffectsInner: React.FC<SimpleBorderEffectsInnerProps> = ({
   const archwayData = useMemo(() => {
     const segments: { position: Vector3; rotation: Euler }[] = [];
     const angleStep = (Math.PI * 2) / count;
-    const segmentsPerArch = 8; // Number of segments per archway
-    const archHeight = halfHeight ? 1.35 : 2.3; // Half height for compact version
+    const segmentsPerArch = 12; // Number of segments per archway
+    const archHeight = halfHeight ? 1.35 : 2.125; // Half height for compact version
 
     for (let i = 0; i < count; i++) {
       const startAngle = i * angleStep;
@@ -318,7 +318,7 @@ const SimpleBorderEffectsInner: React.FC<SimpleBorderEffectsInnerProps> = ({
 
     // Gentle rotation (reverse for purple theme)
     const rotationDirection = reverseRotation ? -1 : 1;
-    groupRef.current.rotation.y = time * 0.01 * rotationDirection;
+    groupRef.current.rotation.y = time * 0.02 * rotationDirection;
 
     // Update particle positions for floating animation
     if (particleRef.current) {

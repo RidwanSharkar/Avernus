@@ -7,6 +7,7 @@ import RuneCircle from './RuneCircle';
 import EnhancedGround from './EnhancedGround';
 import VolcanicEruptionSystem from './VolcanicEruption';
 import LightningStrikeSystem from './LightningStrikeSystem';
+import PerimeterCloudSystem from './PerimeterCloudSystem';
 import PillarCollision from './PillarCollision';
 import DetailedTrees, { DetailedTree } from './DetailedTrees';
 import TreeCollision from './TreeCollision';
@@ -94,6 +95,9 @@ const Environment: React.FC<EnvironmentProps> = ({
       {/* Lightning strikes - periodic electrical discharges from random locations */}
       <LightningStrikeSystem groundRadius={29} />
 
+      {/* Perimeter clouds - red atmospheric clouds around map boundary */}
+      <PerimeterCloudSystem radius={23.5} />
+
       <Planet />
 
       <DetailedTrees trees={treePositions} />
@@ -108,21 +112,12 @@ const Environment: React.FC<EnvironmentProps> = ({
       {enableBorderEffects && (
         <SimpleBorderEffects
           radius={24}
-          count={50}
+          count={48}
           enableParticles={true}
           particleCount={100}
         />
       )}
 
-            {/* Border effects - particles and glows around map perimeter */}
-            {enableBorderEffects && (
-        <CompactPurpleBorderEffects
-          radius={22.75}
-          count={42}
-          enableParticles={true}
-          particleCount={0}
-        />
-      )}
 
       {/* Central Rune Circle */}
       <RuneCircle position={pedestalPosition} scale={0.4} level={level} />

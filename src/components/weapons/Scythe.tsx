@@ -85,7 +85,7 @@ function ScytheModel({
       <group position={[-.0, 0., 0]} rotation={[Math.PI / 1, 0, Math.PI - 0.3]}>
         {/* Base connector */}
         <mesh>
-          <cylinderGeometry args={[0.08, 0.08, 0.3, 8]} />
+          <cylinderGeometry args={[0.06, 0.06, 0.3, 8]} />
           <meshStandardMaterial color="#2c1810" roughness={0.6} />
         </mesh>
 
@@ -176,11 +176,11 @@ function ScytheModel({
 
         {/* Static outer glow */}
         <mesh>
-          <cylinderGeometry args={[0.13, 0.11, 0.32, 8]} />
+          <cylinderGeometry args={[0.0725, 0.0725, 0.4, 8]} />
           <meshStandardMaterial
-            color={isEmpowered ? "#8A2BE2" : "#17CE54"}
-            emissive={isEmpowered ? "#8A2BE2" : "#17CE54"}
-            emissiveIntensity={1.5}
+            color={isEmpowered ? "#00BFFF" : "#00BFFF"}
+            emissive={isEmpowered ? "#00BFFF" : "#00BFFF"}
+            emissiveIntensity={1.25}
             transparent
             opacity={0.3}
           />
