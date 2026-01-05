@@ -291,7 +291,7 @@ const VolcanicEruptionSystem: React.FC<VolcanicEruptionSystemProps> = ({
 
   // Create eruption particle geometry (shared between all eruptions)
   const eruptionGeometry = useMemo(() => {
-    const particleCount = 45; // More particles for volcanic eruptions
+    const particleCount =17; // More particles for volcanic eruptions
     const positions = new Float32Array(particleCount * 3);
     const randoms = new Float32Array(particleCount);
     const particleIndices = new Float32Array(particleCount);

@@ -19,7 +19,7 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
   onComplete
 }) => {
   const startTimeRef = useRef(Date.now());
-  const duration = 0.6; // seconds
+  const duration = 0.625; // seconds
   const flickerRef = useRef(1);
 
   // Calculate the sky position (directly above the hit position)
@@ -137,13 +137,13 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
     impact: new MeshStandardMaterial({
       color: new Color('#FFFFFF'),
       emissive: new Color('#B6EAFF'),
-      emissiveIntensity: 8,
+      emissiveIntensity: 12,
       transparent: true
     }),
     ring: new MeshBasicMaterial({
       color: '#80D9FF',
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.6,
       blending: AdditiveBlending
     })
   }), []);
@@ -188,7 +188,7 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
           geometry={geometries.impact}
           material={materials.impact}
           scale={[0.25, 0.25, 0.25]}
-          position={[0, 0.25, 0]}
+          position={[0, 0.125, 0]}
         />
 
         {/* Impact rings - using memoized geometries and shared material */}
@@ -248,7 +248,7 @@ const LightningStrikeSystem: React.FC<LightningStrikeSystemProps> = ({
       id: strikeIdCounterRef.current++,
       position,
       startTime: currentTime,
-      duration: 0.6, // 0.5 seconds duration
+      duration: 0.625, // 0.5 seconds duration
     };
 
     setActiveStrikes(prev => [...prev, newStrike]);

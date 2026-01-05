@@ -267,7 +267,7 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
       {[0, 60, 120, 180, 240, 300].map((angle, i) => {
         const rad = (angle * Math.PI) / 180;
         // Position at inner ring radius (12.5 scaled)
-        const radius = 5 * scaleFactor;
+        const radius = 4.5 * scaleFactor;
         const x = Math.cos(rad) * radius;
         const z = Math.sin(rad) * radius;
 

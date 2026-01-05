@@ -11,7 +11,7 @@ import PillarCollision from './PillarCollision';
 import DetailedTrees, { DetailedTree } from './DetailedTrees';
 import TreeCollision from './TreeCollision';
 import AtmosphericParticles from './AtmosphericParticles';
-import SimpleBorderEffects from './SimpleBorderEffects';
+import SimpleBorderEffects, { CompactPurpleBorderEffects } from './SimpleBorderEffects';
 import CustomSkeleton from './CustomSkeleton';
 
 import { generateMountains } from '@/utils/MountainGenerator';
@@ -108,9 +108,19 @@ const Environment: React.FC<EnvironmentProps> = ({
       {enableBorderEffects && (
         <SimpleBorderEffects
           radius={24}
-          count={48}
+          count={50}
           enableParticles={true}
           particleCount={100}
+        />
+      )}
+
+            {/* Border effects - particles and glows around map perimeter */}
+            {enableBorderEffects && (
+        <CompactPurpleBorderEffects
+          radius={22.75}
+          count={42}
+          enableParticles={true}
+          particleCount={0}
         />
       )}
 
@@ -121,7 +131,7 @@ const Environment: React.FC<EnvironmentProps> = ({
       {/* Atmospheric particles around central area */}
       <AtmosphericParticles
         position={pedestalPosition}
-        count={30}
+        count={50}
         radius={8}
         color="#ffffff"
         speed={0.3}

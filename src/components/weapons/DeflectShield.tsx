@@ -78,7 +78,6 @@ export default function DeflectShield({
 
     // Animate shield appearance and disappearance - KEEP CONSISTENT SIZE
     let opacity = 1;
-    const scale = 0.325; // Scale down the visual effect by half
     
     if (progress < 0.1) {
       // Fade in quickly - only change opacity, not scale
@@ -90,8 +89,7 @@ export default function DeflectShield({
       opacity = 1 - fadeProgress;
     }
 
-    // Apply consistent scale and update materials
-    shieldRef.current.scale.setScalar(scale);
+    // Scale is now set in JSX, no need to set it here
     
     // Update material opacity for all children
     shieldRef.current.traverse((child: any) => {
@@ -117,7 +115,7 @@ export default function DeflectShield({
   if (!isActive) return null;
 
   return (
-    <group ref={shieldRef}>
+    <group ref={shieldRef} scale={0.275}>
       {/* Main shield disc */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[3, 3, 0.1, 32]} />

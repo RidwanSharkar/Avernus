@@ -7,6 +7,7 @@ import {
   CircleGeometry,
   BoxGeometry,
   ConeGeometry,
+  OctahedronGeometry,
   Matrix4,
   Vector3,
   Group,
@@ -31,6 +32,33 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
   enableParticles = true,
   particleCount = 100
 }) => {
+  // Half height version with opposite rotation and purple theme
+  return <SimpleBorderEffectsInner
+    radius={radius}
+    count={count}
+    enableParticles={enableParticles}
+    particleCount={particleCount}
+    halfHeight={false}
+    reverseRotation={false}
+    purpleTheme={false}
+  />;
+};
+
+interface SimpleBorderEffectsInnerProps extends SimpleBorderEffectsProps {
+  halfHeight?: boolean;
+  reverseRotation?: boolean;
+  purpleTheme?: boolean;
+}
+
+const SimpleBorderEffectsInner: React.FC<SimpleBorderEffectsInnerProps> = ({
+  radius = 25,
+  count = 64,
+  enableParticles = true,
+  particleCount = 100,
+  halfHeight = false,
+  reverseRotation = false,
+  purpleTheme = false
+}) => {
   const particleRef = useRef<InstancedMesh>(null);
   const glowRef = useRef<InstancedMesh>(null);
   const coneRef = useRef<InstancedMesh>(null);
@@ -46,41 +74,44 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
   const particlePositions = useMemo(() => {
     const positions: Vector3[] = [];
     const angleStep = (Math.PI * 2) / particleCount;
+    const maxHeight = halfHeight ? 1 : 2; // Half height for compact version
 
     for (let i = 0; i < particleCount; i++) {
       const angle = i * angleStep;
       const distance = radius + (Math.random() - 0.5) * 3; // Slight variation
       const x = Math.cos(angle) * distance;
       const z = Math.sin(angle) * distance;
-      const y = Math.random() * 2; // Random height
+      const y = Math.random() * maxHeight; // Random height
 
       positions.push(new Vector3(x, y, z));
     }
 
     return positions;
-  }, [radius, particleCount]);
+  }, [radius, particleCount, halfHeight]);
 
   // Generate glow positions (fewer, larger)
   const glowPositions = useMemo(() => {
     const positions: Vector3[] = [];
     const angleStep = (Math.PI * 2) / count;
+    const yPosition = halfHeight ? 0.375 : 0.65; // Half the pillar height for ground positioning
 
     for (let i = 0; i < count; i++) {
       const angle = i * angleStep;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
 
-      positions.push(new Vector3(x, 0.75, z)); // Position pillars so they sit on ground (half height + ground offset)
+      positions.push(new Vector3(x, yPosition, z)); // Position pillars so they sit on ground (half height + ground offset)
     }
 
     return positions;
-  }, [radius, count]);
+  }, [radius, count, halfHeight]);
 
   // Generate archway segments between poles
   const archwayData = useMemo(() => {
     const segments: { position: Vector3; rotation: Euler }[] = [];
     const angleStep = (Math.PI * 2) / count;
     const segmentsPerArch = 8; // Number of segments per archway
+    const archHeight = halfHeight ? 1.35 : 2.3; // Half height for compact version
 
     for (let i = 0; i < count; i++) {
       const startAngle = i * angleStep;
@@ -88,7 +119,6 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
 
       // Calculate arch parameters
       const archRadius = radius;
-      const archHeight = 2.5; // Height of the arch peak
 
       for (let j = 0; j < segmentsPerArch; j++) {
         // Create segments that connect between points
@@ -141,7 +171,8 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
   const middlePolesPositions = useMemo(() => {
     const positions: Vector3[] = [];
     const angleStep = (Math.PI * 2) / count;
-    const archHeight = 2.5; // Height of the arch peak
+    const archHeight = halfHeight ? 1.35 : 3; // Height of the arch peak
+    const baseOffset = halfHeight ? 0.75 : 1.75; // Half the base offset for compact version
 
     for (let i = 0; i < count; i++) {
       const startAngle = i * angleStep;
@@ -151,64 +182,64 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       for (let poleIndex = 0; poleIndex < 2; poleIndex++) {
         const t = 0.45 + poleIndex * 0.1; // t = 0.45 and t = 0.55 (very close together)
         const angle = startAngle + (endAngle - startAngle) * t;
-        
+
         // Calculate position along the circle
         const x = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
-        
+
         // Calculate height at this position on the archway (parabolic curve)
         const archProgress = Math.sin(t * Math.PI);
-        const y = archProgress * archHeight - 1.5; // Reduced base offset to lower the poles slightly
+        const y = archProgress * archHeight - baseOffset; // Reduced base offset to lower the poles slightly
 
         positions.push(new Vector3(x, y, z));
       }
     }
 
     return positions;
-  }, [radius, count]);
+  }, [radius, count, halfHeight]);
 
-  // Materials
+  // Materials - support purple theme from RuneCircle
   const particleMaterial = useMemo(() => new MeshBasicMaterial({
-    color: 0xF40000,
+    color: purpleTheme ? 0x8a2be2 : 0xF40000, // Blue Violet for purple theme, red otherwise
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.35,
     alphaTest: 0.1,
-  }), []);
+  }), [purpleTheme]);
 
   const glowMaterial = useMemo(() => new MeshBasicMaterial({
-    color: 0xF74F4F, // Light purple
+    color: purpleTheme ? 0xdda0dd : 0xF74F4F, // Plum for purple theme, light red otherwise
     transparent: true,
-    opacity: 0.4,
+    opacity: 0.435,
     alphaTest: 0.1,
-  }), []);
+  }), [purpleTheme]);
 
   const archwayMaterial = useMemo(() => new MeshBasicMaterial({
-    color: 0xE63946, // Darker red for archways
+    color: purpleTheme ? 0x8a2be2 : 0xE63946, // Blue Violet for purple theme, darker red otherwise
     transparent: true,
-    opacity: 0.6,
+    opacity: 0.435,
     alphaTest: 0.1,
-  }), []);
+  }), [purpleTheme]);
 
   const middlePolesMaterial = useMemo(() => new MeshBasicMaterial({
-    color: 0xF74F4F, // Red to match the theme
+    color: purpleTheme ? 0xdda0dd : 0xF74F4F, // Plum for purple theme, red otherwise
     transparent: true,
-    opacity: 0.4, // Same intensity as regular poles
+    opacity: 0.435, // Same intensity as regular poles
     alphaTest: 0.1,
-  }), []);
+  }), [purpleTheme]);
 
   const coneMaterial = useMemo(() => new MeshBasicMaterial({
-    color: 0xF74F4F, // Match the pillar color
+    color: purpleTheme ? 0xdda0dd : 0xF74F4F, // Plum for purple theme, match the pillar color
     transparent: true,
-    opacity: 0.4,
+    opacity: 0.435,
     alphaTest: 0.1,
-  }), []);
+  }), [purpleTheme]);
 
-  // Geometries
+  // Geometries - support half height
   const particleGeometry = useMemo(() => new PlaneGeometry(0.05, 0.05), []);
-  const glowGeometry = useMemo(() => new BoxGeometry(0.0675, 1.5, 0.0675), []); // 3D pillars visible from all angles
-  const coneGeometry = useMemo(() => new ConeGeometry(0.1, 0.35, 8), []); // Small cone on top of pillars
-  const middlePolesGeometry = useMemo(() => new BoxGeometry(0.0625, 2.35, 0.0625), []); // Taller poles for middle positions
-  const archwayGeometry = useMemo(() => new BoxGeometry(0.07, 0.15, 0.07), []); // Thicker segments for archways
+  const glowGeometry = useMemo(() => new BoxGeometry(0.0675, halfHeight ? 0.75 : 1.5, 0.0675), [halfHeight]); // 3D pillars visible from all angles
+  const coneGeometry = useMemo(() => new ConeGeometry(0.1, halfHeight ? 0.175 : 0.35, 8), [halfHeight]); // Small cone on top of pillars
+  const middlePolesGeometry = useMemo(() => new BoxGeometry(0.0625, halfHeight ? 1.175 : 2.35, 0.0625), [halfHeight]); // Taller poles for middle positions
+  const archwayGeometry = useMemo(() => new OctahedronGeometry(0.075, 0), []); // Diamond-shaped segments for archways
 
   // Cleanup geometries and materials on unmount to prevent memory leaks
   useEffect(() => {
@@ -224,7 +255,7 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       archwayMaterial.dispose();
       middlePolesMaterial.dispose();
     };
-  }, [particleGeometry, glowGeometry, coneGeometry, middlePolesGeometry, archwayGeometry, particleMaterial, glowMaterial, coneMaterial, archwayMaterial, middlePolesMaterial]);
+  }, [particleGeometry, glowGeometry, coneGeometry, middlePolesGeometry, archwayGeometry, particleMaterial, glowMaterial, coneMaterial, archwayMaterial, middlePolesMaterial, halfHeight, purpleTheme]);
 
   // Update instanced matrices
   useEffect(() => {
@@ -250,8 +281,10 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
 
     // Update cone instances (positioned on top of pillars)
     if (coneRef.current) {
+      const pillarHeight = halfHeight ? 0.58 : 1.125;
+      const halfConeHeight = halfHeight ? 0.0875 : 0.175;
       glowPositions.forEach((position, i) => {
-        matrix.makeTranslation(position.x, position.y + 1.5 - 0.55, position.z); // Top of pillar + half cone height
+        matrix.makeTranslation(position.x, position.y + pillarHeight - halfConeHeight, position.z); // Top of pillar + half cone height
         coneRef.current?.setMatrixAt(i, matrix);
       });
       coneRef.current.instanceMatrix.needsUpdate = true;
@@ -275,7 +308,7 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       });
       middlePolesRef.current.instanceMatrix.needsUpdate = true;
     }
-  }, [particlePositions, glowPositions, archwayData, middlePolesPositions, count]);
+  }, [particlePositions, glowPositions, archwayData, middlePolesPositions, count, halfHeight]);
 
   // Animate particles
   useFrame((state) => {
@@ -283,8 +316,9 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
 
     const time = state.clock.getElapsedTime();
 
-    // Gentle rotation
-    groupRef.current.rotation.y = time * 0.065;
+    // Gentle rotation (reverse for purple theme)
+    const rotationDirection = reverseRotation ? -1 : 1;
+    groupRef.current.rotation.y = time * 0.01 * rotationDirection;
 
     // Update particle positions for floating animation
     if (particleRef.current) {
@@ -342,6 +376,16 @@ const SimpleBorderEffects: React.FC<SimpleBorderEffectsProps> = ({
       />
     </group>
   );
+};
+
+// Compact version with half height, reverse rotation, and original red theme
+export const CompactPurpleBorderEffects: React.FC<SimpleBorderEffectsProps> = (props) => {
+  return <SimpleBorderEffectsInner
+    {...props}
+    halfHeight={true}
+    reverseRotation={true}
+    purpleTheme={false}
+  />;
 };
 
 export default SimpleBorderEffects;
