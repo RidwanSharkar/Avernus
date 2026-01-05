@@ -54,7 +54,7 @@ const volcanicEruptionVertexShader = `
 
     // Wider spread for larger eruptions
     vec3 spreadOffset = (perpendicular1 * cos(spreadRotation) + perpendicular2 * sin(spreadRotation))
-                       * spreadAngle * outwardDist * (0.5 + uScale * 0.5);
+                       * spreadAngle * outwardDist * (0.35 + uScale * 0.5);
 
     // Final position: origin + outward movement + arc + spread
     vec3 eruptionPos = uEruptionOrigin
@@ -62,10 +62,10 @@ const volcanicEruptionVertexShader = `
                   + uEruptionDirection * arcHeight * 0.25
                   + spreadOffset;
 
-    // Alpha: fade in quickly, sustain, fade out
+    // Alpha: fade in quickly, sustain, fade out (reduced intensity)
     float fadeIn = smoothstep(0.0, 0.15, particleProgress);
     float fadeOut = 1.0 - smoothstep(0.5, 1.0, particleProgress);
-    vAlpha = fadeIn * fadeOut * (0.6 + aRandom * 0.4) * min(uScale, 1.5);
+    vAlpha = fadeIn * fadeOut * (0.2 + aRandom * 0.3) * min(uScale, 0.85);
 
     // Heat: hotter at beginning, cooler as it travels
     vHeat = 1.0 - particleProgress * 0.5;
@@ -100,9 +100,9 @@ const volcanicEruptionFragmentShader = `
     // Blend from deep green to bright green based on heat
     vec3 color = mix(deepGreen, brightGreen, vHeat);
 
-    // Hot core at center of particle
-    float core = 1.0 - smoothstep(0.0, 0.25, dist);
-    color = mix(color, hotCore, core * vHeat * 0.7);
+    // Hot core at center of particle (reduced emissive intensity)
+    float core = 1.0 - smoothstep(0.0, 0.125, dist);
+    color = mix(color, hotCore, core * vHeat * 0.3);
 
     gl_FragColor = vec4(color, alpha * vAlpha);
   }
@@ -191,11 +191,11 @@ const VolcanicEruptionSystem: React.FC<VolcanicEruptionSystemProps> = ({
       Math.sin(angle) * distance
     );
 
-    // Direction is upward with some outward and random deviation for more violent eruption
+    // Direction is primarily upwards towards the sky with minimal random deviation
     const direction = new Vector3(
-      Math.cos(angle) * 0.3 + (Math.random() - 0.5) * 0.4, // Some outward + randomness
-      0.8 + Math.random() * 0.4, // Mostly upward
-      Math.sin(angle) * 0.3 + (Math.random() - 0.5) * 0.4  // Some outward + randomness
+      (Math.random() - 0.5) * 0.15, // Small random horizontal deviation
+      0.95 + Math.random() * 0.1,   // Mostly straight up
+      (Math.random() - 0.5) * 0.15  // Small random horizontal deviation
     );
     direction.normalize();
 
@@ -213,15 +213,15 @@ const VolcanicEruptionSystem: React.FC<VolcanicEruptionSystemProps> = ({
       scale = 1.8 + Math.random() * 1.2; // 1.8 - 3.0
     }
 
-    // Spread varies - some focused jets, some wide explosions
+    // Spread varies - focused jets for upward eruptions
     const spreadRoll = Math.random();
     let spread: number;
-    if (spreadRoll < 0.3) {
-      spread = 0.15 + Math.random() * 0.2; // Focused jets
-    } else if (spreadRoll < 0.7) {
-      spread = 0.35 + Math.random() * 0.3; // Medium spread
+    if (spreadRoll < 0.6) {
+      spread = 0.1 + Math.random() * 0.15; // Focused upward jets
+    } else if (spreadRoll < 0.9) {
+      spread = 0.25 + Math.random() * 0.2; // Medium spread
     } else {
-      spread = 0.65 + Math.random() * 0.35; // Wide explosions
+      spread = 0.45 + Math.random() * 0.2; // Occasional wider bursts
     }
 
     // Distance varies significantly - volcanic eruptions can be quite far-reaching
@@ -285,14 +285,14 @@ const VolcanicEruptionSystem: React.FC<VolcanicEruptionSystemProps> = ({
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
 
-    // Spawn new volcanic eruptions every 10 seconds
+    // Spawn new volcanic eruptions every 2.5 seconds (much more frequent)
     const timeSinceLastEruption = t - lastEruptionTimeRef.current;
 
-    if (timeSinceLastEruption > 10.0 || lastEruptionTimeRef.current === 0) {
-      // Spawn 1-2 eruptions at once for more dramatic effect
-      const eruptionCount = 1 + Math.floor(Math.random() * 1); // 1-2 eruptions
+    if (timeSinceLastEruption > 7.5 || lastEruptionTimeRef.current === 0) {
+      // Spawn 1-3 eruptions at once for more dramatic effect
+      const eruptionCount = 1 + Math.floor(Math.random() * 2); // 1-3 eruptions
       for (let i = 0; i < eruptionCount; i++) {
-        setTimeout(() => spawnEruption(t + i * 0.5), i * 500);
+        setTimeout(() => spawnEruption(t + i * 0.3), i * 300);
       }
       lastEruptionTimeRef.current = t;
     }
