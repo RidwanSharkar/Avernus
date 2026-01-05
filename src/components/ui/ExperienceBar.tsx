@@ -140,13 +140,12 @@ export default function ExperienceBar({ experience, level, essence, playerId, is
 
           {/* Essence Display */}
           {essence !== undefined && (
-            <div className="flex items-center space-x-1 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-purple-600/30">
-              {/* Essence icon/symbol */}
-              <div className="text-purple-400 text-xs">⚡</div>
-
-              {/* Essence amount */}
-              <div className={`text-xs font-bold ${isLocalPlayer ? 'text-purple-400' : 'text-purple-300'}`}>
-                {essence}
+            <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-400/30">
+              <div className="text-center">
+                <div className="text-xs font-semibold text-purple-300/80">⚡</div>
+                <div className={`text-[10px] font-bold leading-none ${isLocalPlayer ? 'text-purple-400' : 'text-purple-300'}`}>
+                  {essence}
+                </div>
               </div>
             </div>
           )}

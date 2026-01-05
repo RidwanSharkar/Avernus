@@ -22,6 +22,8 @@ const volcanicEruptionVertexShader = `
   uniform float uSpread;
   uniform float uDistance;
   uniform float uSpeed;
+  uniform float uRotationSpeed;
+  uniform float uRotationOffset;
 
   attribute float aRandom;
   attribute float aParticleIndex;
@@ -56,11 +58,21 @@ const volcanicEruptionVertexShader = `
     vec3 spreadOffset = (perpendicular1 * cos(spreadRotation) + perpendicular2 * sin(spreadRotation))
                        * spreadAngle * outwardDist * (0.35 + uScale * 0.5);
 
-    // Final position: origin + outward movement + arc + spread
+    // Apply rotation to the spread offset for swirling motion
+    float rotationAngle = (uEruptionTime * uRotationSpeed + aRandom * uRotationOffset) * particleProgress;
+    float cosRot = cos(rotationAngle);
+    float sinRot = sin(rotationAngle);
+
+    // Rotate spread offset around the eruption direction
+    vec3 rotatedSpread = spreadOffset;
+    rotatedSpread.x = spreadOffset.x * cosRot - spreadOffset.z * sinRot;
+    rotatedSpread.z = spreadOffset.x * sinRot + spreadOffset.z * cosRot;
+
+    // Final position: origin + outward movement + arc + rotated spread
     vec3 eruptionPos = uEruptionOrigin
                   + uEruptionDirection * outwardDist
                   + uEruptionDirection * arcHeight * 0.25
-                  + spreadOffset;
+                  + rotatedSpread;
 
     // Alpha: fade in quickly, sustain, fade out (reduced intensity)
     float fadeIn = smoothstep(0.0, 0.15, particleProgress);
@@ -120,6 +132,8 @@ interface VolcanicEruption {
   spread: number;       // Cone spread angle (0.1 - 0.8)
   distance: number;     // Travel distance multiplier (0.5 - 2.5)
   speed: number;        // Ejection speed multiplier (0.5 - 1.5)
+  rotationSpeed: number; // Rotation speed multiplier (0.5 - 3.0)
+  rotationOffset: number; // Rotation offset for variation (0 - 6.28)
 }
 
 interface VolcanicEruptionParticlesProps {
@@ -144,6 +158,8 @@ const VolcanicEruptionParticles: React.FC<VolcanicEruptionParticlesProps> = ({ e
         uSpread: { value: eruption.spread },
         uDistance: { value: eruption.distance },
         uSpeed: { value: eruption.speed },
+        uRotationSpeed: { value: eruption.rotationSpeed },
+        uRotationOffset: { value: eruption.rotationOffset },
       },
       vertexShader: volcanicEruptionVertexShader,
       fragmentShader: volcanicEruptionFragmentShader,
@@ -151,7 +167,7 @@ const VolcanicEruptionParticles: React.FC<VolcanicEruptionParticlesProps> = ({ e
       blending: AdditiveBlending,
       depthWrite: false,
     });
-  }, [eruption.origin, eruption.direction, eruption.duration, eruption.scale, eruption.spread, eruption.distance, eruption.speed]);
+  }, [eruption.origin, eruption.direction, eruption.duration, eruption.scale, eruption.spread, eruption.distance, eruption.speed, eruption.rotationSpeed, eruption.rotationOffset]);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
@@ -238,6 +254,20 @@ const VolcanicEruptionSystem: React.FC<VolcanicEruptionSystemProps> = ({
     // Speed affects how quickly the eruption travels - volcanic eruptions are fast
     const speed = 0.8 + Math.random() * 1.2; // 0.8 - 2.0
 
+    // Rotation speed - some eruptions swirl faster than others
+    const rotationRoll = Math.random();
+    let rotationSpeed: number;
+    if (rotationRoll < 0.3) {
+      rotationSpeed = 0.5 + Math.random() * 2.0; // Slow rotation
+    } else if (rotationRoll < 0.7) {
+      rotationSpeed = 1.5 + Math.random() * 2.5; // Medium rotation
+    } else {
+      rotationSpeed = 3.0 + Math.random() * 3.0; // Fast spinning
+    }
+
+    // Rotation offset for initial variation
+    const rotationOffset = Math.random() * Math.PI * 2; // 0 - 2π
+
     // Duration correlates with distance and scale - longer for bigger eruptions
     const baseDuration = 2.0 + Math.random() * 1.5;
     const duration = baseDuration * (0.7 + eruptionDistance * 0.3) * (0.8 + scale * 0.2);
@@ -252,6 +282,8 @@ const VolcanicEruptionSystem: React.FC<VolcanicEruptionSystemProps> = ({
       spread,
       distance: eruptionDistance,
       speed,
+      rotationSpeed,
+      rotationOffset,
     };
 
     setActiveEruptions(prev => [...prev, newEruption]);
@@ -259,7 +291,7 @@ const VolcanicEruptionSystem: React.FC<VolcanicEruptionSystemProps> = ({
 
   // Create eruption particle geometry (shared between all eruptions)
   const eruptionGeometry = useMemo(() => {
-    const particleCount = 75; // More particles for volcanic eruptions
+    const particleCount = 45; // More particles for volcanic eruptions
     const positions = new Float32Array(particleCount * 3);
     const randoms = new Float32Array(particleCount);
     const particleIndices = new Float32Array(particleCount);

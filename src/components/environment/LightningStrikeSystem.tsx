@@ -263,7 +263,7 @@ const LightningStrikeSystem: React.FC<LightningStrikeSystemProps> = ({
 
     // Spawn new lightning strikes every 12-18 seconds (less frequent than eruptions)
     const timeSinceLastStrike = t - lastStrikeTimeRef.current;
-    const nextStrikeInterval = 5 + Math.random() * 15; // 5-20 seconds
+    const nextStrikeInterval = 7 + Math.random() * 23; // 7-30 seconds
 
     if (timeSinceLastStrike > nextStrikeInterval || lastStrikeTimeRef.current === 0) {
       // Spawn 1 lightning strike at a time (less frequent than eruptions)
