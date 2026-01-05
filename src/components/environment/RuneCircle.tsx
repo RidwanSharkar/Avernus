@@ -37,7 +37,7 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
     // Create dashed ring geometries (like SVG strokeDasharray)
     const createDashedRingGeometry = (innerRadius: number, outerRadius: number, dashLength: number, gapLength: number, segments: number = 32) => {
       const geometries: THREE.RingGeometry[] = [];
-      const circumference = 2 * Math.PI * ((innerRadius + outerRadius) / 2);
+      const circumference = 2.375 * Math.PI * ((innerRadius + outerRadius) / 2);
       const totalDashGap = dashLength + gapLength;
       const numDashes = Math.floor(circumference / totalDashGap);
 
@@ -100,9 +100,9 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
     const markerMaterial = new MeshStandardMaterial({
       color: new Color(baseColor),
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.7,
       emissive: new Color(glowColor),
-      emissiveIntensity: 0.6, // Steady cardinal markers
+      emissiveIntensity: 0.4, // Steady cardinal markers
     });
 
     const runeMaterial = new MeshStandardMaterial({
@@ -148,7 +148,7 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
     if (!groupRef.current) return;
 
     // Smooth continuous rotation for mystical effect
-    rotationRef.current += delta * 0.15 * 180 / Math.PI; // Slower, more elegant rotation
+    rotationRef.current += delta * 0.125 * 180 / Math.PI; // Slower, more elegant rotation
     rotationRef.current = rotationRef.current % 360;
 
     // Apply rotation to rings with spellcaster timing
@@ -189,6 +189,8 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
         position={[0, 0.01, 0]}
       />
 
+      
+
       {/* Rotating outer spell circle with dashed segments and cardinal markers */}
       <group ref={outerRingRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
         {geometries.outerRing.map((geometry, i) => (
@@ -200,31 +202,58 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
         ))}
 
         {/* Cardinal direction markers (4 lines pointing outward from inner to outer ring) */}
-        {[0, 90, 180, 270].map((angle, i) => {
-          const rad = (angle * Math.PI) / 180;
-          // Position markers at the midpoint between inner (18) and outer (22.5) radius
-          const innerRadius = 18 * scaleFactor;
-          const outerRadius = 24.5 * scaleFactor;
-          const midpointRadius = (innerRadius + outerRadius) / 2;
-          const x = Math.cos(rad) * midpointRadius;
-          const z = Math.sin(rad) * midpointRadius;
-          const length = (outerRadius - innerRadius);
+        <group rotation={[Math.PI / 2, 0, 0]}>
+          {[90, 270].map((angle, i) => {
+            const rad = (angle * Math.PI) / 180;
+            // Position markers at the midpoint between inner (18) and outer (22.5) radius
+            const innerRadius = 5 * scaleFactor;
+            const outerRadius = 12.75 * scaleFactor;
+            const midpointRadius = (innerRadius + outerRadius) / 2;
+            const x = Math.cos(rad) * midpointRadius;
+            const z = Math.sin(rad) * midpointRadius;
+            const length = (outerRadius - innerRadius);
 
-          return (
-            <mesh
-              key={`marker-${i}`}
-              geometry={geometries.marker}
-              material={materials.marker}
-              position={[x, 0.005, z]} // Relative to the group position
-              rotation={[0, rad, Math.PI / 2]} // Rotate to be flat on ground and point outward along the radius
-              scale={[1, length, 1]}
-            />
-          );
-        })}
+            return (
+              <mesh
+                key={`marker-${i}`}
+                geometry={geometries.marker}
+                material={materials.marker}
+                position={[x, 0.005, z]} // Relative to the group position
+                rotation={[rad, 0, 0]} // Only rotate around Z to point outward along the radius
+                scale={[3, length/2, 1]}
+              />
+            );
+          })}
+        </group>
+
+                {/* Cardinal direction markers (4 lines pointing outward from inner to outer ring) */}
+                <group rotation={[Math.PI / 2, Math.PI / 2, 0]}>
+          {[90, 270].map((angle, i) => {
+            const rad = (angle * Math.PI) / 180;
+            // Position markers at the midpoint between inner (18) and outer (22.5) radius
+            const innerRadius = 5.75 * scaleFactor;
+            const outerRadius = 24 * scaleFactor;
+            const midpointRadius = (innerRadius + outerRadius) / 2;
+            const x = Math.cos(rad) * midpointRadius;
+            const z = Math.sin(rad) * midpointRadius;
+            const length = (outerRadius - innerRadius);
+
+            return (
+              <mesh
+                key={`marker-${i}`}
+                geometry={geometries.marker}
+                material={materials.marker}
+                position={[x, 0.005, z]} // Relative to the group position
+                rotation={[rad, 0, 0]} // Only rotate around Z to point outward along the radius
+                scale={[4.5, length/1.9, 1]}
+              />
+            );
+          })}
+        </group>
       </group>
 
       {/* Counter-rotating inner spell circle with dashed segments */}
-      <group ref={innerRingRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
+      <group ref={innerRingRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.035, 0]}>
         {geometries.innerRing.map((geometry, i) => (
           <mesh
             key={`inner-dash-${i}`}
@@ -238,7 +267,7 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
       {[0, 60, 120, 180, 240, 300].map((angle, i) => {
         const rad = (angle * Math.PI) / 180;
         // Position at inner ring radius (12.5 scaled)
-        const radius = 12.5 * scaleFactor;
+        const radius = 5 * scaleFactor;
         const x = Math.cos(rad) * radius;
         const z = Math.sin(rad) * radius;
 
@@ -262,14 +291,7 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
         position={[0, 0.04, 0]}
       />
 
-      {/* Central point light for mystical atmosphere */}
-      <pointLight
-        position={[0, 1, 0]}
-        color={hasCryoflame ? 0x4a90e2 : 0x8a2be2}
-        intensity={1.5}
-        distance={18}
-        decay={2}
-      />
+
     </group>
   );
 };

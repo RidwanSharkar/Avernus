@@ -245,7 +245,7 @@ export default function PillarRenderer({
     // Pulse the energy sphere
     if (energySphereRef.current && ownerId) {
       const time = state.clock.getElapsedTime();
-      const pulseScale = 1 + Math.sin(time * 2) * 0.05; // Subtle pulsing
+      const pulseScale = 0.75 + Math.sin(time * 2) * 0.05; // Subtle pulsing
       energySphereRef.current.scale.setScalar(pulseScale);
     }
     
@@ -364,7 +364,7 @@ export default function PillarRenderer({
           ref={energySphereRef}
           geometry={pillarGeometries.energySphere}
           material={materials.energySphere}
-          position={[0, 1.4, 0]}
+          position={[0, 1.6, 0]}
           scale={[0.80, 0.80, 0.80]}
         />
       )}

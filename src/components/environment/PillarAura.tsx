@@ -19,10 +19,10 @@ const PillarAura = forwardRef<{ toggle: () => void; isActive: boolean }, PillarA
   const rotationSpeed = 0.08; // Slower rotation for pillars
   const [internalActive, setInternalActive] = useState(false);
 
-  // CRITICAL FIX: Memoize geometries to prevent recreation every frame
+  // Memoize geometries to prevent recreation every frame
   const geometries = useMemo(() => ({
     ring: new RingGeometry(0.7, 0.85, 4),
-    cylinder: new CylinderGeometry(0.75, 0.5, -0.05, 16),
+    cylinder: new CylinderGeometry(0.75, 0.5, -0.05, 32),
   }), []);
 
   // Cleanup geometries on unmount to prevent memory leaks
@@ -63,15 +63,15 @@ const PillarAura = forwardRef<{ toggle: () => void; isActive: boolean }, PillarA
   return (
     <group ref={auraRef}>
       {/* Rotating inner elements - Player color theme */}
-      <group rotation={[0, 0, 0]} position={[0, 0.05, 0]} scale={[1.05, 1.05, 1.05]}>
-        {[0, Math.PI/2, Math.PI, Math.PI*1.5].map((rotation, i) => (
+      <group rotation={[0, 0, 0]} position={[0, -0.2, 0]} scale={[1.145, 1.145, 1.145]}>
+        {[0, Math.PI/3, 2*Math.PI/3, Math.PI, 4*Math.PI/3, 5*Math.PI/3].map((rotation, i) => (
           <mesh key={i} rotation={[-Math.PI / 2, 0, rotation]} geometry={geometries.ring}>
             <meshStandardMaterial
               color={pillarColor}
               emissive={pillarColor}
-              emissiveIntensity={.2}
+              emissiveIntensity={0.5}
               transparent
-              opacity={0.6}
+              opacity={0.2}
               depthWrite={false}
             />
           </mesh>
@@ -79,7 +79,7 @@ const PillarAura = forwardRef<{ toggle: () => void; isActive: boolean }, PillarA
       </group>
 
       {/* Circle base - Player color theme */}
-      <mesh position={[0, 0, 0]} scale={[1.175, 1.175, 1.175]} geometry={geometries.cylinder}>
+      <mesh position={[0, -0.2, 0]} scale={[1.325, 1.325, 1.325]} geometry={geometries.cylinder}>
         <meshStandardMaterial
           color={pillarColor}
           emissive={pillarColor}

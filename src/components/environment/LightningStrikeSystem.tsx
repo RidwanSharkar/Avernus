@@ -19,7 +19,7 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
   onComplete
 }) => {
   const startTimeRef = useRef(Date.now());
-  const duration = 0.5; // seconds
+  const duration = 0.6; // seconds
   const flickerRef = useRef(1);
 
   // Calculate the sky position (directly above the hit position)
@@ -125,25 +125,25 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
     coreBolt: new MeshStandardMaterial({
       color: new Color('#FFFFFF'),
       emissive: new Color('#80D9FF'),
-      emissiveIntensity: 15,
+      emissiveIntensity: 22,
       transparent: true
     }),
     secondaryBolt: new MeshStandardMaterial({
       color: new Color('#80D9FF'),
       emissive: new Color('#80D9FF'),
-      emissiveIntensity: 8,
+      emissiveIntensity: 2,
       transparent: true
     }),
     impact: new MeshStandardMaterial({
       color: new Color('#FFFFFF'),
       emissive: new Color('#B6EAFF'),
-      emissiveIntensity: 6,
+      emissiveIntensity: 8,
       transparent: true
     }),
     ring: new MeshBasicMaterial({
       color: '#80D9FF',
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.7,
       blending: AdditiveBlending
     })
   }), []);
@@ -188,7 +188,7 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
           geometry={geometries.impact}
           material={materials.impact}
           scale={[0.25, 0.25, 0.25]}
-          position={[0, 0, 0]}
+          position={[0, 0.25, 0]}
         />
 
         {/* Impact rings - using memoized geometries and shared material */}
@@ -210,9 +210,10 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
 
         {/* Enhanced lighting */}
         <pointLight
+        position={[0, 0.25, 0]}
           color="#80D9FF"
-          intensity={10 * (1 - (Date.now() - startTimeRef.current) / (duration * 1000)) * flickerRef.current}
-          distance={8}
+          intensity={50 * (1 - (Date.now() - startTimeRef.current) / (duration * 1000)) * flickerRef.current}
+          distance={4}
           decay={2}
         />
       </group>
@@ -235,11 +236,11 @@ const LightningStrikeSystem: React.FC<LightningStrikeSystemProps> = ({
   const spawnStrike = useCallback((currentTime: number) => {
     // Random position within the ground radius (slightly inward to avoid edge)
     const angle = Math.random() * Math.PI * 2;
-    const distance = Math.random() * (groundRadius * 0.9); // Stay within 90% of radius
+    const distance = Math.random() * (groundRadius * 1); // Stay within 90% of radius
 
     const position = new Vector3(
       Math.cos(angle) * distance,
-      0.0, // Ground level
+      0, // Ground level
       Math.sin(angle) * distance
     );
 
@@ -247,7 +248,7 @@ const LightningStrikeSystem: React.FC<LightningStrikeSystemProps> = ({
       id: strikeIdCounterRef.current++,
       position,
       startTime: currentTime,
-      duration: 0.5, // 0.5 seconds duration
+      duration: 0.6, // 0.5 seconds duration
     };
 
     setActiveStrikes(prev => [...prev, newStrike]);

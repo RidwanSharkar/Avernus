@@ -15,7 +15,7 @@ const SKY_THEMES = {
   lightBlue: {
     topColor: '#4682B4',
     middleColor: '#5CB4FC',
-    bottomColor: '#ACC6E9'
+    bottomColor: '#87ceeb'
   },
   lightGreen: {
     topColor: '#084508',

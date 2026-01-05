@@ -220,13 +220,13 @@ const VolcanicEruptionSystem: React.FC<VolcanicEruptionSystemProps> = ({
     let scale: number;
     if (sizeRoll < 0.4) {
       // 40% small eruptions
-      scale = 0.4 + Math.random() * 0.6; // 0.4 - 1.0
+      scale = 0.6 + Math.random() * 0.6; // 0.6 - 1.2
     } else if (sizeRoll < 0.8) {
       // 40% medium eruptions
-      scale = 1.0 + Math.random() * 0.8; // 1.0 - 1.8
+      scale = 1.2 + Math.random() * 0.8; // 1.2 - 2.0
     } else {
       // 20% large dramatic eruptions
-      scale = 1.8 + Math.random() * 1.2; // 1.8 - 3.0
+      scale = 2.0 + Math.random() * 0.8; // 2.0 - 2.8
     }
 
     // Spread varies - focused jets for upward eruptions

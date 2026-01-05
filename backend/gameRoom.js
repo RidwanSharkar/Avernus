@@ -392,11 +392,11 @@ class GameRoom {
       pillarIndex: 0,
       position: {
         x: towerX + (normalizedX * frontOffset) + (perpX * -pillarSpacing),
-        y: towerY + 0.1625, // Raise pillar so base sits on ground (half of scaled base height)
+        y: towerY + 0.275, // Raise pillar so base sits on ground (half of scaled base height)
         z: towerZ + (normalizedZ * frontOffset) + (perpZ * -pillarSpacing)
       },
-      health: 4000,
-      maxHealth: 4000,
+      health: 5000,
+      maxHealth: 5000,
       isDead: false,
       isActive: true,
       isCorrupted: false, // Whether pillar has corrupted aura effect
@@ -414,11 +414,11 @@ class GameRoom {
       pillarIndex: 1,
       position: {
         x: towerX + (normalizedX * frontOffset),
-        y: towerY + 0.1625, // Raise pillar so base sits on ground (half of scaled base height)
+        y: towerY + 0.275, // Raise pillar so base sits on ground (half of scaled base height)
         z: towerZ + (normalizedZ * frontOffset)
       },
-      health: 4000,
-      maxHealth: 4000,
+      health: 6000,
+      maxHealth: 6000,
       isDead: false,
       isActive: true,
       isCorrupted: false, // Whether pillar has corrupted aura effect
@@ -436,11 +436,11 @@ class GameRoom {
       pillarIndex: 2,
       position: {
         x: towerX + (normalizedX * frontOffset) + (perpX * pillarSpacing),
-        y: towerY + 0.12, // Raise pillar so base sits on ground (half of scaled base height)
+        y: towerY + 0.275, // Raise pillar so base sits on ground (half of scaled base height)
         z: towerZ + (normalizedZ * frontOffset) + (perpZ * pillarSpacing)
       },
-      health: 4000,
-      maxHealth: 4000,
+      health: 5000,
+      maxHealth: 5000,
       isDead: false,
       isActive: true,
       isCorrupted: false, // Whether pillar has corrupted aura effect
