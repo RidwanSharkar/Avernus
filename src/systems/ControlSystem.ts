@@ -1739,7 +1739,8 @@ export class ControlSystem extends System {
         explosive: false, // No explosion, but has special visual effects
         subclass: this.currentSubclass,
         level: this.currentLevel,
-        opacity: 1.0
+        opacity: 1.0,
+        sourcePlayerId: this.playerEntity?.userData?.playerId || 'unknown'
       }
     );
     

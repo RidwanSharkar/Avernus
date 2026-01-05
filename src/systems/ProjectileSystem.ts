@@ -399,6 +399,7 @@ export class ProjectileSystem extends System {
       subclass?: WeaponSubclass;
       level?: number;
       opacity?: number;
+      sourcePlayerId?: string;
     }
   ): Entity {
     const projectileEntity = world.createEntity();
@@ -414,8 +415,9 @@ export class ProjectileSystem extends System {
     projectile.damage = config?.damage || 25; // Higher damage than regular arrows
     projectile.maxLifetime = config?.lifetime || 5; // Longer lifetime
     projectile.owner = ownerId;
+    projectile.sourcePlayerId = config?.sourcePlayerId || 'unknown';
     projectile.setDirection(direction);
-    
+
     if (config?.piercing) projectile.setPiercing(true);
     if (config?.explosive && config?.explosionRadius) {
       projectile.setExplosive(config.explosionRadius);

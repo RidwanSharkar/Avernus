@@ -15,7 +15,7 @@ export default function ControlsPanel({ className = '', onShowRules }: ControlsP
     if (isExpanded) {
       timer = setTimeout(() => {
         setIsExpanded(false);
-      }, 10000); // 10 seconds
+      }, 7500); // 10 seconds
     }
 
     return () => {
@@ -30,7 +30,7 @@ export default function ControlsPanel({ className = '', onShowRules }: ControlsP
     { key: 'Double Tap WASD', description: 'Dash', icon: '⌨️' },
     { key: 'Right Click (Hold)', description: 'Rotate', icon: '🖱️' },
     { key: 'Left Click (Hold)', description: 'Attack', icon: '⚔️' },
-    { key: 'Scoll Wheel', description: 'Zoom Camera', icon: '🖱️' },
+    { key: 'Scroll Wheel', description: 'Zoom Camera', icon: '🖱️' },
     { key: 'Space Bar', description: 'Jump', icon: '⌨️' },
     { key: 'Rulebook', description: 'Game Rules', icon: '📜', onClick: onShowRules }
   ];

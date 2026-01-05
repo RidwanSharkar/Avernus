@@ -59,7 +59,7 @@ export default function SummonedUnitRenderer({
     head: new OctahedronGeometry(unitBaseRadius * 0.6, 0),
     shoulder: new SphereGeometry(unitBaseRadius * 0.4, 8, 8),
     arm: new CylinderGeometry(unitBaseRadius * 0.25, unitBaseRadius * 0.15, unitHeight * 0.3, 6),
-    energyAura: new SphereGeometry(unitBaseRadius * 1.675, 8, 8),
+    energyAura: new SphereGeometry(unitBaseRadius * 1.675, 16, 16),
     healthBarBg: new PlaneGeometry(healthBarWidth, healthBarHeight),
     healthBarFill: new PlaneGeometry(healthBarWidth, healthBarHeight * 0.75),
     healthBarGlow: new PlaneGeometry(healthBarWidth + healthBarBorderWidth * 2, healthBarHeight + healthBarBorderWidth * 2),
@@ -113,6 +113,11 @@ export default function SummonedUnitRenderer({
       depthWrite: false,
     }),
   }), []);
+
+  // Dynamic emissive properties for enhanced visual effects
+  const emissiveColor = useMemo(() => new Color(), []);
+  const emissiveIntensity = useRef(0);
+  const currentTimeRef = useRef(0);
 
   // Cleanup geometries and materials on unmount
   useEffect(() => {
@@ -204,6 +209,11 @@ export default function SummonedUnitRenderer({
       damageColor.addScalar(0.2); // Add some white to make it brighter
     }
     currentDamageColorRef.current = damageColor;
+
+  
+
+    // Store current time for use in render
+    currentTimeRef.current = time;
 
     // Gentle floating motion
     groupRef.current.position.y = position.y + Math.sin(time * 2) * 0.05;
@@ -309,6 +319,8 @@ export default function SummonedUnitRenderer({
       >
         <meshStandardMaterial
           color={currentDamageColorRef.current}
+          emissive={emissiveColor}
+          emissiveIntensity={emissiveIntensity.current}
           metalness={0.7}
           roughness={0.3}
           transparent
@@ -370,17 +382,37 @@ export default function SummonedUnitRenderer({
       ))}
 
 
-
       {/* Energy Aura - Crystal glow effect */}
       <mesh position={[0, unitHeight * 0.75, 0]} geometry={geometries.energyAura}>
         <meshBasicMaterial
           color={currentDamageColorRef.current}
           transparent
-          opacity={opacity * 0.3}
+          opacity={opacity * 0.4}
           depthWrite={false}
           blending={AdditiveBlending}
         />
       </mesh>
+
+      {/* Dynamic Aura Particles - More particles for elite units */}
+      {Array.from({ length: isElite ? 12 : 6 }, (_, i) => (
+        <mesh
+          key={`aura-particle-${i}`}
+          position={[
+            Math.cos(currentTimeRef.current * 2 + i * Math.PI / (isElite ? 6 : 3)) * unitBaseRadius * 2.2,
+            unitHeight * 0.75 + Math.sin(currentTimeRef.current * 3 + i) * 0.2,
+            Math.sin(currentTimeRef.current * 2 + i * Math.PI / (isElite ? 6 : 3)) * unitBaseRadius * 2.2
+          ]}
+          scale={[0.1, 0.1, 0.1]}
+          geometry={geometries.shoulder}
+        >
+          <meshBasicMaterial
+            color={unitColor}
+            transparent
+            opacity={0.6 + Math.sin(currentTimeRef.current * 4 + i) * 0.2}
+            blending={AdditiveBlending}
+          />
+        </mesh>
+      ))}
 
       {/* Health Bar */}
       {!isDead && (

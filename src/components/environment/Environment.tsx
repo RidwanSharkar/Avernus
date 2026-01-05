@@ -5,6 +5,7 @@ import InstancedMountains from './InstancedMountains';
 import Pillar from './Pillar';
 import RuneCircle from './RuneCircle';
 import EnhancedGround from './EnhancedGround';
+import VolcanicEruptionSystem from './VolcanicEruption';
 import PillarCollision from './PillarCollision';
 import DetailedTrees, { DetailedTree } from './DetailedTrees';
 import TreeCollision from './TreeCollision';
@@ -84,6 +85,8 @@ const Environment: React.FC<EnvironmentProps> = ({
       {/* Enhanced ground with procedural textures */}
       <EnhancedGround level={level} />
 
+      {/* Volcanic eruptions - periodic green flares from random ground locations */}
+      <VolcanicEruptionSystem groundRadius={29} />
 
       <Planet />
 
