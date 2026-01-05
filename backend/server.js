@@ -114,7 +114,8 @@ io.on('connection', (socket) => {
       summonedUnits: room.getSummonedUnits(),
       killCount: room.getKillCount(),
       gameStarted: room.getGameStarted(),
-      gameMode: room.gameMode || gameMode
+      gameMode: room.gameMode || gameMode,
+      skyTheme: room.skyTheme
     });
     
     // Notify other players

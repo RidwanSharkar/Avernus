@@ -6,6 +6,7 @@ import Pillar from './Pillar';
 import RuneCircle from './RuneCircle';
 import EnhancedGround from './EnhancedGround';
 import VolcanicEruptionSystem from './VolcanicEruption';
+import LightningStrikeSystem from './LightningStrikeSystem';
 import PillarCollision from './PillarCollision';
 import DetailedTrees, { DetailedTree } from './DetailedTrees';
 import TreeCollision from './TreeCollision';
@@ -30,6 +31,7 @@ interface EnvironmentProps {
   pvpPillarPositions?: Array<[number, number, number]>; // PVP pillar positions
   merchantRotation?: [number, number, number]; // Merchant rotation for interactions
   showMerchant?: boolean; // Whether to render the merchant (for performance optimization)
+  skyTheme?: 'purple' | 'lightBlue' | 'lightGreen' | 'red'; // Sky theme for the room
 }
 
 /**
@@ -48,7 +50,8 @@ const Environment: React.FC<EnvironmentProps> = ({
   isPVP = false,
   pvpPillarPositions,
   merchantRotation = [0, 0, 0],
-  showMerchant = false
+  showMerchant = false,
+  skyTheme = 'purple'
 }) => {
   // Generate mountains once and memoize for performance
   const mountains = useMemo(() => generateMountains(), []);
@@ -80,13 +83,16 @@ const Environment: React.FC<EnvironmentProps> = ({
   return (
     <group name="environment">
       {/* Custom sky with level-based colors */}
-      {enableSky && <CustomSky />}
+      {enableSky && <CustomSky theme={skyTheme} />}
 
       {/* Enhanced ground with procedural textures */}
       <EnhancedGround level={level} />
 
       {/* Volcanic eruptions - periodic green flares from random ground locations */}
       <VolcanicEruptionSystem groundRadius={29} />
+
+      {/* Lightning strikes - periodic electrical discharges from random locations */}
+      <LightningStrikeSystem groundRadius={29} />
 
       <Planet />
 

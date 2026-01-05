@@ -11,7 +11,10 @@ class GameRoom {
     this.summonedUnits = new Map(); // Server-authoritative summoned units
     this.lastUpdate = Date.now();
     this.io = io; // Store io reference for broadcasting
-    
+
+    // Sky theme selection (randomly chosen when room is created)
+    this.skyTheme = this.selectRandomSkyTheme();
+
     // Game state management
     this.gameStarted = false;
     this.killCount = 0; // Shared kill count for all players
@@ -50,6 +53,12 @@ class GameRoom {
 
     // Elite unit tracking for PVP - track destroyed pillars per player
     this.destroyedEnemyPillars = new Map(); // playerId -> number of their own pillars that have been destroyed
+  }
+
+  // Randomly select sky theme when room is created
+  selectRandomSkyTheme() {
+    const themes = ['purple', 'lightBlue', 'lightGreen', 'red'];
+    return themes[Math.floor(Math.random() * themes.length)];
   }
 
   // Start the actual game

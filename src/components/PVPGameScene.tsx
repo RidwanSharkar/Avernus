@@ -183,6 +183,7 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
     summonedUnits,
     gameStarted,
     gameMode,
+    skyTheme,
     isInRoom,
     currentRoomId,
     updatePlayerPosition,
@@ -4964,6 +4965,7 @@ const hasMana = useCallback((amount: number) => {
         isPVP={true}
         merchantRotation={merchantRotation}
         showMerchant={isMerchantVisible}
+        skyTheme={skyTheme}
       />
 
       {/* Lighting */}

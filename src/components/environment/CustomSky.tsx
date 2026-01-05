@@ -1,20 +1,43 @@
 import React, { useMemo, useEffect } from 'react';
 import { Color, BackSide, SphereGeometry } from '@/utils/three-exports';
 
-interface SkyProps {}
+interface SkyProps {
+  theme?: 'purple' | 'lightBlue' | 'lightGreen' | 'red';
+}
 
+// Define sky themes with their color schemes
+const SKY_THEMES = {
+  purple: {
+    topColor: '#FC5656',
+    middleColor: '#FC5656',
+    bottomColor: '#9B97D8'
+  },
+  lightBlue: {
+    topColor: '#4682B4',
+    middleColor: '#5CB4FC',
+    bottomColor: '#ACC6E9'
+  },
+  lightGreen: {
+    topColor: '#084508',
+    middleColor: '#084508',
+    bottomColor: '#A4FFA5'
+  },
+  red: {
+    topColor: '#FF6347',
+    middleColor: '#FF7F7F',
+    bottomColor: '#FFE4E1'
+  }
+};
 
 /**
- * Creates a custom sky shader with tropical indigo lighter purple gradient
+ * Creates a custom sky shader with the specified theme colors
  */
-const createSkyShader = () => {
-  // Create tropical indigo lighter purple gradient colors
-  // Top: darker deep indigo blue
-  const topColor = new Color('#FC5656');
-  // Middle: darker tropical blue-purple
-  const middleColor = new Color('#FC5656');
-  // Bottom: darker blue that blends with the sky
-  const bottomColor = new Color('#9B97D8');
+const createSkyShader = (theme: keyof typeof SKY_THEMES = 'purple') => {
+  const themeColors = SKY_THEMES[theme];
+  // Create gradient colors based on theme
+  const topColor = new Color(themeColors.topColor);
+  const middleColor = new Color(themeColors.middleColor);
+  const bottomColor = new Color(themeColors.bottomColor);
   
   return {
     uniforms: {
@@ -54,19 +77,19 @@ const createSkyShader = () => {
 };
 
 /**
- * Custom sky component with tropical indigo lighter purple gradient shader
+ * Custom sky component with themed gradient shader
  * Creates an immersive atmospheric backdrop for the game
  */
-const CustomSky: React.FC<SkyProps> = () => {
+const CustomSky: React.FC<SkyProps> = ({ theme = 'purple' }) => {
   const shaderParams = useMemo(() => {
-    const skyShader = createSkyShader();
+    const skyShader = createSkyShader(theme);
     return {
       uniforms: skyShader.uniforms,
       vertexShader: skyShader.vertexShader,
       fragmentShader: skyShader.fragmentShader,
       side: BackSide,
     };
-  }, []);
+  }, [theme]);
 
   // Memoize geometry for performance
   const skyGeometry = useMemo(() => new SphereGeometry(500, 32, 32), []);

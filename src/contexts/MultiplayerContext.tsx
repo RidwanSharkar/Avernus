@@ -163,6 +163,7 @@ interface MultiplayerContextType {
   killCount: number;
   gameStarted: boolean;
   gameMode: 'multiplayer' | 'pvp';
+  skyTheme: 'purple' | 'lightBlue' | 'lightGreen' | 'red';
 
   // Victory state
   winner: 'Red' | 'Blue' | null;
@@ -283,6 +284,7 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
   const [killCount, setKillCount] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameMode, setGameMode] = useState<'multiplayer' | 'pvp'>('multiplayer');
+  const [skyTheme, setSkyTheme] = useState<'purple' | 'lightBlue' | 'lightGreen' | 'red'>('purple');
   const [winner, setWinner] = useState<'Red' | 'Blue' | null>(null);
   const [currentPreview, setCurrentPreview] = useState<RoomPreview | null>(null);
 
@@ -382,6 +384,7 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
       setKillCount(data.killCount);
       setGameStarted(data.gameStarted);
       setGameMode(data.gameMode || 'multiplayer'); // Set game mode from server
+      setSkyTheme(data.skyTheme || 'purple'); // Set sky theme from server
 
       // Refresh room list for other players to see updated room status
       setTimeout(() => requestRoomList(), 1000);
@@ -918,6 +921,7 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
       setKillCount(0);
       setGameStarted(false);
       setGameMode('multiplayer');
+      setSkyTheme('purple');
     }
   }, [socket]);
 
@@ -1345,6 +1349,7 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     killCount,
     gameStarted,
     gameMode,
+    skyTheme,
     winner,
     currentPreview,
     roomList,
