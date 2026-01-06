@@ -8,12 +8,29 @@ interface SmiteProps {
   weaponType: WeaponType;
   position: Vector3;
   onComplete: () => void;
-  onHit?: (targetId: string, damage: number) => void;
+  onHit?: (targetId: string, damage: number, isCritical?: boolean, targetType?: 'enemy' | 'player' | 'summonedUnit' | 'pillar') => void;
   onDamageDealt?: (totalDamage: number) => void;
   enemyData?: Array<{
     id: string;
     position: Vector3;
     health: number;
+  }>;
+  playersData?: Array<{
+    id: string;
+    position: Vector3;
+    health: number;
+  }>;
+  summonedUnitsData?: Array<{
+    id: string;
+    position: Vector3;
+    health: number;
+    ownerId: string;
+  }>;
+  pillarsData?: Array<{
+    id: string;
+    position: Vector3;
+    health: number;
+    ownerId: string;
   }>;
   playerPosition?: Vector3;
   setDamageNumbers?: (callback: (prev: Array<{
@@ -41,6 +58,9 @@ const SmiteComponent = memo(function Smite({
   onHit,
   onDamageDealt,
   enemyData = [],
+  playersData = [],
+  summonedUnitsData = [],
+  pillarsData = [],
   setDamageNumbers,
   nextDamageNumberId,
   combatSystem,
@@ -48,7 +68,7 @@ const SmiteComponent = memo(function Smite({
 }: SmiteProps) {
   const lightningRef = useRef<Group>(null);
   const progressRef = useRef(0);
-  const animationDuration = 1.0; // Extended animation duration to ensure full visibility in PVP mode
+  const animationDuration = 0.66; // Extended animation duration to ensure full visibility in PVP mode
   const delayTimer = useRef(0);
   const startDelay = 0.05; // Initial delay
   const damageTriggered = useRef(false);
@@ -200,18 +220,47 @@ const SmiteComponent = memo(function Smite({
     const damageRadius = 3.0; // Small radius around impact location
     let totalDamage = 0;
 
+    // Calculate damage using centralized DamageCalculator system
+    const damageResult: DamageResult = calculateDamage(baseSmiteDamage, weaponType ?? WeaponType.RUNEBLADE);
+    const finalDamage = damageResult.damage;
+    const isCritical = damageResult.isCritical;
+
+    // Handle players first (highest priority)
+    playersData.forEach(player => {
+      if (!player.health || player.health <= 0) return;
+
+      const distance = position.distanceTo(player.position);
+      if (distance <= damageRadius) {
+        // Player is within damage radius - deal damage
+        if (onHit) {
+          onHit(player.id, finalDamage, isCritical, 'player');
+        }
+
+        // Create damage number for visual feedback using CombatSystem
+        if (combatSystem && combatSystem.damageNumberManager) {
+          const damagePosition = player.position.clone();
+          damagePosition.y += 1.5; // Offset above target
+          combatSystem.damageNumberManager.addDamageNumber(
+            finalDamage,
+            isCritical,
+            damagePosition,
+            'smite'
+          );
+        }
+
+        totalDamage += finalDamage;
+      }
+    });
+
+    // Handle PvE enemies
     enemyData.forEach(enemy => {
       if (!enemy.health || enemy.health <= 0) return;
 
       const distance = position.distanceTo(enemy.position);
       if (distance <= damageRadius) {
-        // Calculate critical hit damage (Corrupted Aura bonuses are already applied via global rune count modifications)
-        const damageResult: DamageResult = calculateDamage(baseSmiteDamage, weaponType ?? WeaponType.RUNEBLADE);
-        const finalDamage = damageResult.damage;
-
         // Enemy is within damage radius - deal damage
         if (onHit) {
-          onHit(enemy.id, finalDamage); // Pass target ID and damage amount
+          onHit(enemy.id, finalDamage, isCritical, 'enemy');
         }
 
         // Create damage number for visual feedback using CombatSystem
@@ -220,21 +269,64 @@ const SmiteComponent = memo(function Smite({
           damagePosition.y += 1.5; // Offset above target
           combatSystem.damageNumberManager.addDamageNumber(
             finalDamage,
-            damageResult.isCritical,
+            isCritical,
             damagePosition,
             'smite'
           );
         }
 
-        // Also create damage number using setDamageNumbers if provided
-        if (setDamageNumbers && nextDamageNumberId) {
-          setDamageNumbers(prev => [...prev, {
-            id: nextDamageNumberId.current++,
-            damage: finalDamage,
-            position: enemy.position.clone(),
-            isCritical: damageResult.isCritical,
-            isSmite: true
-          }]);
+        totalDamage += finalDamage;
+      }
+    });
+
+    // Handle summoned units
+    summonedUnitsData.forEach(unit => {
+      if (!unit.health || unit.health <= 0) return;
+
+      const distance = position.distanceTo(unit.position);
+      if (distance <= damageRadius) {
+        // Summoned unit is within damage radius - deal damage
+        if (onHit) {
+          onHit(unit.id, finalDamage, isCritical, 'summonedUnit');
+        }
+
+        // Create damage number for visual feedback using CombatSystem
+        if (combatSystem && combatSystem.damageNumberManager) {
+          const damagePosition = unit.position.clone();
+          damagePosition.y += 1.0; // Offset above unit (lower than enemies)
+          combatSystem.damageNumberManager.addDamageNumber(
+            finalDamage,
+            isCritical,
+            damagePosition,
+            'smite'
+          );
+        }
+
+        totalDamage += finalDamage;
+      }
+    });
+
+    // Handle pillars
+    pillarsData.forEach(pillar => {
+      if (!pillar.health || pillar.health <= 0) return;
+
+      const distance = position.distanceTo(pillar.position);
+      if (distance <= damageRadius) {
+        // Pillar is within damage radius - deal damage
+        if (onHit) {
+          onHit(pillar.id, finalDamage, isCritical, 'pillar');
+        }
+
+        // Create damage number for visual feedback using CombatSystem
+        if (combatSystem && combatSystem.damageNumberManager) {
+          const damagePosition = pillar.position.clone();
+          damagePosition.y += 2.0; // Offset above pillar
+          combatSystem.damageNumberManager.addDamageNumber(
+            finalDamage,
+            isCritical,
+            damagePosition,
+            'smite'
+          );
         }
 
         totalDamage += finalDamage;
@@ -329,6 +421,9 @@ const SmiteComponent = memo(function Smite({
   if (prevProps.weaponType !== nextProps.weaponType) return false;
   if (!prevProps.position.equals(nextProps.position)) return false;
   if ((prevProps.enemyData?.length || 0) !== (nextProps.enemyData?.length || 0)) return false;
+  if ((prevProps.playersData?.length || 0) !== (nextProps.playersData?.length || 0)) return false;
+  if ((prevProps.summonedUnitsData?.length || 0) !== (nextProps.summonedUnitsData?.length || 0)) return false;
+  if ((prevProps.pillarsData?.length || 0) !== (nextProps.pillarsData?.length || 0)) return false;
 
   if (prevProps.enemyData && nextProps.enemyData) {
     for (let i = 0; i < prevProps.enemyData.length; i++) {
@@ -336,6 +431,39 @@ const SmiteComponent = memo(function Smite({
       const next = nextProps.enemyData[i];
       if (!prev || !next) return false;
       if (prev.id !== next.id || prev.health !== next.health || !prev.position.equals(next.position)) {
+        return false;
+      }
+    }
+  }
+
+  if (prevProps.playersData && nextProps.playersData) {
+    for (let i = 0; i < prevProps.playersData.length; i++) {
+      const prev = prevProps.playersData[i];
+      const next = nextProps.playersData[i];
+      if (!prev || !next) return false;
+      if (prev.id !== next.id || prev.health !== next.health || !prev.position.equals(next.position)) {
+        return false;
+      }
+    }
+  }
+
+  if (prevProps.summonedUnitsData && nextProps.summonedUnitsData) {
+    for (let i = 0; i < prevProps.summonedUnitsData.length; i++) {
+      const prev = prevProps.summonedUnitsData[i];
+      const next = nextProps.summonedUnitsData[i];
+      if (!prev || !next) return false;
+      if (prev.id !== next.id || prev.health !== next.health || prev.ownerId !== next.ownerId || !prev.position.equals(next.position)) {
+        return false;
+      }
+    }
+  }
+
+  if (prevProps.pillarsData && nextProps.pillarsData) {
+    for (let i = 0; i < prevProps.pillarsData.length; i++) {
+      const prev = prevProps.pillarsData[i];
+      const next = nextProps.pillarsData[i];
+      if (!prev || !next) return false;
+      if (prev.id !== next.id || prev.health !== next.health || prev.ownerId !== next.ownerId || !prev.position.equals(next.position)) {
         return false;
       }
     }

@@ -317,7 +317,7 @@ const PerimeterCloudSystem: React.FC<PerimeterCloudSystemProps> = ({
 
     if (timeSinceLastCloud > 0.25 + Math.random() * 1.0 || lastCloudTimeRef.current === 0) {
       // Spawn 3-6 clouds at once for dense coverage
-      const cloudCount = 10 + Math.floor(Math.random() * 7); // 3-6 clouds
+      const cloudCount = 14 + Math.floor(Math.random() * 10); // 3-6 clouds
       for (let i = 0; i < cloudCount; i++) {
         setTimeout(() => spawnCloud(t + i * 0.1), i * 100);
       }

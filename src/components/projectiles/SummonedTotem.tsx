@@ -63,6 +63,7 @@ interface SummonProps {
   nextDamageNumberId?: { current: number };
   onHealPlayer?: (healAmount: number) => void; // Callback for healing the caster
   casterId?: string; // ID of the player who cast the totem
+  onCreateExplosion?: (targetId: string, position: Vector3) => void; // Callback to create explosion locally
 }
 
 export default function SummonedTotem({
@@ -78,7 +79,8 @@ export default function SummonedTotem({
   setDamageNumbers,
   nextDamageNumberId,
   onHealPlayer,
-  casterId
+  casterId,
+  onCreateExplosion
 }: SummonProps) {
 
   const groupRef = useRef<Group>(null);
@@ -217,10 +219,18 @@ export default function SummonedTotem({
 
     const effectId = Date.now();
 
-    // Create explosion effect that tracks the target player's current position
-    // Instead of using the internal activeEffects system, broadcast to the global PVP system
-    if (typeof window !== 'undefined' && (window as any).triggerSummonTotemExplosion) {
-      (window as any).triggerSummonTotemExplosion(target.id, currentWorldImpactPosition);
+    // Create explosion locally for the caster to see
+    if (onCreateExplosion) {
+      onCreateExplosion(target.id, currentWorldImpactPosition);
+    }
+
+    // Broadcast explosion effect to all players so they can see the visual effect
+    // Don't send position - let clients track the target player's current position
+    if (typeof window !== 'undefined' && (window as any).multiplayer?.broadcastPlayerEffect) {
+      (window as any).multiplayer.broadcastPlayerEffect({
+        type: 'totem_explosion',
+        targetPlayerId: target.id
+      });
     }
 
     // Add damage number locally for immediate visual feedback (attributed to summoner)

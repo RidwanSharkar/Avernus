@@ -21,11 +21,12 @@ interface DamageNumberProps {
   size: { width: number; height: number };
 }
 
+// Simplified interface - each damage number is independent
 interface DamageNumberPropsExtended extends DamageNumberProps {
-  stackIndex: number; // Index in the stack (0 = newest, 1 = second newest, etc.)
+  // Removed stackIndex and horizontalOffset for independent animations
 }
 
-const DamageNumber = memo(function DamageNumber({ damageData, onComplete, camera, size, stackIndex }: DamageNumberPropsExtended) {
+const DamageNumber = memo(function DamageNumber({ damageData, onComplete, camera, size }: DamageNumberPropsExtended) {
   const [opacity, setOpacity] = useState(1);
   const [yOffset, setYOffset] = useState(0);
   const [scale, setScale] = useState(1);
@@ -39,22 +40,21 @@ const DamageNumber = memo(function DamageNumber({ damageData, onComplete, camera
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Ease out animation
+      // Simple ease out animation
       const easeOut = 1 - Math.pow(1 - progress, 3);
 
       if (isIncoming) {
         // For incoming damage, float downward from under the character
         const baseFloatDistance = -2; // Float downward
-        const stackOffset = stackIndex * -0.5; // Stack downward
-        setYOffset(easeOut * baseFloatDistance + stackOffset);
+        setYOffset(easeOut * baseFloatDistance);
 
-        // Scale animation - start slightly big, settle smaller
-        const initialScale = stackIndex === 0 ? 1.1 : 0.8 - (stackIndex * 0.1);
-        const finalScale = 0.7 - (stackIndex * 0.1);
-        const scaleProgress = Math.min(progress * 4, 1); // Scale settles faster
+        // Simple scale animation - start slightly big, settle smaller
+        const initialScale = 1.1;
+        const finalScale = 0.7;
+        const scaleProgress = Math.min(progress * 4, 1);
         setScale(initialScale + (finalScale - initialScale) * scaleProgress);
 
-        // Fade out
+        // Fade out after 50% progress
         if (progress > 0.5) {
           const fadeProgress = (progress - 0.5) / 0.5;
           setOpacity(1 - fadeProgress);
@@ -62,27 +62,22 @@ const DamageNumber = memo(function DamageNumber({ damageData, onComplete, camera
           setOpacity(1);
         }
       } else {
-        // Original outgoing damage animation
-        // Float upward with stacking offset
-        const baseFloatDistance = 4; // Base float distance
-        const stackOffset = stackIndex * 0.8; // Vertical spacing between stacked numbers
-        setYOffset(easeOut * baseFloatDistance + stackOffset);
+        // Outgoing damage animation - simple float up and fade
+        const baseFloatDistance = 4; // Float upward
+        setYOffset(easeOut * baseFloatDistance);
 
-        // Scale animation - start big, settle to smaller size based on stack position
-        const initialScale = stackIndex === 0 ? 1.2 : 0.9 - (stackIndex * 0.1);
-        const finalScale = 0.8 - (stackIndex * 0.1);
-        const scaleProgress = Math.min(progress * 3, 1); // Scale settles faster
+        // Simple scale animation - start big, settle smaller
+        const initialScale = 1.2;
+        const finalScale = 0.8;
+        const scaleProgress = Math.min(progress * 3, 1);
         setScale(initialScale + (finalScale - initialScale) * scaleProgress);
 
-        // Fade out older numbers more aggressively
-        const fadeStartPoint = stackIndex === 0 ? 0.6 : 0.3 - (stackIndex * 0.1);
-        if (progress > fadeStartPoint) {
-          const fadeProgress = (progress - fadeStartPoint) / (1 - fadeStartPoint);
-          const targetOpacity = stackIndex === 0 ? 0 : Math.max(0, 0.7 - (stackIndex * 0.2));
-          setOpacity(1 - fadeProgress + (targetOpacity * fadeProgress));
+        // Fade out after 60% progress
+        if (progress > 0.6) {
+          const fadeProgress = (progress - 0.6) / 0.4;
+          setOpacity(1 - fadeProgress);
         } else {
-          // Older numbers start more transparent
-          setOpacity(1 - (stackIndex * 0.2));
+          setOpacity(1);
         }
       }
 
@@ -94,7 +89,7 @@ const DamageNumber = memo(function DamageNumber({ damageData, onComplete, camera
     };
 
     animate();
-  }, [damageData.id, onComplete, stackIndex, damageData.isIncomingDamage]);
+  }, [damageData.id, onComplete, damageData.isIncomingDamage]);
 
   // Proper 3D to 2D projection using the camera
   let x = 0;
@@ -131,8 +126,7 @@ const DamageNumber = memo(function DamageNumber({ damageData, onComplete, camera
         opacity,
         transform: `translate(-50%, -50%) scale(${scale})`,
         textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-        zIndex: 1000 - stackIndex, // Newer numbers appear on top
-        transition: stackIndex > 0 ? 'opacity 0.3s ease-out' : 'none', // Smooth transitions for older numbers
+        zIndex: 1000, // Fixed z-index since no stacking
       }}
     >
       <span
@@ -195,7 +189,6 @@ const DamageNumber = memo(function DamageNumber({ damageData, onComplete, camera
     prevProps.damageData.isIncomingDamage === nextProps.damageData.isIncomingDamage &&
     prevProps.damageData.timestamp === nextProps.damageData.timestamp &&
     prevProps.damageData.position.equals(nextProps.damageData.position) &&
-    prevProps.stackIndex === nextProps.stackIndex &&
     prevProps.camera === nextProps.camera &&
     prevProps.size.width === nextProps.size.width &&
     prevProps.size.height === nextProps.size.height
@@ -209,63 +202,21 @@ interface DamageNumbersProps {
   size: { width: number; height: number };
 }
 
-const DamageNumbersComponent = memo(function DamageNumbers({ damageNumbers, onDamageNumberComplete, camera, size }: DamageNumbersProps) {
-  // Group damage numbers by position to create stacks
-  const positionGroups = new Map<string, DamageNumberData[]>();
-  
-  damageNumbers.forEach(damageData => {
-    // Create a position key with some tolerance for grouping nearby damage
-    const posKey = `${Math.round(damageData.position.x * 2)}_${Math.round(damageData.position.z * 2)}`;
-    if (!positionGroups.has(posKey)) {
-      positionGroups.set(posKey, []);
-    }
-    positionGroups.get(posKey)!.push(damageData);
-  });
-
-  // Sort each group by timestamp (newest first) and limit to 1 most recent
-  positionGroups.forEach(group => {
-    group.sort((a, b) => b.timestamp - a.timestamp);
-    group.splice(1); // Keep only the 1 most recent
-  });
-
+function DamageNumbers({ damageNumbers, onDamageNumberComplete, camera, size }: DamageNumbersProps) {
+  // Simply render each damage number independently - no grouping or stacking
   return (
     <div className="fixed inset-0 pointer-events-none">
-      {Array.from(positionGroups.values()).flat().map((damageData) => {
-        // Find the stack index for this damage number
-        const posKey = `${Math.round(damageData.position.x * 2)}_${Math.round(damageData.position.z * 2)}`;
-        const group = positionGroups.get(posKey)!;
-        const stackIndex = group.findIndex(d => d.id === damageData.id);
-
-        return (
-          <DamageNumber
-            key={damageData.id}
-            damageData={damageData}
-            onComplete={onDamageNumberComplete}
-            camera={camera}
-            size={size}
-            stackIndex={stackIndex}
-          />
-        );
-      })}
+      {damageNumbers.map((damageData) => (
+        <DamageNumber
+          key={damageData.id}
+          damageData={damageData}
+          onComplete={onDamageNumberComplete}
+          camera={camera}
+          size={size}
+        />
+      ))}
     </div>
   );
-}, (prevProps, nextProps) => {
-  // Custom comparison function for main component
-  return (
-    prevProps.damageNumbers.length === nextProps.damageNumbers.length &&
-    prevProps.damageNumbers.every((prev, index) => {
-      const next = nextProps.damageNumbers[index];
-      return prev?.id === next?.id &&
-             prev?.damage === next?.damage &&
-             prev?.isCritical === next?.isCritical &&
-             prev?.damageType === next?.damageType &&
-             prev?.isIncomingDamage === next?.isIncomingDamage &&
-             prev?.timestamp === next?.timestamp;
-    }) &&
-    prevProps.camera === nextProps.camera &&
-    prevProps.size.width === nextProps.size.width &&
-    prevProps.size.height === nextProps.size.height
-  );
-});
+}
 
-export default DamageNumbersComponent;
+export default DamageNumbers;

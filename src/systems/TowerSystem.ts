@@ -331,6 +331,7 @@ export class TowerSystem extends System {
         // Add metadata to identify this as a tower projectile
         projectileRenderer.mesh.userData.isTowerProjectile = true;
         projectileRenderer.mesh.userData.towerOwnerId = tower.ownerId;
+        projectileRenderer.mesh.userData.towerIndex = tower.towerIndex;
         projectileRenderer.mesh.userData.isRegularArrow = false; // Override regular arrow flag
         projectileRenderer.mesh.userData.direction = this.tempVector.clone();
         projectileRenderer.mesh.userData.opacity = 1.0;

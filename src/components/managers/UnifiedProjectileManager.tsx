@@ -29,6 +29,7 @@ interface ProjectileData {
   level?: number;
   opacity?: number;
   ownerId?: string; // For tower projectiles
+  towerIndex?: number; // For tower projectiles to determine team color
   isCryoflame?: boolean; // For Entropic Bolt Cryoflame mode
   projectileType?: string; // For projectile type differentiation (e.g., burst_arrow)
 }
@@ -108,7 +109,7 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
     if (!world || !spatialHashRef.current) return false;
 
     // Check ground collision first - ground is at y = -0.5 (EnhancedGround position)
-    if (position.y <= -0.125) {
+    if (position.y <= -0.5) {
       return true; // Hit the ground
     }
 
@@ -141,7 +142,7 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
     if (!world || !spatialHashRef.current) return false;
 
     // Check ground collision first - ground is at y = -0.5 (EnhancedGround position)
-    if (position.y <= -0.25) {
+    if (position.y <= -0.5) {
       return true; // Hit the ground
     }
 
@@ -237,7 +238,8 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
             subclass: userData.subclass,
             level: userData.level,
             opacity: userData.opacity || 1.0,
-            ownerId: userData.towerOwnerId
+            ownerId: userData.towerOwnerId,
+            towerIndex: userData.towerIndex
           });
         }
       } else if (userData.isCrossentropyBolt) {
@@ -507,6 +509,7 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
           direction={projectile.direction}
           entityId={projectile.entityId}
           ownerId={projectile.ownerId}
+          towerIndex={projectile.towerIndex}
           opacity={projectile.opacity}
         />
       ))}

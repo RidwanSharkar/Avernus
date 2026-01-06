@@ -283,7 +283,7 @@ export default function RoomJoin({ onJoinSuccess, onBack, currentWeapon, current
                   .map((room) => (
                     <div
                       key={room.roomId}
-                      className={`relative overflow-hidden rounded-xl transition-all duration-300 transform ${room.playerCount < room.maxPlayers && !isJoining ? 'hover:scale-[1.02] cursor-pointer' : 'cursor-not-allowed opacity-60'} bg-gradient-to-br from-gray-800/80 via-gray-900/90 to-gray-800/80 backdrop-blur-sm border ${room.gameStarted ? 'border-yellow-500/50' : room.playerCount >= room.maxPlayers ? 'border-red-500/50' : room.playerCount < room.maxPlayers && !isJoining ? 'border-green-500/50' : 'border-gray-600/50'} p-4`}
+                      className={`relative overflow-hidden rounded-xl transition-all duration-300 transform ${room.playerCount < room.maxPlayers && !isJoining ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'} bg-gradient-to-br from-gray-800/80 via-gray-900/90 to-gray-800/80 backdrop-blur-sm border ${room.gameStarted ? 'border-yellow-500/50' : room.playerCount >= room.maxPlayers ? 'border-red-500/50' : room.playerCount < room.maxPlayers && !isJoining ? 'border-green-500/50' : 'border-gray-600/50'} p-4`}
                       onClick={() => {
                         if (room.playerCount < room.maxPlayers && !isJoining) {
                           // Pre-fill the room ID and switch to join form for name entry

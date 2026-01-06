@@ -53,6 +53,7 @@ interface PVPSummonTotemManagerProps {
   onHealPlayer?: (healAmount: number) => void;
   playerId?: string; // Add player ID for healing
   onHealPlayerCallback?: (healAmount: number) => void; // Additional healing callback
+  onCreateExplosion?: (targetId: string, position: Vector3) => void; // Callback to create explosion locally
 }
 
 const PVPSummonTotemManager: React.FC<PVPSummonTotemManagerProps> = ({
@@ -66,7 +67,8 @@ const PVPSummonTotemManager: React.FC<PVPSummonTotemManagerProps> = ({
   nextDamageNumberId,
   onHealPlayer,
   playerId,
-  onHealPlayerCallback
+  onHealPlayerCallback,
+  onCreateExplosion
 }) => {
   const managerRef = React.useRef<SummonTotemManagerRef>(null);
 
@@ -130,7 +132,8 @@ const PVPSummonTotemManager: React.FC<PVPSummonTotemManagerProps> = ({
             // Heal the local player - this should be handled by the parent component
           }),
           casterId,
-          effectiveLocalSocketId
+          effectiveLocalSocketId,
+          onCreateExplosion
         );
       }
     });

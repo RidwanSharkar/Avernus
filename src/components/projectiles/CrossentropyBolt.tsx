@@ -104,7 +104,7 @@ export default function CrossentropyBolt({ id, position, direction, onImpact, ch
       const currentPos = currentPosition.current.clone();
 
       // Check ground collision first - ground is at y = -0.5 (EnhancedGround position)
-      const isGroundCollision = currentPos.y <= -0.25;
+      const isGroundCollision = currentPos.y <= -0.5;
 
       const hitSomething = checkCollisions(id, currentPos);
 

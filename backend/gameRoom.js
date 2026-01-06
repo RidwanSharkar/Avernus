@@ -1204,12 +1204,13 @@ class GameRoom {
       // FIXED: Use proper wave removal method that handles both PVP and multiplayer modes
       this.removeUnitFromWave(unitId, unit.ownerId);
 
-      // Broadcast summoned unit death to all players so they can play death sound
+      // Broadcast summoned unit death to all players so they can play death sound and show effects
       if (this.io) {
         this.io.to(this.roomId).emit('summoned-unit-death', {
           unitId: unitId,
           unitOwnerId: unit.ownerId,
           sourcePlayerId: sourceOwnerId,
+          position: unit.position, // Include position for death effect
           timestamp: Date.now()
         });
       }

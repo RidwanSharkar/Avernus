@@ -10,6 +10,7 @@ interface TowerProjectileProps {
   direction: Vector3;
   entityId: number;
   ownerId?: string;
+  towerIndex?: number;
   opacity?: number;
 }
 
@@ -27,6 +28,7 @@ export default function TowerProjectile({
   direction,
   entityId,
   ownerId,
+  towerIndex,
   opacity = 1.0
 }: TowerProjectileProps) {
   const groupRef = useRef<Group>(null);
@@ -78,20 +80,11 @@ export default function TowerProjectile({
   const emissiveColor = useMemo(() =>
     projectileColor.clone().multiplyScalar(0.6), [projectileColor]);
 
-  // Determine team based on owner ID for trail color
+  // Determine team based on tower index for trail color
   const team = useMemo(() => {
-    if (!ownerId) return 'Red'; // Default to Red team
-
-    // Extract player number from ownerId (e.g., "player1" -> 0, "player2" -> 1)
-    const playerMatch = ownerId.match(/player(\d+)/);
-    let playerIndex = 0;
-    if (playerMatch) {
-      playerIndex = parseInt(playerMatch[1]) - 1; // Convert to 0-based index
-    }
-
-    // In PVP: player1 (index 0) = Red team, player2 (index 1) = Blue team
-    return playerIndex === 0 ? 'Red' : 'Blue';
-  }, [ownerId]);
+    // In PVP: towerIndex 0 = Blue team (Player 1), towerIndex 1 = Red team (Player 2)
+    return towerIndex === 0 ? 'Blue' : 'Red';
+  }, [towerIndex]);
 
   useFrame((_, delta) => {
     timeRef.current += delta;
@@ -138,11 +131,17 @@ export default function TowerProjectile({
       <TowerProjectileTrail
         team={team}
         size={0.3}
-        meshRef={groupRef}
+        position={position}
         opacity={opacity}
       />
-      
+
       <group ref={groupRef}>
+        {/* Debug: Show entity ID for troubleshooting */}
+        {/* <Html>
+          <div style={{ color: 'white', fontSize: '12px' }}>
+            Tower Projectile {entityId} - {ownerId}
+          </div>
+        </Html> */}
         {/* Main projectile body - crystalline energy shard */}
         <mesh geometry={sharedGeometries.main}>
           <meshStandardMaterial

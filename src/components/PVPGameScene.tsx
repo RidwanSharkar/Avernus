@@ -5,6 +5,7 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { Vector3, Matrix4, Camera, PerspectiveCamera, Scene, WebGLRenderer, PCFSoftShadowMap, Color, Quaternion, Euler, Group, AdditiveBlending } from '@/utils/three-exports';
 import DragonRenderer from './dragon/DragonRenderer';
 import SummonTotemEffect from './SummonTotemEffect';
+import SummonedUnitDeathEffect from './SummonedUnitDeathEffect';
 import { useMultiplayer, Player } from '@/contexts/MultiplayerContext';
 import { SkillPointData } from '@/utils/SkillPointSystem';
 
@@ -428,6 +429,14 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
     isActive: boolean;
   }>>(new Map());
 
+  // Track summoned unit death effects
+  const [summonedUnitDeathEffects, setSummonedUnitDeathEffects] = useState<Array<{
+    id: string;
+    position: Vector3;
+    playerNumber: number; // 1 for blue, 2 for red
+    startTime: number;
+  }>>([]);
+
   // Sync server summoned units to ECS entities for targeting and collision
   const syncSummonedUnitsToECS = useCallback(() => {
     if (!engineRef.current) return;
@@ -749,6 +758,20 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
     activeMistEffectsRef.current = activeMistEffects;
     deathEffectsRef.current = deathEffects;
   }, [players, towers, pillars, summonedUnits, activeMistEffects, deathEffects]);
+
+  // Clean up completed summoned unit death effects
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      const currentTime = Date.now() / 1000;
+      const effectDuration = 3.5; // Total duration of death effect (explosion + spirit)
+
+      setSummonedUnitDeathEffects(prev =>
+        prev.filter(effect => (currentTime - effect.startTime) < effectDuration)
+      );
+    }, 1000); // Check every second
+
+    return () => clearInterval(cleanupInterval);
+  }, []);
 
   // Memory monitoring and leak detection (runs continuously without restarting)
   useEffect(() => {
@@ -1481,6 +1504,24 @@ const [maxMana, setMaxMana] = useState(150);
       }]);
     }, venomEffect.duration);
   }, [socket?.id, broadcastPlayerDamage]);
+
+  const createPvpTotemExplosionEffect = useCallback((playerId: string, position: Vector3) => {
+    // Create totem explosion effect at the target player's position
+    const explosionId = nextSummonTotemExplosionId.current++;
+
+    setPvpSummonTotemExplosions(prev => [...prev, {
+      id: explosionId,
+      playerId: playerId,
+      position: position.clone(),
+      startTime: Date.now(),
+      duration: 1000 // 1 second explosion
+    }]);
+
+    // Remove explosion effect after duration
+    setTimeout(() => {
+      setPvpSummonTotemExplosions(prev => prev.filter(effect => effect.id !== explosionId));
+    }, 1000);
+  }, []);
 
   // Function to handle player death in PVP
   const handlePlayerDeath = useCallback((deadPlayerId: string, killerId: string | undefined) => {
@@ -3450,12 +3491,12 @@ const hasMana = useCallback((amount: number) => {
     const handlePlayerEffect = (data: any) => {
 
       if (data.effect?.type === 'venom') {
-        const { targetPlayerId, position, duration } = data.effect;
+        const { targetPlayerId, position, duration, casterId } = data.effect;
 
         // Create venom effect on the target player (could be local player or other player)
         if (targetPlayerId && position) {
           const venomPosition = new Vector3(position.x, position.y, position.z);
-          createPvpVenomEffect(targetPlayerId, venomPosition);
+          createPvpVenomEffect(targetPlayerId, venomPosition, casterId);
         }
       }
 
@@ -3503,6 +3544,28 @@ const hasMana = useCallback((amount: number) => {
               transform.setPosition(pullPosition.x, pullPosition.y, pullPosition.z);
             }
           }
+        }
+      }
+
+      if (data.effect?.type === 'totem_explosion') {
+        const { targetPlayerId } = data.effect;
+
+        // Create totem explosion effect that will track the target player's current position
+        if (targetPlayerId) {
+          let currentPosition: Vector3;
+
+          // If the target is the local player, use local player position
+          if (targetPlayerId === socket?.id) {
+            currentPosition = playerPosition.clone();
+          } else {
+            // For other players, get from players map
+            const targetPlayer = players.get(targetPlayerId);
+            currentPosition = targetPlayer
+              ? new Vector3(targetPlayer.position.x, targetPlayer.position.y, targetPlayer.position.z)
+              : new Vector3(0, 0, 0);
+          }
+
+          createPvpTotemExplosionEffect(targetPlayerId, currentPosition);
         }
       }
     };
@@ -4994,12 +5057,45 @@ const hasMana = useCallback((amount: number) => {
       // Process pending summoned unit death events
       const pendingDeath = (window as any).pendingSummonedUnitDeath;
       if (pendingDeath && pendingDeath.length > 0) {
-        // Play minion death sound effect for all players
-        if (window.audioSystem) {
-          for (const deathEvent of pendingDeath) {
+        // Play minion death sound effect and create death effects for all players
+        const newDeathEffects: Array<{
+          id: string;
+          position: Vector3;
+          playerNumber: number;
+          startTime: number;
+        }> = [];
+
+        for (const deathEvent of pendingDeath) {
+          // Play sound
+          if (window.audioSystem) {
             window.audioSystem.playMinionDeathSound();
           }
+
+          // Create death effect
+          if (deathEvent.position) {
+            // Determine player number from ownerId
+            let playerNumber = 1; // Default to player 1
+            if (deathEvent.unitOwnerId) {
+              const playerMatch = deathEvent.unitOwnerId.match(/player(\d+)/);
+              if (playerMatch) {
+                playerNumber = parseInt(playerMatch[1]);
+              }
+            }
+
+            newDeathEffects.push({
+              id: `${deathEvent.unitId}_${deathEvent.timestamp}`,
+              position: new Vector3(deathEvent.position.x, deathEvent.position.y, deathEvent.position.z),
+              playerNumber,
+              startTime: Date.now() / 1000
+            });
+          }
         }
+
+        // Add new death effects to state
+        if (newDeathEffects.length > 0) {
+          setSummonedUnitDeathEffects(prev => [...prev, ...newDeathEffects]);
+        }
+
         // Clear processed events
         (window as any).pendingSummonedUnitDeath = [];
       }
@@ -5540,7 +5636,8 @@ const hasMana = useCallback((amount: number) => {
                   type: 'venom',
                   targetPlayerId: playerId,
                   position: { x: clonedPosition.x, y: clonedPosition.y, z: clonedPosition.z },
-                  duration: 6000
+                  duration: 6000,
+                  casterId: casterId // Include caster ID for damage number creation
                 });
               }
             }}
@@ -5876,6 +5973,7 @@ const hasMana = useCallback((amount: number) => {
               }
             }}
             playerId={socket?.id}
+            onCreateExplosion={createPvpTotemExplosionEffect}
           />
 
 
@@ -5909,6 +6007,66 @@ const hasMana = useCallback((amount: number) => {
                 health: player.health
               }));
 
+            // Get summoned units data from enemy players
+            const summonedUnitsData: Array<{
+              id: string;
+              position: Vector3;
+              health: number;
+              ownerId: string;
+            }> = [];
+            const SummonedUnitSystem = require('@/systems/SummonedUnitSystem').SummonedUnitSystem;
+            const summonedUnitSystem = engineRef.current?.getWorld().getSystem(SummonedUnitSystem) as typeof SummonedUnitSystem.prototype;
+            if (summonedUnitSystem) {
+              const enemyPlayerIds = Array.from(players.keys()).filter(playerId => playerId !== smiteEffect.playerId);
+              enemyPlayerIds.forEach(playerId => {
+                const units = summonedUnitSystem.getUnitsByOwner(playerId);
+                units.forEach((unit: any) => {
+                  const transform = unit.getComponent(require('@/ecs/components/Transform').Transform);
+                  const health = unit.getComponent(require('@/ecs/components/Health').Health);
+                  const summonedUnit = unit.getComponent(require('@/ecs/components/SummonedUnit').SummonedUnit);
+
+                  if (transform && health && summonedUnit && health.currentHealth > 0 && summonedUnit.isActive && !summonedUnit.isDead) {
+                    summonedUnitsData.push({
+                      id: summonedUnit.unitId,
+                      position: new Vector3(transform.position.x, transform.position.y, transform.position.z),
+                      health: health.currentHealth,
+                      ownerId: summonedUnit.ownerId
+                    });
+                  }
+                });
+              });
+            }
+
+            // Get pillars data from enemy players
+            const pillarsData: Array<{
+              id: string;
+              position: Vector3;
+              health: number;
+              ownerId: string;
+            }> = [];
+            const PillarSystem = require('@/systems/PillarSystem').PillarSystem;
+            const pillarSystem = engineRef.current?.getWorld().getSystem(PillarSystem) as typeof PillarSystem.prototype;
+            if (pillarSystem) {
+              const enemyPlayerIds = Array.from(players.keys()).filter(playerId => playerId !== smiteEffect.playerId);
+              enemyPlayerIds.forEach(playerId => {
+                const pillars = pillarSystem.getPillarsByOwner(playerId);
+                pillars.forEach((pillar: any) => {
+                  const transform = pillar.getComponent(require('@/ecs/components/Transform').Transform);
+                  const health = pillar.getComponent(require('@/ecs/components/Health').Health);
+                  const pillarComponent = pillar.getComponent(require('@/ecs/components/Pillar').Pillar);
+
+                  if (transform && health && pillarComponent && health.currentHealth > 0 && pillarComponent.isActive && !pillarComponent.isDead) {
+                    pillarsData.push({
+                      id: `${pillarComponent.ownerId}_${pillarComponent.pillarIndex}`,
+                      position: new Vector3(transform.position.x, transform.position.y, transform.position.z),
+                      health: health.currentHealth,
+                      ownerId: pillarComponent.ownerId
+                    });
+                  }
+                });
+              });
+            }
+
 
             return (
               <Smite
@@ -5918,11 +6076,76 @@ const hasMana = useCallback((amount: number) => {
                 onComplete={() => {
                   // Animation completed, but don't remove yet - let setTimeout handle cleanup
                 }}
-                onHit={(targetId, damage) => {
-                  // Handle PVP damage through broadcast system
-                  broadcastPlayerDamage(targetId, damage, 'smite');
+                onHit={(targetId, damage, isCritical, targetType) => {
+                  // Handle PVP damage based on target type
+                  if (targetType === 'enemy') {
+                    // PvE enemy damage - no broadcast needed as it's handled locally
+                    // This would be handled by the CombatSystem for actual PvE enemies
+                  } else if (targetType === 'summonedUnit') {
+                    // Summoned unit damage - find the entity and apply damage directly
+                    const SummonedUnitSystem = require('@/systems/SummonedUnitSystem').SummonedUnitSystem;
+                    const summonedUnitSystem = engineRef.current?.getWorld().getSystem(SummonedUnitSystem) as typeof SummonedUnitSystem.prototype;
+                    if (summonedUnitSystem) {
+                      // Find the entity by unitId
+                      const allEntities = summonedUnitSystem.getAllUnits();
+                      const targetEntity = allEntities.find((entity: any) => {
+                        const summonedUnit = entity.getComponent(require('@/ecs/components/SummonedUnit').SummonedUnit);
+                        return summonedUnit && summonedUnit.unitId === targetId;
+                      });
+
+                      if (targetEntity) {
+                        const CombatSystem = require('@/systems/CombatSystem').CombatSystem;
+                        const combatSystem = engineRef.current?.getWorld().getSystem(CombatSystem) as typeof CombatSystem.prototype;
+                        if (combatSystem) {
+                          combatSystem.queueDamage(
+                            targetEntity,
+                            damage,
+                            undefined, // source entity
+                            'smite',
+                            smiteEffect.playerId,
+                            isCritical
+                          );
+                        }
+                      }
+                    }
+                  } else if (targetType === 'pillar') {
+                    // Pillar damage - find the entity and apply damage directly
+                    const PillarSystem = require('@/systems/PillarSystem').PillarSystem;
+                    const pillarSystem = engineRef.current?.getWorld().getSystem(PillarSystem) as typeof PillarSystem.prototype;
+                    if (pillarSystem) {
+                      // Parse pillar ID to get owner and index
+                      const [ownerId, pillarIndexStr] = targetId.split('_');
+                      const pillarIndex = parseInt(pillarIndexStr);
+
+                      const pillars = pillarSystem.getPillarsByOwner(ownerId);
+                      const targetEntity = pillars.find((entity: any) => {
+                        const pillar = entity.getComponent(require('@/ecs/components/Pillar').Pillar);
+                        return pillar && pillar.pillarIndex === pillarIndex;
+                      });
+
+                      if (targetEntity) {
+                        const CombatSystem = require('@/systems/CombatSystem').CombatSystem;
+                        const combatSystem = engineRef.current?.getWorld().getSystem(CombatSystem) as typeof CombatSystem.prototype;
+                        if (combatSystem) {
+                          combatSystem.queueDamage(
+                            targetEntity,
+                            damage,
+                            undefined, // source entity
+                            'smite',
+                            smiteEffect.playerId,
+                            isCritical
+                          );
+                        }
+                      }
+                    }
+                  } else {
+                    // Player damage through broadcast system
+                    broadcastPlayerDamage(targetId, damage, 'smite');
+                  }
                 }}
-                enemyData={otherPlayersData}
+                playersData={otherPlayersData}
+                summonedUnitsData={summonedUnitsData}
+                pillarsData={pillarsData}
                 onDamageDealt={smiteEffect.onDamageDealt || ((totalDamage) => {
                   // Fallback healing if no callback provided - heal for the actual damage dealt
                   if (totalDamage > 0 && playerEntity) {
@@ -5956,6 +6179,66 @@ const hasMana = useCallback((amount: number) => {
                 health: player.health
               }));
 
+            // Get summoned units data from enemy players
+            const summonedUnitsData: Array<{
+              id: string;
+              position: Vector3;
+              health: number;
+              ownerId: string;
+            }> = [];
+            const SummonedUnitSystem = require('@/systems/SummonedUnitSystem').SummonedUnitSystem;
+            const summonedUnitSystem = engineRef.current?.getWorld().getSystem(SummonedUnitSystem) as typeof SummonedUnitSystem.prototype;
+            if (summonedUnitSystem) {
+              const enemyPlayerIds = Array.from(players.keys()).filter(playerId => playerId !== colossusStrikeEffect.playerId);
+              enemyPlayerIds.forEach(playerId => {
+                const units = summonedUnitSystem.getUnitsByOwner(playerId);
+                units.forEach((unit: any) => {
+                  const transform = unit.getComponent(require('@/ecs/components/Transform').Transform);
+                  const health = unit.getComponent(require('@/ecs/components/Health').Health);
+                  const summonedUnit = unit.getComponent(require('@/ecs/components/SummonedUnit').SummonedUnit);
+
+                  if (transform && health && summonedUnit && health.currentHealth > 0 && summonedUnit.isActive && !summonedUnit.isDead) {
+                    summonedUnitsData.push({
+                      id: summonedUnit.unitId,
+                      position: new Vector3(transform.position.x, transform.position.y, transform.position.z),
+                      health: health.currentHealth,
+                      ownerId: summonedUnit.ownerId
+                    });
+                  }
+                });
+              });
+            }
+
+            // Get pillars data from enemy players
+            const pillarsData: Array<{
+              id: string;
+              position: Vector3;
+              health: number;
+              ownerId: string;
+            }> = [];
+            const PillarSystem = require('@/systems/PillarSystem').PillarSystem;
+            const pillarSystem = engineRef.current?.getWorld().getSystem(PillarSystem) as typeof PillarSystem.prototype;
+            if (pillarSystem) {
+              const enemyPlayerIds = Array.from(players.keys()).filter(playerId => playerId !== colossusStrikeEffect.playerId);
+              enemyPlayerIds.forEach(playerId => {
+                const pillars = pillarSystem.getPillarsByOwner(playerId);
+                pillars.forEach((pillar: any) => {
+                  const transform = pillar.getComponent(require('@/ecs/components/Transform').Transform);
+                  const health = pillar.getComponent(require('@/ecs/components/Health').Health);
+                  const pillarComponent = pillar.getComponent(require('@/ecs/components/Pillar').Pillar);
+
+                  if (transform && health && pillarComponent && health.currentHealth > 0 && pillarComponent.isActive && !pillarComponent.isDead) {
+                    pillarsData.push({
+                      id: `${pillarComponent.ownerId}_${pillarComponent.pillarIndex}`,
+                      position: new Vector3(transform.position.x, transform.position.y, transform.position.z),
+                      health: health.currentHealth,
+                      ownerId: pillarComponent.ownerId
+                    });
+                  }
+                });
+              });
+            }
+
 
             return (
               <ColossusStrike
@@ -5966,11 +6249,73 @@ const hasMana = useCallback((amount: number) => {
                 onComplete={() => {
                   // Animation completed, but don't remove yet - let setTimeout handle cleanup
                 }}
-                onHit={(targetId, damage, isCritical) => {
-                  // Handle PVP damage through broadcast system
-                  broadcastPlayerDamage(targetId, damage, 'colossusStrike');
+                onHit={(targetId, damage, isCritical, targetType) => {
+                  // Handle PVP damage based on target type
+                  if (targetType === 'player') {
+                    // Player damage through broadcast system
+                    broadcastPlayerDamage(targetId, damage, 'colossusStrike');
+                  } else if (targetType === 'summonedUnit') {
+                    // Summoned unit damage - find the entity and apply damage directly
+                    const SummonedUnitSystem = require('@/systems/SummonedUnitSystem').SummonedUnitSystem;
+                    const summonedUnitSystem = engineRef.current?.getWorld().getSystem(SummonedUnitSystem) as typeof SummonedUnitSystem.prototype;
+                    if (summonedUnitSystem) {
+                      // Find the entity by unitId
+                      const allEntities = summonedUnitSystem.getAllUnits();
+                      const targetEntity = allEntities.find((entity: any) => {
+                        const summonedUnit = entity.getComponent(require('@/ecs/components/SummonedUnit').SummonedUnit);
+                        return summonedUnit && summonedUnit.unitId === targetId;
+                      });
+
+                      if (targetEntity) {
+                        const CombatSystem = require('@/systems/CombatSystem').CombatSystem;
+                        const combatSystem = engineRef.current?.getWorld().getSystem(CombatSystem) as typeof CombatSystem.prototype;
+                        if (combatSystem) {
+                          combatSystem.queueDamage(
+                            targetEntity,
+                            damage,
+                            undefined, // source entity
+                            'colossusStrike',
+                            colossusStrikeEffect.playerId,
+                            isCritical
+                          );
+                        }
+                      }
+                    }
+                  } else if (targetType === 'pillar') {
+                    // Pillar damage - find the entity and apply damage directly
+                    const PillarSystem = require('@/systems/PillarSystem').PillarSystem;
+                    const pillarSystem = engineRef.current?.getWorld().getSystem(PillarSystem) as typeof PillarSystem.prototype;
+                    if (pillarSystem) {
+                      // Parse pillar ID to get owner and index
+                      const [ownerId, pillarIndexStr] = targetId.split('_');
+                      const pillarIndex = parseInt(pillarIndexStr);
+
+                      const pillars = pillarSystem.getPillarsByOwner(ownerId);
+                      const targetEntity = pillars.find((entity: any) => {
+                        const pillar = entity.getComponent(require('@/ecs/components/Pillar').Pillar);
+                        return pillar && pillar.pillarIndex === pillarIndex;
+                      });
+
+                      if (targetEntity) {
+                        const CombatSystem = require('@/systems/CombatSystem').CombatSystem;
+                        const combatSystem = engineRef.current?.getWorld().getSystem(CombatSystem) as typeof CombatSystem.prototype;
+                        if (combatSystem) {
+                          combatSystem.queueDamage(
+                            targetEntity,
+                            damage,
+                            undefined, // source entity
+                            'colossusStrike',
+                            colossusStrikeEffect.playerId,
+                            isCritical
+                          );
+                        }
+                      }
+                    }
+                  }
                 }}
                 targetPlayerData={otherPlayersData}
+                summonedUnitsData={summonedUnitsData}
+                pillarsData={pillarsData}
                 onDamageDealt={colossusStrikeEffect.onDamageDealt || ((damageDealt) => {
                   // No healing for Colossus Strike (unlike Smite)
                 })}
@@ -6105,18 +6450,26 @@ const hasMana = useCallback((amount: number) => {
             );
           })}
 
-          {/* PVP Summon Totem Explosion Effects */}
-          {pvpSummonTotemExplosions.map(explosionEffect => {
-            // Find the current position of the target player
-            const targetPlayer = players.get(explosionEffect.playerId);
-            const currentPosition = targetPlayer
-              ? new Vector3(targetPlayer.position.x, targetPlayer.position.y, targetPlayer.position.z)
-              : explosionEffect.position;
+            {/* PVP Summon Totem Explosion Effects */}
+            {pvpSummonTotemExplosions.map(explosionEffect => {
+              // Use current player position for proper tracking of moving targets
+              let currentPosition: Vector3;
 
-            return (
-              <SummonTotemExplosion
-                key={explosionEffect.id}
-                position={currentPosition}
+              if (explosionEffect.playerId === socket?.id) {
+                // For local player explosions, use current local position
+                currentPosition = playerPosition.clone();
+              } else {
+                // For other players, get from players map
+                const targetPlayer = players.get(explosionEffect.playerId);
+                currentPosition = targetPlayer
+                  ? new Vector3(targetPlayer.position.x, targetPlayer.position.y, targetPlayer.position.z)
+                  : explosionEffect.position;
+              }
+
+              return (
+                <SummonTotemExplosion
+                  key={explosionEffect.id}
+                  position={currentPosition}
                 explosionStartTime={explosionEffect.startTime}
                 onComplete={() => {
                   setPvpSummonTotemExplosions(prev => prev.filter(effect => effect.id !== explosionEffect.id));
@@ -6350,6 +6703,21 @@ const hasMana = useCallback((amount: number) => {
             }
             return null;
           })}
+
+          {/* Summoned Unit Death Effects */}
+          {summonedUnitDeathEffects.map(effect => (
+            <SummonedUnitDeathEffect
+              key={effect.id}
+              position={effect.position}
+              playerNumber={effect.playerNumber}
+              onComplete={() => {
+                // Remove completed effect
+                setSummonedUnitDeathEffects(prev =>
+                  prev.filter(e => e.id !== effect.id)
+                );
+              }}
+            />
+          ))}
         </>
       )}
 

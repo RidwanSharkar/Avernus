@@ -5,17 +5,17 @@ import { Color, Mesh, Group, Points, Vector3, AdditiveBlending } from '@/utils/t
 interface TowerProjectileTrailProps {
   team: 'Red' | 'Blue';
   size: number;
-  meshRef: React.RefObject<Mesh | Group>;
+  position: Vector3;
   opacity?: number;
 }
 
 const TowerProjectileTrail: React.FC<TowerProjectileTrailProps> = ({
   team,
   size,
-  meshRef,
+  position,
   opacity = 1
 }) => {
-  const particlesCount = 24; // Slightly fewer particles than EntropicBoltTrail for tower projectiles
+  const particlesCount = 18; // Slightly fewer particles than EntropicBoltTrail for tower projectiles
   const particlesRef = useRef<Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -41,13 +41,10 @@ const TowerProjectileTrail: React.FC<TowerProjectileTrailProps> = ({
     }
   }, [team]);
 
-  // Initialize positions only once when mesh is available
+  // Initialize positions only once
   useEffect(() => {
-    if (meshRef.current && !isInitialized.current) {
-      // Get world position to handle coordinate space correctly
-      const worldPosition = new Vector3();
-      meshRef.current.getWorldPosition(worldPosition);
-      const { x, y, z } = worldPosition;
+    if (!isInitialized.current) {
+      const { x, y, z } = position;
       lastKnownPosition.current.set(x, y, z);
 
       // Initialize all particles at the starting position
@@ -60,10 +57,10 @@ const TowerProjectileTrail: React.FC<TowerProjectileTrailProps> = ({
       }
       isInitialized.current = true;
     }
-  }, [meshRef]);
+  }, [position, team]);
 
   useFrame((_, delta) => {
-    if (!particlesRef.current?.parent || !meshRef.current || !isInitialized.current) return;
+    if (!particlesRef.current?.parent || !isInitialized.current) return;
 
     updateTimer.current += delta;
 
@@ -71,16 +68,12 @@ const TowerProjectileTrail: React.FC<TowerProjectileTrailProps> = ({
     if (updateTimer.current < updateInterval) return;
     updateTimer.current = 0;
 
-    // Get world position to handle coordinate space correctly
-    const worldPosition = new Vector3();
-    meshRef.current.getWorldPosition(worldPosition);
-
     // Calculate movement distance
-    const distance = worldPosition.distanceTo(lastKnownPosition.current);
+    const distance = position.distanceTo(lastKnownPosition.current);
 
     // Only update if there's meaningful movement
     if (distance > minMovementDistance) {
-      lastKnownPosition.current.copy(worldPosition);
+      lastKnownPosition.current.copy(position);
 
       // Update particle positions by shifting them backward
       for (let i = particlesCount - 1; i > 0; i--) {
@@ -90,9 +83,9 @@ const TowerProjectileTrail: React.FC<TowerProjectileTrailProps> = ({
       }
 
       // Update lead particle
-      positionsRef.current[0] = worldPosition.x;
-      positionsRef.current[1] = worldPosition.y;
-      positionsRef.current[2] = worldPosition.z;
+      positionsRef.current[0] = position.x;
+      positionsRef.current[1] = position.y;
+      positionsRef.current[2] = position.z;
 
       // Update geometry attributes
       if (particlesRef.current) {

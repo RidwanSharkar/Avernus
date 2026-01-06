@@ -200,8 +200,9 @@ const groundSplashFragmentShader = `
     float variation = sin(vUV.x * 15.0 + vUV.y * 15.0) * 0.1 + 0.9;
     color *= variation;
 
-    // More intense alpha for spherical effect
-    gl_FragColor = vec4(color, vAlpha * (surfaceRing * 0.8 + innerGlow * 0.4));
+    // More intense alpha for spherical effect with stronger fade as it expands
+    float expansionFade = 1.0 - smoothstep(0.5, 1.0, vDist); // Fade more at larger distances
+    gl_FragColor = vec4(color, vAlpha * (surfaceRing * 0.4 + innerGlow * 0.2) * expansionFade);
   }
 `;
 
@@ -350,7 +351,7 @@ const GroundSplash: React.FC<GroundSplashProps> = ({ eruption }) => {
     const t = clock.getElapsedTime();
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value = t;
-      materialRef.current.uniforms.uSplashTime.value = Math.max(0, t - (eruption.startTime - 0.25));
+      materialRef.current.uniforms.uSplashTime.value = Math.max(0, t - (eruption.startTime - 0.5));
     }
   });
 

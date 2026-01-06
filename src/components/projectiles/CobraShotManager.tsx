@@ -234,8 +234,8 @@ export default function CobraShotManager({ world }: CobraShotManagerProps) {
 
       const venomStatus = enemy.updateVenomStatus(currentTime / 1000);
       if (venomStatus.shouldDealDamage && combatSystem) {
-        // Deal venom damage
-        combatSystem.queueDamage(entity, venomStatus.damage, undefined, 'venom');
+          // Deal venom damage
+          combatSystem.queueDamage(entity, venomStatus.damage, undefined, 'cobra_shot');
         
         // Create venom effect animation every second (one-time pulse effect)
         createVenomEffect(transform.position);

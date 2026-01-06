@@ -27,8 +27,8 @@ const CobraShotProjectileVisual: React.FC<{ projectile: CobraShotProjectile }> =
   useFrame(() => {
     if (!groupRef.current) return;
 
-    // Update position but keep it at ground level (Y=0)
-    groupRef.current.position.set(projectile.position.x, 0, projectile.position.z);
+    // Update position - use the projectile's actual position (including Y coordinate)
+    groupRef.current.position.copy(projectile.position);
 
     // Calculate rotation based on direction (only Y rotation to stay parallel to ground)
     const lookDirection = projectile.direction.clone().normalize();

@@ -100,7 +100,7 @@ export default function ControlsPanel({ className = '', onShowRules }: ControlsP
               {controls.map((control, index) => (
                 <div
                   key={control.key}
-                  className={`px-3 py-2 rounded-lg bg-black/10 border border-white/5 hover:bg-indigo-500/10 transition-all duration-200 flex items-center justify-between group ${
+                  className={`px-3 py-1 rounded-lg bg-black/10 border border-white/5 hover:bg-indigo-500/10 transition-all duration-200 flex items-center justify-between group ${
                     control.onClick ? 'cursor-pointer hover:scale-105' : ''
                   }`}
                   style={{

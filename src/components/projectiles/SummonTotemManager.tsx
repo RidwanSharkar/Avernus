@@ -61,6 +61,7 @@ interface SummonTotemData {
   onHealPlayer?: (healAmount: number) => void;
   casterId?: string;
   localSocketId?: string;
+  onCreateExplosion?: (targetId: string, position: Vector3) => void;
 }
 
 interface SummonTotemManagerProps {
@@ -119,7 +120,8 @@ export interface SummonTotemManagerRef {
     nextDamageNumberId?: { current: number },
     onHealPlayer?: (healAmount: number) => void,
     casterId?: string,
-    localSocketId?: string
+    localSocketId?: string,
+    onCreateExplosion?: (targetId: string, position: Vector3) => void
   ) => number;
 }
 
@@ -180,7 +182,8 @@ const SummonTotemManager = forwardRef<SummonTotemManagerRef, SummonTotemManagerP
     nextDamageNumberId?: { current: number },
     onHealPlayer?: (healAmount: number) => void,
     casterId?: string,
-    localSocketId?: string
+    localSocketId?: string,
+    onCreateExplosion?: (targetId: string, position: Vector3) => void
   ) => {
     const totemId = totemIdCounter.current++;
     const startTime = Date.now();
@@ -204,7 +207,8 @@ const SummonTotemManager = forwardRef<SummonTotemManagerRef, SummonTotemManagerP
       nextDamageNumberId,
       onHealPlayer,
       casterId: casterId,
-      localSocketId
+      localSocketId,
+      onCreateExplosion
     };
 
     setActiveTotems(prev => [...prev, newTotem]);
@@ -239,6 +243,7 @@ const SummonTotemManager = forwardRef<SummonTotemManagerRef, SummonTotemManagerP
           nextDamageNumberId={totem.nextDamageNumberId}
           onHealPlayer={totem.onHealPlayer}
           casterId={totem.casterId}
+          onCreateExplosion={totem.onCreateExplosion}
         />
       ))}
     </>

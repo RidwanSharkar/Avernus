@@ -181,6 +181,7 @@ export class ControlSystem extends System {
   // Weapon-specific states
   private isCharging = false;
   private chargeProgress = 0;
+  private chargeStartTime: number | null = null;
   private isSwinging = false;
   
   // Viper Sting charging state
@@ -838,6 +839,7 @@ export class ControlSystem extends System {
       // Ensure charging state is reset since we don't use charging in burst mode
       this.isCharging = false;
       this.chargeProgress = 0;
+      this.chargeStartTime = null;
 
       if (this.inputManager.isMouseButtonPressed(0)) { // Left mouse button pressed
         const currentTime = performance.now() / 1000; // Convert to seconds
@@ -872,19 +874,23 @@ export class ControlSystem extends System {
         if (!this.isCharging && !this.isViperStingCharging && !this.isBarrageCharging && !this.isCobraShotCharging && !this.isCloudkillCharging) {
           this.isCharging = true;
           this.chargeProgress = 0;
+          this.chargeStartTime = Date.now(); // Track when charging started
 
           // Play bow draw sound when starting to charge
           this.audioSystem?.playBowDrawSound(playerTransform.position);
         }
-        // Increase charge progress (could be time-based)
-        if (!this.isViperStingCharging && !this.isBarrageCharging && !this.isCobraShotCharging && !this.isCloudkillCharging) {
-          this.chargeProgress = Math.min(this.chargeProgress + 0.0125, 1.0); // BOW CHARGE SPEED
+        // Increase charge progress based on time elapsed (time-based instead of frame-based)
+        if (!this.isViperStingCharging && !this.isBarrageCharging && !this.isCobraShotCharging && !this.isCloudkillCharging && this.chargeStartTime) {
+          const elapsedTime = Date.now() - this.chargeStartTime;
+          const totalChargeTime = 1250; // 1.5 seconds to fully charge
+          this.chargeProgress = Math.min(elapsedTime / totalChargeTime, 1.0);
         }
       } else if (this.isCharging) {
         // Check if any ability is charging - if so, cancel the regular bow shot
         if (this.isViperStingCharging || this.isBarrageCharging || this.isCobraShotCharging || this.isCloudkillCharging) {
           this.isCharging = false;
           this.chargeProgress = 0;
+          this.chargeStartTime = null;
           return;
         }
 
@@ -898,6 +904,7 @@ export class ControlSystem extends System {
         this.fireProjectile(playerTransform);
         this.isCharging = false;
         this.chargeProgress = 0;
+        this.chargeStartTime = null;
 
         // Trigger visual effects callback with the stored charge progress
         this.triggerBowReleaseEffects(finalChargeProgress);
@@ -911,6 +918,7 @@ export class ControlSystem extends System {
       if (!this.isCharging) {
         this.isCharging = true;
         this.chargeProgress = 0;
+        this.chargeStartTime = null; // Scythe doesn't use time-based charging
 
       }
       // Increase charge progress continuously for spinning animation (no cap)
@@ -922,6 +930,7 @@ export class ControlSystem extends System {
       // Stop spinning when mouse is released
       this.isCharging = false;
       this.chargeProgress = 0;
+      this.chargeStartTime = null;
 
     }
     // Handle CrossentropyBolt ability with 'R' key
@@ -973,10 +982,12 @@ export class ControlSystem extends System {
     direction.applyMatrix4(rotationMatrix);
     direction.normalize();
     
-    // Perfect shot timing constants
-    const perfectShotMinThreshold = 0.7; // 85% charge
-    const perfectShotMaxThreshold = 0.98; // 95% charge
-    const isPerfectShot = this.chargeProgress >= perfectShotMinThreshold && this.chargeProgress <= perfectShotMaxThreshold;
+    // Perfect shot timing constants (time-based)
+    const totalChargeTime = 1500; // 1.5 seconds to fully charge
+    const perfectShotMinTime = 1000; // Perfect shot window starts at 1.2 seconds (80% of total time)
+    const perfectShotMaxTime = 1200; // Perfect shot window ends at 1.47 seconds (98% of total time)
+    const elapsedTime = this.chargeStartTime ? Date.now() - this.chargeStartTime : 0;
+    const isPerfectShot = elapsedTime >= perfectShotMinTime && elapsedTime <= perfectShotMaxTime;
 
     // Check if tempest rounds passive is unlocked for the bow weapon
     let bowWeaponSlot: 'primary' | 'secondary' | null = null;
@@ -1783,8 +1794,8 @@ export class ControlSystem extends System {
       direction,
       this.playerEntity.id,
       {
-        speed: 40, // Faster than regular charged arrows (35)
-        damage: 75, // Higher damage than regular charged arrows (50)
+        speed: 50, // Faster than regular charged arrows (35)
+        damage: 80, // Higher damage than regular charged arrows (50)
         lifetime: 6, // Longer lifetime than regular charged arrows (5)
         piercing: true, // Perfect shots can pierce through enemies
         explosive: false, // No explosion, but has special visual effects
@@ -1798,8 +1809,8 @@ export class ControlSystem extends System {
     // Broadcast projectile creation to other players
     if (this.onProjectileCreatedCallback) {
       this.onProjectileCreatedCallback('perfect_shot', spawnPosition, direction, {
-        speed: 40,
-        damage: 75,
+        speed: 50,
+        damage: 80,
         lifetime: 6,
         piercing: true,
         subclass: this.currentSubclass,
@@ -3661,6 +3672,7 @@ export class ControlSystem extends System {
     this.isSwinging = false; // Reset swinging state to prevent sound overlap
     this.isCharging = false; // Reset bow charging state
     this.chargeProgress = 0; // Reset charge progress
+    this.chargeStartTime = null; // Reset charge start time
     this.isViperStingCharging = false; // Reset viper sting charging
     this.viperStingChargeProgress = 0;
     this.isBarrageCharging = false; // Reset barrage charging

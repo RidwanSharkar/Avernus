@@ -189,7 +189,7 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
         position={[0, 0.01, 0]}
       />
 
-      {/* Subtle mystical aura ring */}
+      {/* Subtle mystical aura ring 2*/}
       <mesh
         ref={expandingRingRef}
         geometry={geometries.expandingRing}
@@ -198,17 +198,6 @@ const RuneCircle: React.FC<RuneCircleProps> = ({
         position={[0, 0.01, 0]}
         scale={[1.25, 1.25, 1.25]}
       />
-
-      {/* Subtle mystical aura ring */}
-      <mesh
-        ref={expandingRingRef}
-        geometry={geometries.expandingRing}
-        material={materials.expandingRing}
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0.01, 0]}
-        scale={[2.0, 2.0, 2.0]}
-      />
-
       
 
       {/* Rotating outer spell circle with dashed segments and cardinal markers */}
