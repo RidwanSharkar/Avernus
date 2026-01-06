@@ -255,6 +255,15 @@ const VolcanicEruptionParticles: React.FC<VolcanicEruptionParticlesProps> = ({ e
     });
   }, [eruption.origin, eruption.direction, eruption.duration, eruption.scale, eruption.spread, eruption.distance, eruption.speed, eruption.rotationSpeed, eruption.rotationOffset]);
 
+  // Cleanup material on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (material) {
+        material.dispose();
+      }
+    };
+  }, [material]);
+
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (materialRef.current) {
@@ -346,6 +355,18 @@ const GroundSplash: React.FC<GroundSplashProps> = ({ eruption }) => {
 
     return geometry;
   }, []);
+
+  // Cleanup material and geometry on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (material) {
+        material.dispose();
+      }
+      if (geometry) {
+        geometry.dispose();
+      }
+    };
+  }, [material, geometry]);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();

@@ -37,6 +37,14 @@ const InstancedMountains: React.FC<InstancedMountainsProps> = ({ mountains }) =>
     metalness: 0.0,
   }), []);
 
+  // Cleanup materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      baseMaterial.dispose();
+      peakMaterial.dispose();
+    };
+  }, [baseMaterial, peakMaterial]);
+
   // Set up instanced matrices for each geometry variant
   useEffect(() => {
     const matrix = new Matrix4();

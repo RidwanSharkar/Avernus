@@ -3,7 +3,43 @@ import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, Color, Shape, AdditiveBlending } from '@/utils/three-exports';
 import { WeaponSubclass } from '@/components/dragon/weapons';
 import DeflectShield from './DeflectShield';
-import { calculationCache } from '@/utils/CalculationCache';;
+import { calculationCache } from '@/utils/CalculationCache';
+
+// Cleanup utility for Three.js resources
+const disposeThreeJSResources = (object: any) => {
+  if (!object) return;
+
+  // Dispose geometry
+  if (object.geometry) {
+    object.geometry.dispose();
+  }
+
+  // Dispose material
+  if (object.material) {
+    if (Array.isArray(object.material)) {
+      object.material.forEach((material: any) => {
+        if (material.map) material.map.dispose();
+        if (material.normalMap) material.normalMap.dispose();
+        if (material.roughnessMap) material.roughnessMap.dispose();
+        if (material.metalnessMap) material.metalnessMap.dispose();
+        if (material.emissiveMap) material.emissiveMap.dispose();
+        material.dispose();
+      });
+    } else {
+      if (object.material.map) object.material.map.dispose();
+      if (object.material.normalMap) object.material.normalMap.dispose();
+      if (object.material.roughnessMap) object.material.roughnessMap.dispose();
+      if (object.material.metalnessMap) object.material.metalnessMap.dispose();
+      if (object.material.emissiveMap) object.material.emissiveMap.dispose();
+      object.material.dispose();
+    }
+  }
+
+  // Recursively dispose children
+  if (object.children) {
+    object.children.forEach((child: any) => disposeThreeJSResources(child));
+  }
+};;
 
 interface SwordProps {
   isSwinging: boolean;
@@ -782,6 +818,21 @@ const SwordComponent = memo(function Sword({
       sparkParticles.current = sparkParticles.current.filter(spark => spark.life > 0);
     }
   });
+
+  // Cleanup effect for component unmount
+  useEffect(() => {
+    return () => {
+      // Dispose of all Three.js resources in the sword group
+      if (swordRef.current) {
+        disposeThreeJSResources(swordRef.current);
+      }
+
+      // Clear particle arrays to prevent memory leaks
+      sparkParticles.current = [];
+      chargeTrail.current = [];
+      chargeHitEnemies.current.clear();
+    };
+  }, []);
 
   // Helper function to get ready positions for each combo step
   const getComboReadyPosition = (step: 1 | 2 | 3): {

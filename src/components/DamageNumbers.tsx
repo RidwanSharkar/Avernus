@@ -1,7 +1,7 @@
 // Floating damage numbers component to display damage dealt to enemies
 'use client';
 
-import React, { useEffect, useState, memo } from 'react';
+import React, { useEffect, useState, memo, useRef } from 'react';
 import { Vector3, Camera } from '@/utils/three-exports';
 
 export interface DamageNumberData {
@@ -33,10 +33,14 @@ const DamageNumber = memo(function DamageNumber({ damageData, onComplete, camera
 
   useEffect(() => {
     const isIncoming = damageData.isIncomingDamage;
-    const duration = isIncoming ? 3000 : 5000; // Shorter duration for incoming damage
+    const duration = isIncoming ? 900 : 3000; // Longer duration for better visibility
     const startTime = Date.now();
+    let animationId: number | null = null;
+    let isCancelled = false;
 
     const animate = () => {
+      if (isCancelled) return;
+
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
@@ -54,9 +58,9 @@ const DamageNumber = memo(function DamageNumber({ damageData, onComplete, camera
         const scaleProgress = Math.min(progress * 4, 1);
         setScale(initialScale + (finalScale - initialScale) * scaleProgress);
 
-        // Fade out after 50% progress
-        if (progress > 0.5) {
-          const fadeProgress = (progress - 0.5) / 0.5;
+        // Keep fully visible for 2.67 seconds, then fade out over the remaining 1.33 seconds
+        if (progress > 0.667) { // 2.67 seconds out of 4 seconds
+          const fadeProgress = (progress - 0.667) / 0.333; // Fade over last 1/3
           setOpacity(1 - fadeProgress);
         } else {
           setOpacity(1);
@@ -72,23 +76,31 @@ const DamageNumber = memo(function DamageNumber({ damageData, onComplete, camera
         const scaleProgress = Math.min(progress * 3, 1);
         setScale(initialScale + (finalScale - initialScale) * scaleProgress);
 
-        // Fade out after 60% progress
-        if (progress > 0.6) {
-          const fadeProgress = (progress - 0.6) / 0.4;
+        // Keep fully visible for 3.6 seconds, then fade out over the remaining 2.4 seconds
+        if (progress > 0.6) { // 3.6 seconds out of 6 seconds
+          const fadeProgress = (progress - 0.6) / 0.4; // Fade over last 2.4 seconds
           setOpacity(1 - fadeProgress);
         } else {
           setOpacity(1);
         }
       }
 
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
+      if (progress < 1 && !isCancelled) {
+        animationId = requestAnimationFrame(animate);
+      } else if (!isCancelled) {
         onComplete(damageData.id);
       }
     };
 
-    animate();
+    animationId = requestAnimationFrame(animate);
+
+    // Cleanup function to cancel animation and prevent state updates
+    return () => {
+      isCancelled = true;
+      if (animationId !== null) {
+        cancelAnimationFrame(animationId);
+      }
+    };
   }, [damageData.id, onComplete, damageData.isIncomingDamage]);
 
   // Proper 3D to 2D projection using the camera

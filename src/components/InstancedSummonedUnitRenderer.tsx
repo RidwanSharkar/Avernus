@@ -700,6 +700,11 @@ export default function InstancedSummonedUnitRenderer({
   useEffect(() => {
     // Materials are already configured with vertexColors: true above
     // This ensures proper instanced rendering
+    return () => {
+      // Cleanup shared geometries and materials to prevent memory leaks
+      Object.values(sharedGeometries).forEach(geometry => geometry.dispose());
+      Object.values(sharedMaterials).forEach(material => material.dispose());
+    };
   }, []);
 
   return (

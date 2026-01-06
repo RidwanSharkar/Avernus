@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useMemo } from 'react';
+import React, { useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Color, AdditiveBlending, MeshBasicMaterial, MeshStandardMaterial, RingGeometry, SphereGeometry } from '@/utils/three-exports';
 
@@ -147,6 +147,14 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
       blending: AdditiveBlending
     })
   }), []);
+
+  // Cleanup geometries and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(geometry => geometry.dispose());
+      Object.values(materials).forEach(material => material.dispose());
+    };
+  }, [geometries, materials]);
 
   useFrame(() => {
     const elapsed = (Date.now() - startTimeRef.current) / 1000;

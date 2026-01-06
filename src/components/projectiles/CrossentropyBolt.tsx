@@ -1,5 +1,41 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { AdditiveBlending } from '@/utils/three-exports';
+
+// Cleanup utility for Three.js resources
+const disposeThreeJSResources = (object: any) => {
+  if (!object) return;
+
+  // Dispose geometry
+  if (object.geometry) {
+    object.geometry.dispose();
+  }
+
+  // Dispose material
+  if (object.material) {
+    if (Array.isArray(object.material)) {
+      object.material.forEach((material: any) => {
+        if (material.map) material.map.dispose();
+        if (material.normalMap) material.normalMap.dispose();
+        if (material.roughnessMap) material.roughnessMap.dispose();
+        if (material.metalnessMap) material.metalnessMap.dispose();
+        if (material.emissiveMap) material.emissiveMap.dispose();
+        material.dispose();
+      });
+    } else {
+      if (object.material.map) object.material.map.dispose();
+      if (object.material.normalMap) object.material.normalMap.dispose();
+      if (object.material.roughnessMap) object.material.roughnessMap.dispose();
+      if (object.material.metalnessMap) object.material.metalnessMap.dispose();
+      if (object.material.emissiveMap) object.material.emissiveMap.dispose();
+      object.material.dispose();
+    }
+  }
+
+  // Recursively dispose children
+  if (object.children) {
+    object.children.forEach((child: any) => disposeThreeJSResources(child));
+  }
+};
 
 import { Mesh, Vector3, Clock, Color } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -155,6 +191,16 @@ export default function CrossentropyBolt({ id, position, direction, onImpact, ch
     fireball2Ref.current.position.copy(currentPosition.current.clone().add(finalOffset2));
     fireball3Ref.current.position.copy(currentPosition.current.clone().add(finalOffset3));
   });
+
+  // Cleanup effect for component unmount
+  useEffect(() => {
+    return () => {
+      // Dispose of Three.js resources for all fireball meshes
+      if (fireball1Ref.current) disposeThreeJSResources(fireball1Ref.current);
+      if (fireball2Ref.current) disposeThreeJSResources(fireball2Ref.current);
+      if (fireball3Ref.current) disposeThreeJSResources(fireball3Ref.current);
+    };
+  }, []);
 
   return (
     <group name="crossentropy-bolt-group">

@@ -169,6 +169,15 @@ const PerimeterCloudParticles: React.FC<PerimeterCloudParticlesProps> = ({ cloud
     });
   }, [cloud.origin, cloud.direction, cloud.duration, cloud.scale, cloud.spread, cloud.height, cloud.speed, cloud.rotationSpeed, cloud.rotationOffset]);
 
+  // Cleanup material on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (material) {
+        material.dispose();
+      }
+    };
+  }, [material]);
+
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (materialRef.current) {

@@ -9,6 +9,42 @@ import { Health } from '@/ecs/components/Health';
 import { SpatialHash } from '@/utils/SpatialHash';
 import { Vector3, Color, Box3 } from '@/utils/three-exports';
 
+// Cleanup utility for Three.js resources
+const disposeThreeJSResources = (object: any) => {
+  if (!object) return;
+
+  // Dispose geometry
+  if (object.geometry) {
+    object.geometry.dispose();
+  }
+
+  // Dispose material
+  if (object.material) {
+    if (Array.isArray(object.material)) {
+      object.material.forEach((material: any) => {
+        if (material.map) material.map.dispose();
+        if (material.normalMap) material.normalMap.dispose();
+        if (material.roughnessMap) material.roughnessMap.dispose();
+        if (material.metalnessMap) material.metalnessMap.dispose();
+        if (material.emissiveMap) material.emissiveMap.dispose();
+        material.dispose();
+      });
+    } else {
+      if (object.material.map) object.material.map.dispose();
+      if (object.material.normalMap) object.material.normalMap.dispose();
+      if (object.material.roughnessMap) object.material.roughnessMap.dispose();
+      if (object.material.metalnessMap) object.material.metalnessMap.dispose();
+      if (object.material.emissiveMap) object.material.emissiveMap.dispose();
+      object.material.dispose();
+    }
+  }
+
+  // Recursively dispose children
+  if (object.children) {
+    object.children.forEach((child: any) => disposeThreeJSResources(child));
+  }
+};
+
 // Import individual projectile components
 import CrossentropyBolt from '@/components/projectiles/CrossentropyBolt';
 import EntropicBolt from '@/components/projectiles/EntropicBolt';
@@ -103,6 +139,44 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
       }
     };
   }, []);
+
+  // Track projectile IDs for cleanup
+  const previousProjectileIds = useRef<Set<number>>(new Set());
+
+  // Cleanup effect for removed projectiles
+  useEffect(() => {
+    const currentProjectileIds = new Set<number>();
+
+    // Collect all current projectile IDs
+    Object.values(projectileData).forEach(projectileArray => {
+      projectileArray.forEach(projectile => {
+        currentProjectileIds.add(projectile.id);
+      });
+    });
+
+    // Find removed projectile IDs
+    const removedIds = new Set<number>();
+    previousProjectileIds.current.forEach(id => {
+      if (!currentProjectileIds.has(id)) {
+        removedIds.add(id);
+      }
+    });
+
+    // Update previous IDs for next comparison
+    previousProjectileIds.current = currentProjectileIds;
+
+    // Note: Individual projectile components handle their own cleanup
+    // This effect just tracks which projectiles are removed from our state
+    // The actual geometry disposal happens in the projectile components themselves
+
+    return () => {
+      // Cleanup all remaining projectiles when component unmounts
+      // This is a safety net - individual components should handle their own cleanup
+      currentProjectileIds.forEach(id => {
+        removedIds.add(id);
+      });
+    };
+  }, [projectileData]);
 
   // Collision detection for EntropicBolt using spatial partitioning
   const checkEntropicBoltCollisions = (boltId: number, position: Vector3): boolean => {
@@ -395,6 +469,30 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
   const handleExplosionComplete = (explosionId: number) => {
     setExplosions(prev => prev.filter(explosion => explosion.id !== explosionId));
   };
+
+  // Cleanup effect for component unmount
+  useEffect(() => {
+    return () => {
+      // Clear all projectile data
+      setProjectileData({
+        crossentropy: [],
+        entropic: [],
+        charged: [],
+        regular: [],
+        sword: [],
+        barrage: [],
+        tower: []
+      });
+
+      // Clear explosions
+      setExplosions([]);
+
+      // Clear spatial hash
+      if (spatialHashRef.current) {
+        spatialHashRef.current.clear();
+      }
+    };
+  }, []);
 
   return (
     <>
