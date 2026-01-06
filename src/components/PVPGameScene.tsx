@@ -3680,6 +3680,11 @@ const hasMana = useCallback((amount: number) => {
 
       // Award 150 essence to the player who destroyed the pillar
       updatePlayerEssence(destroyerId, 150);
+
+      // Play inhibitor destruction sound effect for all players
+      if (window.audioSystem) {
+        window.audioSystem.playInhibitorDestroyedSound();
+      }
     };
 
     const handlePlayerEssenceChanged = (data: any) => {
@@ -4924,6 +4929,19 @@ const hasMana = useCallback((amount: number) => {
         }
         // Clear processed events
         (window as any).pendingSummonedUnitDamage = [];
+      }
+
+      // Process pending summoned unit death events
+      const pendingDeath = (window as any).pendingSummonedUnitDeath;
+      if (pendingDeath && pendingDeath.length > 0) {
+        // Play minion death sound effect for all players
+        if (window.audioSystem) {
+          for (const deathEvent of pendingDeath) {
+            window.audioSystem.playMinionDeathSound();
+          }
+        }
+        // Clear processed events
+        (window as any).pendingSummonedUnitDeath = [];
       }
 
       // State updates are handled individually above

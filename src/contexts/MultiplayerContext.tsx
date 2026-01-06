@@ -781,10 +781,16 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     });
 
     // Summoned unit event handlers
-    addEventHandler('summoned-unit-damaged', (data) => {      
+    addEventHandler('summoned-unit-damaged', (data) => {
       // Store the damage event for the game scene to process
       (window as any).pendingSummonedUnitDamage = (window as any).pendingSummonedUnitDamage || [];
       (window as any).pendingSummonedUnitDamage.push(data);
+    });
+
+    addEventHandler('summoned-unit-death', (data) => {
+      // Store the death event for the game scene to process
+      (window as any).pendingSummonedUnitDeath = (window as any).pendingSummonedUnitDeath || [];
+      (window as any).pendingSummonedUnitDeath.push(data);
     });
 
     // Server-authoritative summoned unit updates

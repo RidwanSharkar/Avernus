@@ -226,7 +226,7 @@ interface LightningStrikeSystemProps {
 }
 
 const LightningStrikeSystem: React.FC<LightningStrikeSystemProps> = ({
-  groundRadius = 32
+  groundRadius = 29
 }) => {
   const [activeStrikes, setActiveStrikes] = useState<LightningStrike[]>([]);
   const strikeIdCounterRef = useRef(0);

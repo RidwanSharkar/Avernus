@@ -71,7 +71,9 @@ export class AudioSystem extends System {
       { id: 'lightning_1', file: 'ui/lightning1.mp3' },
       { id: 'lightning_2', file: 'ui/lightning2.mp3' },
       { id: 'lightning_3', file: 'ui/lightning3.mp3' },
-      { id: 'lightning_4', file: 'ui/lightning4.mp3' }
+      { id: 'lightning_4', file: 'ui/lightning4.mp3' },
+      { id: 'inhibitor_destroyed', file: 'ui/Inhibitor.mp3' },
+      { id: 'minion_death', file: 'ui/deathEffect.mp3' }
       // Removed background_music from preload - loaded lazily
     ];
 
@@ -520,6 +522,16 @@ export class AudioSystem extends System {
     const lightningSounds = ['lightning_1', 'lightning_2', 'lightning_3', 'lightning_4'];
     const randomSoundId = lightningSounds[Math.floor(Math.random() * lightningSounds.length)];
     return this.playWeaponSound(randomSoundId, position, { volume: 0.5 }); // Half volume as requested
+  }
+
+  // Play inhibitor destroyed sound (when a pillar/inhibitor is destroyed)
+  public playInhibitorDestroyedSound() {
+    return this.playWeaponSound('inhibitor_destroyed', new Vector3(0, 0, 0), { volume: 0.8 });
+  }
+
+  // Play minion death sound (when a summoned unit dies)
+  public playMinionDeathSound() {
+    return this.playWeaponSound('minion_death', new Vector3(0, 0, 0), { volume: 0.575 });
   }
 
   // Background music controls (local only, 50% volume)

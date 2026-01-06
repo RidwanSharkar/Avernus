@@ -97,6 +97,7 @@ export class SummonedUnitSystem extends System {
 
         // Mark for destruction and immediately disable to prevent targeting
         unit.isActive = false;
+
         this.unitsToDestroy.push(entity.id);
         continue;
       }

@@ -984,7 +984,6 @@ export class CombatSystem extends System {
       // Immediately disable to prevent further targeting
       summonedUnit.isActive = false;
 
-
       // Experience awards for summoned unit kills are now handled by the backend server
       if (sourcePlayerId && sourcePlayerId !== 'unknown') {
         if (summonedUnit.ownerId !== sourcePlayerId) {
