@@ -1803,6 +1803,7 @@ const [maxMana, setMaxMana] = useState(150);
     isWraithStriking: boolean;
     isCorruptedAuraActive: boolean;
     hasCryoflame?: boolean;
+    hasTempestRounds?: boolean;
     isSundering?: boolean;
     isSummonTotemCharging?: boolean;
     summonTotemChargeProgress?: number;
@@ -2087,7 +2088,8 @@ const hasMana = useCallback((amount: number) => {
                   flatDirection,
                   subclass,
                   true, // isPerfectShot
-                  true  // isElementalShotsUnlocked
+                  true, // isElementalShotsUnlocked
+                  data.animationData?.chargeProgress || 1.0
                 );
                 break;
               case 'barrage_projectile':
@@ -2251,28 +2253,52 @@ const hasMana = useCallback((amount: number) => {
           return; // Skip playing sound if attack type doesn't match source weapon
         }
         
+        // Get enemy player state to check for passive abilities
+        const enemyPlayerState = multiplayerPlayerStates.get(data.playerId);
+        const hasTempestRounds = enemyPlayerState?.hasTempestRounds || false;
+
         switch (data.attackType) {
           case 'viper_sting_projectile':
             window.audioSystem.playEnemyViperStingReleaseSound(position);
             break;
           case 'cobra_shot_projectile':
             // Cobra shot uses bow release sound
-            window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            if (hasTempestRounds) {
+              window.audioSystem.playEnemyBowTempestRoundSound(position, data.animationData?.chargeProgress);
+            } else {
+              window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            }
             break;
           case 'regular_arrow':
-            window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            if (hasTempestRounds) {
+              window.audioSystem.playEnemyBowTempestRoundSound(position, data.animationData?.chargeProgress);
+            } else {
+              window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            }
             break;
           case 'charged_arrow':
-            window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            if (hasTempestRounds) {
+              window.audioSystem.playEnemyBowTempestRoundSound(position, data.animationData?.chargeProgress);
+            } else {
+              window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            }
             break;
           case 'perfect_shot':
-            window.audioSystem.playEnemyBowReleaseSound(position, 1.0); // Perfect shot is max charge
+            window.audioSystem.playEnemyBowReleaseSound(position, 1.0); // Perfect shot always uses power release sound
             break;
           case 'barrage_projectile':
-            window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            if (hasTempestRounds) {
+              window.audioSystem.playEnemyBowTempestRoundSound(position, data.animationData?.chargeProgress);
+            } else {
+              window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            }
             break;
           case 'burst_arrow':
-            window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            if (hasTempestRounds) {
+              window.audioSystem.playEnemyBowTempestRoundSound(position, data.animationData?.chargeProgress);
+            } else {
+              window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            }
             break;
           case 'entropic_bolt':
             window.audioSystem.playEnemyEntropicBoltSound(position);
@@ -3121,9 +3147,17 @@ const hasMana = useCallback((amount: number) => {
       // Play enemy ability sound effects at 50% volume
       const position = new Vector3(data.position.x, data.position.y, data.position.z);
       if (window.audioSystem) {
+        // Get enemy player state to check for passive abilities
+        const enemyPlayerState = multiplayerPlayerStates.get(data.playerId);
+        const hasTempestRounds = enemyPlayerState?.hasTempestRounds || false;
+
         switch (data.abilityType) {
           case 'cloudkill':
-            window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            if (hasTempestRounds) {
+              window.audioSystem.playEnemyBowTempestRoundSound(position, data.animationData?.chargeProgress);
+            } else {
+              window.audioSystem.playEnemyBowReleaseSound(position, data.animationData?.chargeProgress);
+            }
             break;
           case 'frost_nova':
             window.audioSystem.playEnemyFrostNovaSound(position);
@@ -4170,7 +4204,7 @@ const hasMana = useCallback((amount: number) => {
     const canvas = gl.domElement;
     engine.initialize(canvas).then(() => {
       // Create a PVP damage callback that maps local ECS entity IDs back to server player IDs
-      const damagePlayerWithMapping = (entityId: string, damage: number, damageType?: string, isCritical?: boolean) => {
+      const damagePlayerWithMapping = (entityId: string, damage: number, damageType?: string, isCritical?: boolean, isTowerDamage?: boolean) => {
         // Find the server player ID that corresponds to this local ECS entity ID
         const numericEntityId = parseInt(entityId);
         let serverPlayerId: string | null = null;
@@ -4182,7 +4216,7 @@ const hasMana = useCallback((amount: number) => {
         });
 
         if (serverPlayerId) {
-          broadcastPlayerDamage(serverPlayerId, damage, damageType, isCritical);
+          broadcastPlayerDamage(serverPlayerId, damage, damageType, isCritical, isTowerDamage);
         }
       };
       
@@ -4296,7 +4330,8 @@ const hasMana = useCallback((amount: number) => {
                 direction,
                 controlSystem.getCurrentSubclass(),
                 true, // isPerfectShot
-                true  // isElementalShotsUnlocked - for now assume unlocked
+                true, // isElementalShotsUnlocked - for now assume unlocked
+                finalProgress
               );
             }
           }
@@ -4944,6 +4979,19 @@ const hasMana = useCallback((amount: number) => {
         (window as any).pendingSummonedUnitDeath = [];
       }
 
+      // Process pending tower hit events
+      const pendingTowerHit = (window as any).pendingTowerHit;
+      if (pendingTowerHit && pendingTowerHit.length > 0) {
+        // Play tower hit sound effect for all players
+        if (window.audioSystem) {
+          for (const hitEvent of pendingTowerHit) {
+            window.audioSystem.playTowerHitSound(new Vector3(0, 0, 0)); // Position doesn't matter for UI sounds
+          }
+        }
+        // Clear processed events
+        (window as any).pendingTowerHit = [];
+      }
+
       // State updates are handled individually above
     }
   });
@@ -5178,6 +5226,7 @@ const hasMana = useCallback((amount: number) => {
           isWraithStriking: false,
           isCorruptedAuraActive: false,
           hasCryoflame: false,
+          hasTempestRounds: false,
           isFrozen: false
         };
         

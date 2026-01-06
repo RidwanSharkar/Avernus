@@ -370,6 +370,11 @@ export default function HotkeyPanel({ currentWeapon, controlSystem, selectedWeap
       return false;
     }
 
+    // Primary weapon gets 'E' ability unlocked at level 1 (free)
+    if (weaponSlot === 'primary' && ability.key === 'E') {
+      return false;
+    }
+
     if (ability.key === 'E' || ability.key === 'R' || ability.key === 'F' || ability.key === 'P') {
       return !SkillPointSystem.isAbilityUnlocked(skillPointData, weaponType, ability.key, weaponSlot);
     }

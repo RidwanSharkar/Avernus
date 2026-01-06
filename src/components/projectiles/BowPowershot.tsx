@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { AdditiveBlending } from '@/utils/three-exports';
 
 import { Vector3, Group } from 'three';
@@ -12,21 +12,30 @@ interface BowPowershotProps {
   subclass: WeaponSubclass;
   isElementalShotsUnlocked?: boolean;
   isPerfectShot?: boolean;
+  chargeProgress?: number;
 }
 
-const BowPowershot: React.FC<BowPowershotProps> = ({ 
-  position, 
-  direction, 
-  onComplete, 
+const BowPowershot: React.FC<BowPowershotProps> = ({
+  position,
+  direction,
+  onComplete,
   subclass,
   isElementalShotsUnlocked = true,
-  isPerfectShot = false
+  isPerfectShot = false,
+  chargeProgress = 0
 }) => {
   const groupRef = useRef<Group>(null);
   const startTimeRef = useRef(Date.now());
   const duration = isPerfectShot ? 200 : 166; // Perfect shots last slightly longer
   const fadeStartTime = useRef<number | null>(null);
-  
+
+  // Play sound effect when component mounts (only for perfect shots, regular sounds are handled by ControlSystem)
+  useEffect(() => {
+    if (window.audioSystem && isPerfectShot) {
+      window.audioSystem.playBowPowerReleaseSound(position);
+    }
+  }, []); // Empty dependency array to run only once on mount
+
   // Determine colors based on subclass and unlock status
   const getColors = () => {
     if (subclass === WeaponSubclass.VENOM) {

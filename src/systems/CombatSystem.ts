@@ -50,7 +50,7 @@ export class CombatSystem extends System {
   private onEnemyDamageCallback?: (enemyId: string, damage: number, sourcePlayerId?: string) => void;
   
   // PVP damage callback for routing player damage to server
-  private onPlayerDamageCallback?: (playerId: string, damage: number, damageType?: string, isCritical?: boolean) => void;
+  private onPlayerDamageCallback?: (playerId: string, damage: number, damageType?: string, isCritical?: boolean, isTowerDamage?: boolean) => void;
 
   // Summoned unit damage callback for routing summoned unit damage to server
   private onSummonedUnitDamageCallback?: (unitId: string, unitOwnerId: string, damage: number, sourcePlayerId: string, damageType?: string) => void;
@@ -101,7 +101,7 @@ export class CombatSystem extends System {
   }
   
   // Set callback for routing player damage to multiplayer server (PVP)
-  public setPlayerDamageCallback(callback: (playerId: string, damage: number, damageType?: string, isCritical?: boolean) => void): void {
+  public setPlayerDamageCallback(callback: (playerId: string, damage: number, damageType?: string, isCritical?: boolean, isTowerDamage?: boolean) => void): void {
     this.onPlayerDamageCallback = callback;
   }
 
@@ -221,6 +221,9 @@ export class CombatSystem extends System {
     const health = target.getComponent(Health);
     if (!health || !health.enabled) return;
 
+    // Check if damage source is a tower projectile (used throughout this function)
+    const isTowerProjectile = source && (source as any).isTowerProjectile === true;
+
     // Import SummonedUnit component dynamically to avoid circular dependency
     const SummonedUnit = require('@/ecs/components/SummonedUnit').SummonedUnit;
 
@@ -298,7 +301,6 @@ export class CombatSystem extends System {
       }
 
       // Skip damage numbers for tower projectiles - players will see their own damage taken display
-      const isTowerProjectile = source && (source as any).isTowerProjectile === true;
       if (!isTowerProjectile) {
         // Still create local damage numbers for immediate visual feedback
         const transform = target.getComponent(Transform);
@@ -415,7 +417,6 @@ export class CombatSystem extends System {
       }
 
       // Skip damage numbers for tower projectiles or summoned units - players will see their own damage taken display
-      const isTowerProjectile = source && (source as any).isTowerProjectile === true;
       const sourceSummonedUnit = source ? source.getComponent(SummonedUnit) : null;
       const shouldShowDamageNumbers = !sourceSummonedUnit && !isTowerProjectile; // Show numbers unless source is a summoned unit or tower projectile
 
@@ -500,7 +501,6 @@ export class CombatSystem extends System {
         this.totalDamageDealt += actualDamage;
 
         // Skip damage numbers for tower projectiles or summoned units - players will see their own damage taken display
-        const isTowerProjectile = source && (source as any).isTowerProjectile === true;
         const sourceSummonedUnit = source ? source.getComponent(SummonedUnit) : null;
         const shouldShowDamageNumbers = !sourceSummonedUnit && !isTowerProjectile; // Show numbers unless source is a summoned unit or tower projectile
 
@@ -766,11 +766,13 @@ export class CombatSystem extends System {
        // console.log(`🎯 SABRE CRIT CALC - Base: ${finalDamage}, Final: ${damageResult.damage}, Critical: ${damageResult.isCritical}, Type: ${damageType}, Preserved: ${damageEvent.isCritical !== undefined}`);
       }
 
+      // Check if this is tower projectile damage to a player - flag will be used for broadcasting sound
+
       // Route player damage through multiplayer server for PVP (let receiver handle shields)
       if (this.shouldLogDamage()) {
         // console.log(`⚔️ Routing ${damageResult.damage} PVP ${damageType || 'damage'} to player ${target.id} through multiplayer server`);
       }
-      this.onPlayerDamageCallback(target.id.toString(), damageResult.damage, damageType, damageResult.isCritical); // Send damage and critical flag, let receiver handle shields
+      this.onPlayerDamageCallback(target.id.toString(), damageResult.damage, damageType, damageResult.isCritical, isTowerProjectile); // Send damage, critical flag, and tower damage flag
 
       // Apply Runeblade Arcane Mastery passive healing (10% of damage dealt)
       if (source && currentWeapon === WeaponType.RUNEBLADE) {
@@ -803,7 +805,6 @@ export class CombatSystem extends System {
 
       // Skip damage numbers for tower projectiles and specific projectile types that use damage taken system
       // Exception: Show damage numbers for crossentropy and entropic bolts when local player is the caster (not the target)
-      const isTowerProjectile = source && (source as any).isTowerProjectile === true;
       const isProjectileWithDamageTaken = damageType === 'crossentropy' || damageType === 'entropic' || damageType === 'entropic_cryoflame' || damageType === 'projectile';
       const isLocalPlayerCaster = this.localPlayerEntityId !== null && this.localPlayerEntityId !== target.id;
       const shouldShowDamageNumbers = !isTowerProjectile && (!isProjectileWithDamageTaken || (isProjectileWithDamageTaken && isLocalPlayerCaster));
@@ -873,7 +874,6 @@ export class CombatSystem extends System {
       this.totalDamageDealt += actualDamage;
 
       // Skip damage numbers for tower projectiles - players will see their own damage taken display
-      const isTowerProjectile = source && (source as any).isTowerProjectile === true;
       if (!isTowerProjectile) {
         // Create damage number at target position
         const transform = target.getComponent(Transform);
@@ -1142,6 +1142,9 @@ export class CombatSystem extends System {
     const health = target.getComponent(Health);
     if (!health || !health.enabled) return false;
 
+    // Check if damage source is a tower projectile (used throughout this function)
+    const isTowerProjectile = source && (source as any).isTowerProjectile === true;
+
     // Import SummonedUnit component dynamically to avoid circular dependency
     const SummonedUnit = require('@/ecs/components/SummonedUnit').SummonedUnit;
 
@@ -1160,7 +1163,6 @@ export class CombatSystem extends System {
         this.totalDamageDealt += actualDamage;
 
         // Skip damage numbers for tower projectiles or summoned units - players will see their own damage taken display
-        const isTowerProjectile = source && (source as any).isTowerProjectile === true;
         const sourceSummonedUnit = source ? source.getComponent(SummonedUnit) : null;
         const shouldShowDamageNumbers = !sourceSummonedUnit && !isTowerProjectile; // Show numbers unless source is a summoned unit or tower projectile
 
@@ -1209,7 +1211,6 @@ export class CombatSystem extends System {
       this.totalDamageDealt += actualDamage;
 
       // Skip damage numbers for tower projectiles - players will see their own damage taken display
-      const isTowerProjectile = source && (source as any).isTowerProjectile === true;
       if (!isTowerProjectile) {
         // Create damage number at target position
         const transform = target.getComponent(Transform);

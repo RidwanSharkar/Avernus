@@ -38,6 +38,8 @@ export class AudioSystem extends System {
     const weaponSounds = [
       { id: 'bow_draw', file: 'bow/draw.mp3' },
       { id: 'bow_release', file: 'bow/release.mp3' },
+      { id: 'bow_power_release', file: 'bow/powerRelease.mp3' },
+      { id: 'bow_tempest_round', file: 'bow/tempestRound.mp3' },
       { id: 'bow_viper_sting_release', file: 'bow/viper_sting_release.mp3' },
       { id: 'bow_barrage_release', file: 'bow/barrage_release.mp3' },
       { id: 'bow_cobra_shot_release', file: 'bow/cobra_shot_release.mp3' },
@@ -73,7 +75,8 @@ export class AudioSystem extends System {
       { id: 'lightning_3', file: 'ui/lightning3.mp3' },
       { id: 'lightning_4', file: 'ui/lightning4.mp3' },
       { id: 'inhibitor_destroyed', file: 'ui/Inhibitor.mp3' },
-      { id: 'minion_death', file: 'ui/deathEffect.mp3' }
+      { id: 'minion_death', file: 'ui/deathEffect.mp3' },
+      { id: 'tower_hit', file: 'ui/Tower.mp3' }
       // Removed background_music from preload - loaded lazily
     ];
 
@@ -206,10 +209,27 @@ export class AudioSystem extends System {
   // Play bow release sound (called when arrow is fired)
   public playBowReleaseSound(position: Vector3, chargeProgress?: number) {
     // Adjust volume/pitch based on charge level
-    const volume = 0.7 + (chargeProgress || 0) * 0.3; // 0.7 to 1.0
+    const volume = 0.3 + (chargeProgress || 0) * 0.4; // 0.3 to 1.1
     const rate = 0.9 + (chargeProgress || 0) * 0.2; // 0.9 to 1.1
 
     return this.playWeaponSound('bow_release', position, {
+      volume,
+      rate
+    });
+  }
+
+  // Play bow power release sound (called when perfect shot is fired)
+  public playBowPowerReleaseSound(position: Vector3) {
+    return this.playWeaponSound('bow_power_release', position, { volume: 1.0 });
+  }
+
+  // Play bow tempest round sound (called when tempest rounds passive is unlocked)
+  public playBowTempestRoundSound(position: Vector3, chargeProgress?: number) {
+    // Adjust volume/pitch based on charge level
+    const volume = 0.3 + (chargeProgress || 0) * 0.4; // 0.3 to 1.1
+    const rate = 0.9 + (chargeProgress || 0) * 0.2; // 0.9 to 1.1
+
+    return this.playWeaponSound('bow_tempest_round', position, {
       volume,
       rate
     });
@@ -314,6 +334,13 @@ export class AudioSystem extends System {
     const volume = (0.7 + (chargeProgress || 0) * 0.3) * 0.25; // 25% of original volume
     const rate = 0.9 + (chargeProgress || 0) * 0.2;
     return this.playWeaponSound('bow_release', position, { volume, rate });
+  }
+
+  // Play enemy bow tempest round sound
+  public playEnemyBowTempestRoundSound(position: Vector3, chargeProgress?: number) {
+    const volume = (0.3 + (chargeProgress || 0) * 0.4) * 0.25; // 25% of tempest round volume
+    const rate = 0.9 + (chargeProgress || 0) * 0.2;
+    return this.playWeaponSound('bow_tempest_round', position, { volume, rate });
   }
 
   // Play enemy viper sting release sound
@@ -531,7 +558,12 @@ export class AudioSystem extends System {
 
   // Play minion death sound (when a summoned unit dies)
   public playMinionDeathSound() {
-    return this.playWeaponSound('minion_death', new Vector3(0, 0, 0), { volume: 0.575 });
+    return this.playWeaponSound('minion_death', new Vector3(0, 0, 0), { volume: 0.325 });
+  }
+
+  // Play tower hit sound (when tower projectile hits a player)
+  public playTowerHitSound(position: Vector3) {
+    return this.playWeaponSound('tower_hit', position, { volume: 0.8 });
   }
 
   // Background music controls (local only, 50% volume)

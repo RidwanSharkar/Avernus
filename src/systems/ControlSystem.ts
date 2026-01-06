@@ -792,8 +792,14 @@ export class ControlSystem extends System {
   }
 
   private handleBowInput(playerTransform: Transform): void {
-    // Check if RAPIDFIRE passive is unlocked
-    const hasRapidfirePassive = this.isPassiveAbilityUnlocked('P', WeaponType.BOW, this.currentWeapon === this.selectedWeapons?.primary ? 'primary' : 'secondary');
+    // Check if RAPIDFIRE passive is unlocked for the bow weapon
+    let bowWeaponSlot: 'primary' | 'secondary' | null = null;
+    if (this.selectedWeapons?.primary === WeaponType.BOW) {
+      bowWeaponSlot = 'primary';
+    } else if (this.selectedWeapons?.secondary === WeaponType.BOW) {
+      bowWeaponSlot = 'secondary';
+    }
+    const hasRapidfirePassive = bowWeaponSlot ? this.isPassiveAbilityUnlocked('P', WeaponType.BOW, bowWeaponSlot) : false;
 
     // Handle Viper Sting ability with 'R' key
     if (this.inputManager.isKeyPressed('r') && !this.isViperStingCharging && !this.isCharging && this.isAbilityUnlocked('R')) {
@@ -885,9 +891,6 @@ export class ControlSystem extends System {
         // Stop the bow draw sound before playing release sound
         this.audioSystem?.stopSound('bow_draw');
 
-        // Play bow release sound when firing
-        this.audioSystem?.playBowReleaseSound(playerTransform.position, finalChargeProgress);
-
         // Release the bow
         this.fireProjectile(playerTransform);
         this.isCharging = false;
@@ -971,16 +974,48 @@ export class ControlSystem extends System {
     const perfectShotMinThreshold = 0.7; // 85% charge
     const perfectShotMaxThreshold = 0.98; // 95% charge
     const isPerfectShot = this.chargeProgress >= perfectShotMinThreshold && this.chargeProgress <= perfectShotMaxThreshold;
-    
+
+    // Check if tempest rounds passive is unlocked for the bow weapon
+    let bowWeaponSlot: 'primary' | 'secondary' | null = null;
+    if (this.selectedWeapons?.primary === WeaponType.BOW) {
+      bowWeaponSlot = 'primary';
+    } else if (this.selectedWeapons?.secondary === WeaponType.BOW) {
+      bowWeaponSlot = 'secondary';
+    }
+    const hasTempestRounds = bowWeaponSlot ? this.isPassiveAbilityUnlocked('P', WeaponType.BOW, bowWeaponSlot) : false;
+    // Debug: Log tempest rounds status
+    if (hasTempestRounds) {
+      console.log('🎯 Tempest Rounds passive detected for bow in slot:', bowWeaponSlot);
+    }
+
     // Check if bow is fully charged for special projectile
     if (this.chargeProgress >= 1.0) {
       this.createChargedArrowProjectile(playerTransform.position.clone(), direction);
+      // Play bow release sound for charged arrows (always full volume since chargeProgress >= 1.0)
+      if (hasTempestRounds) {
+        console.log('🎵 Playing tempest round sound for charged arrow');
+        this.audioSystem?.playBowTempestRoundSound(playerTransform.position, this.chargeProgress);
+      } else {
+        console.log('🎵 Playing regular release sound for charged arrow');
+        this.audioSystem?.playBowReleaseSound(playerTransform.position, this.chargeProgress);
+      }
     } else if (isPerfectShot) {
       this.createPerfectShotProjectile(playerTransform.position.clone(), direction);
+      // Play power release sound for perfect shots
+      console.log('🎵 Playing power release sound for perfect shot');
+      this.audioSystem?.playBowPowerReleaseSound(playerTransform.position);
     } else {
       // Debug: Log the firing angle to verify it's changing with camera rotation
       const angle = Math.atan2(direction.x, direction.z);
       this.createProjectile(playerTransform.position.clone(), direction);
+      // Play bow release sound for regular arrows (volume based on charge progress)
+      if (hasTempestRounds) {
+        console.log('🎵 Playing tempest round sound for regular arrow');
+        this.audioSystem?.playBowTempestRoundSound(playerTransform.position, this.chargeProgress);
+      } else {
+        console.log('🎵 Playing regular release sound for regular arrow');
+        this.audioSystem?.playBowReleaseSound(playerTransform.position, this.chargeProgress);
+      }
     }
   }
 
@@ -1268,8 +1303,8 @@ export class ControlSystem extends System {
       projectileConfig
     );
 
-    // Play bow release sound locally for Tempest Rounds burst
-    this.audioSystem?.playBowReleaseSound(spawnPosition);
+    // Play tempest round sound locally for Tempest Rounds burst (since the ability is unlocked)
+    this.audioSystem?.playBowTempestRoundSound(spawnPosition, 1.0);
 
     // Broadcast projectile creation to other players
     if (this.onProjectileCreatedCallback) {
@@ -1753,7 +1788,8 @@ export class ControlSystem extends System {
         piercing: true,
         subclass: this.currentSubclass,
         level: this.currentLevel,
-        opacity: 1.0
+        opacity: 1.0,
+        chargeProgress: this.chargeProgress
       });
     }
   }
@@ -3817,6 +3853,11 @@ export class ControlSystem extends System {
       weaponType = this.selectedWeapons.secondary;
     } else {
       // For tertiary weapon or unknown, allow abilities (tertiary unlocks later)
+      return true;
+    }
+
+    // Primary weapon gets 'E' ability unlocked at level 1 (free)
+    if (weaponSlot === 'primary' && abilityKey === 'E') {
       return true;
     }
 

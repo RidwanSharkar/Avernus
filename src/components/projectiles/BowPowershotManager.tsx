@@ -15,6 +15,7 @@ export default function BowPowershotManager() {
           subclass={effect.subclass}
           isElementalShotsUnlocked={effect.isElementalShotsUnlocked}
           isPerfectShot={effect.isPerfectShot}
+          chargeProgress={effect.chargeProgress}
           onComplete={() => removeEffect(effect.id)}
         />
       ))}

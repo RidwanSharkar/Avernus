@@ -9,6 +9,7 @@ export interface BowPowershotEffect {
   subclass: WeaponSubclass;
   isElementalShotsUnlocked: boolean;
   isPerfectShot: boolean;
+  chargeProgress: number;
   startTime: number;
 }
 
@@ -23,10 +24,11 @@ export const createGlobalPowershotEffect = (
   direction: Vector3,
   subclass: WeaponSubclass,
   isPerfectShot: boolean = false,
-  isElementalShotsUnlocked: boolean = true
+  isElementalShotsUnlocked: boolean = true,
+  chargeProgress: number = 0
 ): number => {
   const effectId = globalNextEffectId++;
-  
+
   const newEffect: BowPowershotEffect = {
     id: effectId,
     position: position.clone(),
@@ -34,6 +36,7 @@ export const createGlobalPowershotEffect = (
     subclass,
     isElementalShotsUnlocked,
     isPerfectShot,
+    chargeProgress,
     startTime: Date.now()
   };
 
@@ -65,9 +68,10 @@ export const useBowPowershot = () => {
     direction: Vector3,
     subclass: WeaponSubclass,
     isPerfectShot: boolean = false,
-    isElementalShotsUnlocked: boolean = true
+    isElementalShotsUnlocked: boolean = true,
+    chargeProgress: number = 0
   ) => {
-    return createGlobalPowershotEffect(position, direction, subclass, isPerfectShot, isElementalShotsUnlocked);
+    return createGlobalPowershotEffect(position, direction, subclass, isPerfectShot, isElementalShotsUnlocked, chargeProgress);
   }, []);
 
   const removeEffect = useCallback((effectId: number) => {

@@ -357,7 +357,7 @@ function handlePlayerEvents(socket, gameRooms) {
 
   // Handle PVP damage between players
   socket.on('player-damage', (data) => {
-    const { roomId, targetPlayerId, damage, damageType, isCritical } = data;
+    const { roomId, targetPlayerId, damage, damageType, isCritical, isTowerDamage } = data;
     
     if (!gameRooms.has(roomId)) return;
     
@@ -411,6 +411,14 @@ function handlePlayerEvents(socket, gameRooms) {
       wasKilled: wasActuallyKilled,
       timestamp: Date.now()
     });
+
+    // Broadcast tower hit sound to all players if this damage came from a tower
+    if (isTowerDamage) {
+      room.io.to(roomId).emit('tower-hit-player', {
+        targetPlayerId: targetPlayerId,
+        timestamp: Date.now()
+      });
+    }
     
     // If player was killed, broadcast kill event for scoreboard tracking
     // NOTE: Experience is now awarded by a separate death confirmation system

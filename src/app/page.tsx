@@ -817,49 +817,55 @@ function HomeContent() {
                           <div className="mb-3">
                             <div className="text-xs text-gray-400 text-center mb-2 font-medium">ABILITIES</div>
                             <div className="flex justify-center gap-2.5">
-                              {weaponAbilities[weapon.type]?.map((ability) => (
-                                <div
-                                  key={ability.key}
-                                  className={`
-                                    relative group/ability transition-all duration-200
-                                    ${isSelected || canSelect ? 'cursor-pointer' : 'cursor-not-allowed'}
-                                  `}
-                                  onMouseEnter={(e) => handleAbilityHover(e, ability)}
-                                  onMouseLeave={handleAbilityLeave}
-                                >
-                                  {/* Ability button with enhanced styling */}
-                                  <div className={`
-                                    w-8 h-8 rounded border-2 flex items-center justify-center transition-all duration-200 relative
-                                    ${ability.key === 'Q' && isSelected
-                                      ? `${colorScheme.background} border-2 ${colorScheme.border} shadow-lg ${colorScheme.shadow}`
-                                      : isSelected || canSelect
-                                        ? 'bg-gray-700/80 border-gray-600 hover:bg-gray-600/80 hover:border-gray-500 hover:scale-110'
-                                        : 'bg-gray-800/60 border-gray-700/50'
-                                    }
-                                  `}>
-                                    {/* Special glow effect for Q abilities when weapon is selected */}
-                                    {ability.key === 'Q' && isSelected && (
-                                      <div className={`absolute inset-0 rounded border ${colorScheme.border} animate-pulse opacity-60`}></div>
-                                    )}
-                                    <span className="text-xs font-medium relative z-10">
-                                      {getAbilityIcon(weapon.type, ability.key)}
-                                    </span>
-                                  </div>
+                              {weaponAbilities[weapon.type]?.map((ability) => {
+                                // Determine if this ability should be highlighted as unlocked
+                                const isWeaponPrimary = weaponPosition === 'primary';
+                                const isAbilityAlwaysUnlocked = (ability.key === 'Q') || (ability.key === 'E' && isWeaponPrimary);
 
-                                  {/* Hotkey badge */}
-                                  <div className={`
-                                    absolute -top-1 -right-1 w-3.5 h-3.5 rounded flex items-center justify-center text-[7px] font-bold transition-all duration-200
-                                    ${isSelected
-                                      ? `${colorScheme.badge} text-white shadow-md`
-                                      : canSelect
-                                        ? 'bg-gray-600 text-gray-200 group-hover/ability:bg-gray-500'
-                                        : 'bg-gray-700 text-gray-500'
-                                    }
-                                  `}>
-                                    {ability.key}
+                                return (
+                                  <div
+                                    key={ability.key}
+                                    className={`
+                                      relative group/ability transition-all duration-200
+                                      ${isSelected || canSelect ? 'cursor-pointer' : 'cursor-not-allowed'}
+                                    `}
+                                    onMouseEnter={(e) => handleAbilityHover(e, ability)}
+                                    onMouseLeave={handleAbilityLeave}
+                                  >
+                                    {/* Ability button with enhanced styling */}
+                                    <div className={`
+                                      w-8 h-8 rounded border-2 flex items-center justify-center transition-all duration-200 relative
+                                      ${isAbilityAlwaysUnlocked && isSelected
+                                        ? `${colorScheme.background} border-2 ${colorScheme.border} shadow-lg ${colorScheme.shadow}`
+                                        : isSelected || canSelect
+                                          ? 'bg-gray-700/80 border-gray-600 hover:bg-gray-600/80 hover:border-gray-500 hover:scale-110'
+                                          : 'bg-gray-800/60 border-gray-700/50'
+                                      }
+                                    `}>
+                                      {/* Special glow effect for always unlocked abilities when weapon is selected */}
+                                      {isAbilityAlwaysUnlocked && isSelected && (
+                                        <div className={`absolute inset-0 rounded border ${colorScheme.border} animate-pulse opacity-60`}></div>
+                                      )}
+                                      <span className="text-xs font-medium relative z-10">
+                                        {getAbilityIcon(weapon.type, ability.key)}
+                                      </span>
+                                    </div>
+
+                                    {/* Hotkey badge */}
+                                    <div className={`
+                                      absolute -top-1 -right-1 w-3.5 h-3.5 rounded flex items-center justify-center text-[7px] font-bold transition-all duration-200
+                                      ${isSelected
+                                        ? `${colorScheme.badge} text-white shadow-md`
+                                        : canSelect
+                                          ? 'bg-gray-600 text-gray-200 group-hover/ability:bg-gray-500'
+                                          : 'bg-gray-700 text-gray-500'
+                                      }
+                                    `}>
+                                      {ability.key}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
 

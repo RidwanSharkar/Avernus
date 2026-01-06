@@ -203,7 +203,7 @@ interface MultiplayerContextType {
   broadcastPlayerAttack: (attackType: string, position: { x: number; y: number; z: number }, direction: { x: number; y: number; z: number }, animationData?: { comboStep?: 1 | 2 | 3; chargeProgress?: number; isSpinning?: boolean; isPerfectShot?: boolean; damage?: number; targetId?: number; hitPosition?: { x: number; y: number; z: number }; isSwordCharging?: boolean; sourceWeapon?: WeaponType; projectileConfig?: any }) => void;
   broadcastPlayerAbility: (abilityType: string, position: { x: number; y: number; z: number }, direction?: { x: number; y: number; z: number }, target?: string, extraData?: any) => void;
   broadcastPlayerEffect: (effect: any) => void;
-  broadcastPlayerDamage: (targetPlayerId: string, damage: number, damageType?: string, isCritical?: boolean) => void;
+  broadcastPlayerDamage: (targetPlayerId: string, damage: number, damageType?: string, isCritical?: boolean, isTowerDamage?: boolean) => void;
   broadcastPlayerHealing: (healingAmount: number, healingType: string, position: { x: number; y: number; z: number }) => void;
   broadcastPlayerAnimationState: (animationState: PlayerAnimationState) => void;
   broadcastPlayerDebuff: (targetPlayerId: string, debuffType: 'frozen' | 'slowed' | 'stunned' | 'corrupted' | 'burning', duration: number, effectData?: any) => void;
@@ -793,6 +793,12 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
       (window as any).pendingSummonedUnitDeath.push(data);
     });
 
+    addEventHandler('tower-hit-player', (data) => {
+      // Store the tower hit event for the game scene to process
+      (window as any).pendingTowerHit = (window as any).pendingTowerHit || [];
+      (window as any).pendingTowerHit.push(data);
+    });
+
     // Server-authoritative summoned unit updates
     addEventHandler('summoned-units-updated', (data) => {
       // console.log('🤖 Received summoned units update:', data.units.length, 'units');
@@ -1078,7 +1084,7 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
     }
   }, [socket, currentRoomId]);
 
-  const broadcastPlayerDamage = useCallback((targetPlayerId: string, damage: number, damageType?: string, isCritical?: boolean) => {
+  const broadcastPlayerDamage = useCallback((targetPlayerId: string, damage: number, damageType?: string, isCritical?: boolean, isTowerDamage?: boolean) => {
     if (socket && currentRoomId) {
 
       socket.emit('player-damage', {
@@ -1086,7 +1092,8 @@ export function MultiplayerProvider({ children }: MultiplayerProviderProps) {
         targetPlayerId,
         damage,
         damageType,
-        isCritical
+        isCritical,
+        isTowerDamage
       });
     }
   }, [socket, currentRoomId]);
