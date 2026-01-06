@@ -1,41 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { AdditiveBlending } from '@/utils/three-exports';
-
-// Cleanup utility for Three.js resources
-const disposeThreeJSResources = (object: any) => {
-  if (!object) return;
-
-  // Dispose geometry
-  if (object.geometry) {
-    object.geometry.dispose();
-  }
-
-  // Dispose material
-  if (object.material) {
-    if (Array.isArray(object.material)) {
-      object.material.forEach((material: any) => {
-        if (material.map) material.map.dispose();
-        if (material.normalMap) material.normalMap.dispose();
-        if (material.roughnessMap) material.roughnessMap.dispose();
-        if (material.metalnessMap) material.metalnessMap.dispose();
-        if (material.emissiveMap) material.emissiveMap.dispose();
-        material.dispose();
-      });
-    } else {
-      if (object.material.map) object.material.map.dispose();
-      if (object.material.normalMap) object.material.normalMap.dispose();
-      if (object.material.roughnessMap) object.material.roughnessMap.dispose();
-      if (object.material.metalnessMap) object.material.metalnessMap.dispose();
-      if (object.material.emissiveMap) object.material.emissiveMap.dispose();
-      object.material.dispose();
-    }
-  }
-
-  // Recursively dispose children
-  if (object.children) {
-    object.children.forEach((child: any) => disposeThreeJSResources(child));
-  }
-};
+import { sphereHighDetail, disposeThreeJSResources } from '@/utils/sharedGeometries';
 
 import { Mesh, Vector3, Clock, Color } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -204,8 +169,8 @@ export default function CrossentropyBolt({ id, position, direction, onImpact, ch
 
   return (
     <group name="crossentropy-bolt-group">
-      <mesh ref={fireball1Ref} position={currentPosition.current}>
-        <sphereGeometry args={[size, 32, 32]} />
+      <mesh ref={fireball1Ref} position={currentPosition.current} scale={[size, size, size]}>
+        <primitive object={sphereHighDetail} />
         <meshStandardMaterial
           color="#FF4500"
           emissive="#FF6600"
@@ -218,8 +183,8 @@ export default function CrossentropyBolt({ id, position, direction, onImpact, ch
         />
         <pointLight color={color} intensity={5 * opacity} distance={12} />
       </mesh>
-      <mesh ref={fireball2Ref} position={currentPosition.current}>
-        <sphereGeometry args={[size, 32, 32]} />
+      <mesh ref={fireball2Ref} position={currentPosition.current} scale={[size, size, size]}>
+        <primitive object={sphereHighDetail} />
         <meshStandardMaterial
           color="#FF4500"
           emissive="#FF6600"
@@ -232,8 +197,8 @@ export default function CrossentropyBolt({ id, position, direction, onImpact, ch
         />
         <pointLight color={color} intensity={5 * opacity} distance={12} />
       </mesh>
-      <mesh ref={fireball3Ref} position={currentPosition.current}>
-        <sphereGeometry args={[size, 32, 32]} />
+      <mesh ref={fireball3Ref} position={currentPosition.current} scale={[size, size, size]}>
+        <primitive object={sphereHighDetail} />
         <meshStandardMaterial
           color="#FF4500"
           emissive="#FF6600"

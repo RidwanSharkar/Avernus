@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Group, ConeGeometry, MeshBasicMaterial, RingGeometry, AdditiveBlending, DoubleSide } from 'three';
+import { Vector3, Group, MeshBasicMaterial, AdditiveBlending, DoubleSide } from 'three';
+import { getCachedGeometry, sphereSparkTiny } from '@/utils/sharedGeometries';
 import { Enemy } from '@/contexts/MultiplayerContext';
 
 interface CloudkillArrowProps {
@@ -55,7 +56,7 @@ const CloudkillTrail = ({
         
         return (
           <mesh key={`trail-${index}`} position={[position.x, position.y, position.z]}>
-            <sphereGeometry args={[size, 8, 8]} />
+            <primitive object={getCachedGeometry('sphere', size, 8, 8)} />
             <meshBasicMaterial
               color="#00ff00"
               transparent
@@ -75,7 +76,7 @@ const CloudkillTrail = ({
         
         return (
           <mesh key={`core-${index}`} position={[position.x, position.y, position.z]}>
-            <sphereGeometry args={[size, 6, 6]} />
+            <primitive object={getCachedGeometry('sphere', size, 6, 6)} />
             <meshBasicMaterial
               color="#88ff88"
               transparent
@@ -106,26 +107,22 @@ export default function CloudkillArrow({
 
   // Create geometries and materials with useMemo for proper disposal
   const geometries = useMemo(() => ({
-    arrow: new ConeGeometry(0.1, 0.8, 8),
-    warningRing: new RingGeometry((DAMAGE_RADIUS - 0.2), DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
-    pulsingRing: new RingGeometry((DAMAGE_RADIUS - 0.4), (DAMAGE_RADIUS - 0.2), WARNING_RING_SEGMENTS),
-    outerGlow: new RingGeometry((DAMAGE_RADIUS - 0.1), DAMAGE_RADIUS, WARNING_RING_SEGMENTS)
+    arrow: getCachedGeometry('cone', 0.1, 0.8, 8),
+    warningRing: getCachedGeometry('ring', (DAMAGE_RADIUS - 0.2), DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
+    pulsingRing: getCachedGeometry('ring', (DAMAGE_RADIUS - 0.4), (DAMAGE_RADIUS - 0.2), WARNING_RING_SEGMENTS),
+    outerGlow: getCachedGeometry('ring', (DAMAGE_RADIUS - 0.1), DAMAGE_RADIUS, WARNING_RING_SEGMENTS)
   }), []);
 
   const materials = useMemo(() => ({
     arrow: new MeshBasicMaterial({ color: "#00ff00" })
   }), []);
 
-  // Cleanup geometries and materials on unmount to prevent memory leaks
+  // Cleanup materials on unmount (geometries are cached and shared)
   useEffect(() => {
     return () => {
-      geometries.arrow.dispose();
-      geometries.warningRing.dispose();
-      geometries.pulsingRing.dispose();
-      geometries.outerGlow.dispose();
       materials.arrow.dispose();
     };
-  }, [geometries, materials]);
+  }, [materials]);
 
   // State for tracking current target position
   const [currentTargetPosition, setCurrentTargetPosition] = useState(initialTargetPosition);
@@ -362,7 +359,7 @@ export default function CloudkillArrow({
                 Math.cos(Date.now() * 0.0015 + i) * (DAMAGE_RADIUS - 0.3)
               ]}
             >
-              <sphereGeometry args={[0.03, 6, 6]} />
+              <primitive object={sphereSparkTiny} />
               <meshBasicMaterial
                 color="#00ff00"
                 transparent

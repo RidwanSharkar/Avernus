@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Vector3, Group, AdditiveBlending } from '@/utils/three-exports';
 import { useFrame } from '@react-three/fiber';
+import { getCachedGeometry, sphereSparkTiny, sphereSparkSmall } from '@/utils/sharedGeometries';
 
 interface ViperStingBeamProps {
   position: Vector3;
@@ -62,7 +63,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
       >
         {/* Core beam - ultra thin with venom glow */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-          <cylinderGeometry args={[0.03, 0.03, 20, 8]} />
+          <primitive object={getCachedGeometry('cylinder', 0.03, 0.03, 20, 8)} />
           <meshStandardMaterial
             color={colors.core}
             emissive={colors.emissive}
@@ -74,7 +75,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
 
         {/* Inner glow - venomous aura */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-          <cylinderGeometry args={[0.07, 0.07, 20, 8]} />
+          <primitive object={getCachedGeometry('cylinder', 0.07, 0.07, 20, 8)} />
           <meshStandardMaterial
             color={colors.emissive}
             emissive={colors.emissive}
@@ -86,7 +87,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
 
         {/* Outer glow - toxic mist */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-          <cylinderGeometry args={[0.09, 0.09, 20, 8]} />
+          <primitive object={getCachedGeometry('cylinder', 0.09, 0.09, 20, 8)} />
           <meshStandardMaterial
             color={colors.outer}
             emissive={colors.core}
@@ -113,7 +114,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
                 rotation={[0, Date.now() * 0.0025 + i, 0]}
                 scale={[scale, scale, scale]}
               >
-                <torusGeometry args={[0.35, 0.07, 6, 12]} />
+                <primitive object={getCachedGeometry('torus', 0.35, 0.07, 6, 12)} />
                 <meshStandardMaterial
                   color={colors.outer}
                   emissive={colors.emissive}
@@ -129,7 +130,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
                 rotation={[Math.PI/2, Date.now() * -0.0035 + i, 0]}
                 scale={[scale * 0.75, scale * 0.75, scale * 0.75]}
               >
-                <torusGeometry args={[0.28, 0.05, 6, 12]} />
+                <primitive object={getCachedGeometry('torus', 0.28, 0.05, 6, 12)} />
                 <meshStandardMaterial
                   color={colors.core}
                   emissive={colors.emissive}
@@ -155,7 +156,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
               8 + Math.sin(Date.now() * 0.004 + i) * 3
             ]}>
               <mesh>
-                <sphereGeometry args={[0.025, 4, 4]} />
+                <primitive object={sphereSparkTiny} />
                 <meshStandardMaterial
                   color={colors.outer}
                   emissive={colors.outer}
@@ -192,7 +193,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
                   10 + Math.sin(Date.now() * 0.006 + i) * 2.5
                 ]}>
                   <mesh>
-                    <sphereGeometry args={[0.03, 4, 4]} />
+                    <primitive object={sphereSparkSmall} />
                     <meshStandardMaterial
                       color="#E879F9"
                       emissive="#E879F9"
@@ -208,7 +209,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
             
             {/* Soul steal aura for returning shots */}
             <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-              <cylinderGeometry args={[0.15, 0.15, 20, 8]} />
+              <primitive object={getCachedGeometry('cylinder', 0.15, 0.15, 20, 8)} />
               <meshStandardMaterial
                 color="#E879F9"
                 emissive="#E879F9"

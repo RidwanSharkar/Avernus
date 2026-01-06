@@ -20,7 +20,7 @@ interface BarrageProps {
   projectiles: BarrageProjectile[];
 }
 
-// Shared geometries to prevent memory leaks
+// Shared geometries to prevent memory leaks - these persist across component instances
 const sharedGeometries = {
   arrow: new CylinderGeometry(0.025, 0.1, 1.8, 6),
   ring0: new TorusGeometry(0.1, 0.04, 6, 10),
@@ -28,14 +28,6 @@ const sharedGeometries = {
 };
 
 export default function Barrage({ projectiles }: BarrageProps) {
-  // Cleanup geometries on unmount
-  useEffect(() => {
-    return () => {
-      sharedGeometries.arrow.dispose();
-      sharedGeometries.ring0.dispose();
-      sharedGeometries.ring1.dispose();
-    };
-  }, []);
   return (
     <>
       {projectiles.map(projectile => {

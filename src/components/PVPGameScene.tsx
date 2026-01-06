@@ -4462,7 +4462,6 @@ const hasMana = useCallback((amount: number) => {
 
       // Set up Tempest Rounds callback
       controlSystem.setTempestRoundsCallback((position, direction) => {
-        console.log('🌩️ Tempest Rounds callback triggered!');
         // Trigger a brief flash for each projectile in the burst
         const flashDuration = 80; // 80ms per flash
 
@@ -5058,7 +5057,6 @@ const hasMana = useCallback((amount: number) => {
       // Process pending summoned unit death events
       const pendingDeath = (window as any).pendingSummonedUnitDeath;
       if (pendingDeath && pendingDeath.length > 0) {
-        console.log('💀 Processing', pendingDeath.length, 'summoned unit death events:', pendingDeath);
 
         // Play minion death sound effect and create death effects for all players
         const newDeathEffects: Array<{
@@ -5069,7 +5067,7 @@ const hasMana = useCallback((amount: number) => {
         }> = [];
 
         for (const deathEvent of pendingDeath) {
-          console.log('💀 Creating death effect for unit:', deathEvent.unitId, 'at position:', deathEvent.position);
+         
 
           // Play sound
           if (window.audioSystem) {
@@ -5098,7 +5096,6 @@ const hasMana = useCallback((amount: number) => {
 
         // Add new death effects to state
         if (newDeathEffects.length > 0) {
-          console.log('💀 Adding', newDeathEffects.length, 'death effects to state');
           setSummonedUnitDeathEffects(prev => [...prev, ...newDeathEffects]);
         }
 
@@ -5143,6 +5140,38 @@ const hasMana = useCallback((amount: number) => {
     health: player.health
   }));
 
+  // Global cleanup effect to prevent memory leaks
+  useEffect(() => {
+    const globalCleanupInterval = setInterval(() => {
+      try {
+        if (gl?.info) {
+          const webglMemory = {
+            geometries: gl.info.memory?.geometries || 0,
+            textures: gl.info.memory?.textures || 0,
+            programs: gl.info.programs?.length || 0,
+          };
+
+          // If geometries exceed a reasonable threshold, force garbage collection hint
+          if (webglMemory.geometries > 1000) {
+            console.warn(`🚨 High geometry count detected: ${webglMemory.geometries} - Consider optimizing geometry usage`);
+
+            // Force a garbage collection hint (if available)
+            if (window.gc) {
+              window.gc();
+              console.log('🗑️ Forced garbage collection');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Global cleanup error:', error);
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => {
+      console.log('🛑 Global cleanup stopped');
+      clearInterval(globalCleanupInterval);
+    };
+  }, [gl]);
 
   return (
     <>

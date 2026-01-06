@@ -1,7 +1,8 @@
-import React, { useRef, memo, useEffect } from 'react';
+import React, { useRef, memo, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, CatmullRomCurve3, CubicBezierCurve3, Shape, DoubleSide } from '@/utils/three-exports';
 import { WeaponSubclass } from '@/components/dragon/weapons';
+import { getCachedGeometry } from '@/utils/sharedGeometries';
 
 // Cleanup utility for Three.js resources
 const disposeThreeJSResources = (object: any) => {
@@ -92,8 +93,20 @@ const EtherBowComponent = memo(function EtherealBow({
   const perfectShotMaxThreshold = 0.98; // 95% charge
   const isPerfectShotWindow = chargeProgress >= perfectShotMinThreshold && chargeProgress <= perfectShotMaxThreshold;
   
+  // Create string curve ref
+  const stringCurveRef = useRef<CubicBezierCurve3 | null>(null);
+
   // Charge Release Logic - only trigger for actual bow charging, not ability animations
   useFrame(() => {
+    // Update string curve based on current draw amount
+    const drawAmount = isCobraShotCharging ? cobraShotChargeProgress : isBarrageCharging ? barrageChargeProgress : isViperStingCharging ? viperStingChargeProgress : isCloudkillCharging ? cloudkillChargeProgress : chargeProgress;
+    const pullback = drawAmount * maxDrawDistance;
+    stringCurveRef.current = new CubicBezierCurve3(
+      new Vector3(-0.8, 0, 0),
+      new Vector3(0, 0, -pullback),
+      new Vector3(0, 0, -pullback),
+      new Vector3(0.8, 0, 0)
+    );
     // Only track charging state for actual bow charging, not ability animations
     const actualIsCharging = isCharging && !isAbilityBowAnimation && !isViperStingCharging && !isBarrageCharging && !isCobraShotCharging && !isCloudkillCharging && !isTempestRoundsActive;
 
@@ -119,8 +132,8 @@ const EtherBowComponent = memo(function EtherealBow({
     };
   }, []);
 
-  // Rest of the curve creation functions remain the same
-  const createBowCurve = () => {
+  // Memoized geometry creation to prevent recreation on every render
+  const bowCurve = useMemo(() => {
     return new CatmullRomCurve3([
       new Vector3(-0.875, 0, 0),
       new Vector3(-0.85, 0.2, 0),
@@ -131,24 +144,12 @@ const EtherBowComponent = memo(function EtherealBow({
       new Vector3(0.85, 0.2, 0),
       new Vector3(0.875, 0, 0)
     ]);
-  };
+  }, []);
 
-  const createStringCurve = (drawAmount: number) => {
-    const pullback = drawAmount * maxDrawDistance;
-    const curve = new CubicBezierCurve3(
-      new Vector3(-0.8, 0, 0),
-      new Vector3(0, 0, -pullback),
-      new Vector3(0, 0, -pullback),
-      new Vector3(0.8, 0, 0)
-    );
-    return curve;
-  };
-
-  // Create custom blade shape (similar to scythe blades)
-  const createBladeShape = () => {
+  const bladeShape = useMemo(() => {
     const shape = new Shape();
     shape.moveTo(0, 0);
-    
+
     // Create thick back edge first
     shape.lineTo(0.4, -0.130);
     shape.bezierCurveTo(
@@ -156,7 +157,7 @@ const EtherBowComponent = memo(function EtherealBow({
       1.33, 0.5,    // control point 2
       1.6, 0.515    // end point (tip)
     );
-    
+
     // Create sharp edge
     shape.lineTo(1.125, 0.75);
     shape.bezierCurveTo(
@@ -166,13 +167,13 @@ const EtherBowComponent = memo(function EtherealBow({
     );
     shape.lineTo(0, 0);
     return shape;
-  };
+  }, []);
 
-  const bladeExtrudeSettings = {
+  const bladeExtrudeSettings = useMemo(() => ({
     steps: 1,
     depth: 0.03,
     bevelEnabled: false
-  };
+  }), []);
 
   return (
     <group 
@@ -191,7 +192,7 @@ const EtherBowComponent = memo(function EtherealBow({
       >
         {/* Bow body with dynamic color for instant powershot, charging, and perfect shot timing */}
         <mesh rotation={[Math.PI/2, 0, 0]}>
-          <tubeGeometry args={[createBowCurve(), 64, 0.035, 8, false]} />
+          <tubeGeometry args={[bowCurve, 64, 0.035, 8, false]} />
           <meshStandardMaterial
             color={
               isPerfectShotWindow ? "#ffffff" : // Flash white during perfect shot window
@@ -232,7 +233,7 @@ const EtherBowComponent = memo(function EtherealBow({
 
         {/* Bow string */}
         <mesh>
-          <tubeGeometry args={[createStringCurve(isCobraShotCharging ? cobraShotChargeProgress : isBarrageCharging ? barrageChargeProgress : isViperStingCharging ? viperStingChargeProgress : isCloudkillCharging ? cloudkillChargeProgress : chargeProgress), 16, 0.02, 8, false]} />
+          <tubeGeometry args={[stringCurveRef.current || new CubicBezierCurve3(new Vector3(-0.8, 0, 0), new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(0.8, 0, 0)), 16, 0.02, 8, false]} />
           <meshStandardMaterial 
             color="#ffffff"
             emissive="#ffffff"
@@ -246,7 +247,7 @@ const EtherBowComponent = memo(function EtherealBow({
         <group>
           {/* Left wing */}
           <mesh position={[-0.4, 0, 0.475]} rotation={[Math.PI/2, 0, Math.PI/6]}>
-            <boxGeometry args={[0.6, 0.02, 0.05]} />
+            <primitive object={getCachedGeometry('box', 0.6, 0.02, 0.05)} />
             <meshStandardMaterial
               color={
                 isPerfectShotWindow ? "#ffffff" : // Flash white during perfect shot window
@@ -284,7 +285,7 @@ const EtherBowComponent = memo(function EtherealBow({
 
           {/* Right wing */}
           <mesh position={[0.4, 0, 0.475]} rotation={[Math.PI/2, 0, -Math.PI/6]}>
-            <boxGeometry args={[0.6, 0.02, 0.05]} />
+            <primitive object={getCachedGeometry('box', 0.6, 0.02, 0.05)} />
             <meshStandardMaterial
               color={
                 isPerfectShotWindow ? "#ffffff" : // Flash white during perfect shot window
@@ -325,7 +326,7 @@ const EtherBowComponent = memo(function EtherealBow({
         <group>
           {/* Left blade */}
           <mesh position={[-1, 0, -0.2]} rotation={[Math.PI/2, 0, Math.PI/2]} scale={[0.4, -0.4, 0.4]}>
-            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+            <extrudeGeometry args={[bladeShape, bladeExtrudeSettings]} />
             <meshStandardMaterial
               color={
                 isPerfectShotWindow ? "#ffffff" : // Flash white during perfect shot window
@@ -366,7 +367,7 @@ const EtherBowComponent = memo(function EtherealBow({
 
           {/* Right blade */}
           <mesh position={[1.0, 0, -0.2]} rotation={[Math.PI/2, 0, Math.PI/2]} scale={[0.4, 0.4, 0.4]}>
-            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+            <extrudeGeometry args={[bladeShape, bladeExtrudeSettings]} />
             <meshStandardMaterial
               color={
                 isPerfectShotWindow ? "#ffffff" : // Flash white during perfect shot window
@@ -414,7 +415,7 @@ const EtherBowComponent = memo(function EtherealBow({
           >
             {/* Arrow shaft - increased length from 0.5 to 0.7 */}
             <mesh>
-              <cylinderGeometry args={[0.015, 0.02, 0.9, 8]} />
+              <primitive object={getCachedGeometry('cylinder', 0.015, 0.02, 0.9, 8)} />
               <meshStandardMaterial
                 color={isCobraShotCharging ? "#00ff40" : isBarrageCharging ? "#ff8800" : isViperStingCharging ? "#A855C7" : isCloudkillCharging ? "#00ff00" : "#00ffff"}
                 emissive={isCobraShotCharging ? "#00ff40" : isBarrageCharging ? "#ff8800" : isViperStingCharging ? "#A855C7" : isCloudkillCharging ? "#00ff00" : "#00ffff"}
@@ -425,7 +426,7 @@ const EtherBowComponent = memo(function EtherealBow({
             </mesh>
             {/* Arrow head - adjusted position for longer shaft */}
             <mesh position={[0, 0.35, 0]}>
-              <coneGeometry args={[0.03, 0.175, 8]} />
+              <primitive object={getCachedGeometry('cone', 0.03, 0.175, 8)} />
               <meshStandardMaterial
                 color={isCobraShotCharging ? "#00ff40" : isBarrageCharging ? "#ff8800" : isViperStingCharging ? "#A855C7" : isCloudkillCharging ? "#00ff00" : "#00ffff"}
                 emissive={isCobraShotCharging ? "#00ff40" : isBarrageCharging ? "#ff8800" : isViperStingCharging ? "#A855C7" : isCloudkillCharging ? "#00ff00" : "#00ffff"}

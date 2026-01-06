@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Vector3, Group, AdditiveBlending, DoubleSide } from '@/utils/three-exports';
 import { useFrame } from '@react-three/fiber';
+import { getCachedGeometry, coneTornado, sphereSparkSmall, sphereSparkMedium } from '@/utils/sharedGeometries';
 
 interface WindShearTornadoEffectProps {
   getPlayerPosition: () => Vector3;
@@ -55,7 +56,7 @@ export default function WindShearTornadoEffect({
     <group ref={groupRef} position={[initialPosition.x, initialPosition.y, initialPosition.z]}>
       {/* Main tornado cone - grey with some transparency - ROTATED RIGHT SIDE UP */}
       <mesh rotation={[Math.PI, 0, 0]}>
-        <coneGeometry args={[1.25, 2.5, 8, 1, true]} />
+        <primitive object={coneTornado} />
         <meshStandardMaterial
           color="#666666" // Grey color
           emissive="#444444"
@@ -78,7 +79,7 @@ export default function WindShearTornadoEffect({
             position={[0, heightOffset, 0]}
             rotation={[Math.PI / 2, 0, (Date.now() * 0.005) + (ringIndex * Math.PI / 3)]}
           >
-            <torusGeometry args={[0.625 + (ringIndex * 0.25), 0.07, 12, 24]} />
+            <primitive object={getCachedGeometry('torus', 0.625 + (ringIndex * 0.25), 0.07, 12, 24)} />
             <meshStandardMaterial
               color="#888888"
               emissive="#666666"
@@ -107,7 +108,7 @@ export default function WindShearTornadoEffect({
               Math.cos(fastAngle) * radius
             ]}
           >
-            <sphereGeometry args={[0.05, 6, 6]} />
+            <primitive object={sphereSparkSmall} />
             <meshStandardMaterial
               color="#AAAAAA"
               emissive="#888888"
@@ -136,7 +137,7 @@ export default function WindShearTornadoEffect({
               Math.cos(angle) * radius
             ]}
           >
-            <sphereGeometry args={[0.06, 6, 6]} />
+            <primitive object={sphereSparkMedium} />
             <meshStandardMaterial
               color="#AAAAAA"
               emissive="#888888"

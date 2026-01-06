@@ -3,6 +3,7 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, AdditiveBlending } from '@/utils/three-exports';
+import { cylinderBeamThick, coneLarge, sphereSmall, sphereMedium, sphereLarge, getCachedGeometry } from '@/utils/sharedGeometries';
 
 export interface CobraShotProjectile {
   id: number;
@@ -44,7 +45,7 @@ const CobraShotProjectileVisual: React.FC<{ projectile: CobraShotProjectile }> =
     <group ref={groupRef}>
       {/* Main projectile body - sleek cobra arrow */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.04, 0.15, 2.5, 8]} />
+        <primitive object={cylinderBeamThick} />
         <meshStandardMaterial
           color="#00ff40" // Bright green cobra color
           emissive="#00aa20"
@@ -56,7 +57,7 @@ const CobraShotProjectileVisual: React.FC<{ projectile: CobraShotProjectile }> =
 
       {/* Arrowhead */}
       <mesh position={[0, 0, 1.25]} rotation={[Math.PI / 2, 0, 0]}>
-        <coneGeometry args={[0.365, 0.8, 6]} />
+        <primitive object={coneLarge} />
         <meshStandardMaterial
           color="#00aa20"
           emissive="#00ff40"
@@ -72,7 +73,7 @@ const CobraShotProjectileVisual: React.FC<{ projectile: CobraShotProjectile }> =
           <mesh
             rotation={[0, 0, Date.now() * 0.01 + i * Math.PI / 3]}
           >
-            <torusGeometry args={[0.15 + i * 0.05, 0.02, 6, 12]} />
+            <primitive object={getCachedGeometry('torus', 0.15 + i * 0.05, 0.02, 6, 12)} />
             <meshStandardMaterial
               color="#00aa20" // Medium green
               emissive="#00aa20"
@@ -88,7 +89,7 @@ const CobraShotProjectileVisual: React.FC<{ projectile: CobraShotProjectile }> =
 
       {/* Cobra energy core */}
       <mesh>
-        <sphereGeometry args={[0.08, 8, 8]} />
+        <primitive object={sphereSmall} />
         <meshStandardMaterial
           color="#00ff60"
           emissive="#00aa20"
@@ -115,7 +116,7 @@ const CobraShotProjectileVisual: React.FC<{ projectile: CobraShotProjectile }> =
           >
             {/* Cobra energy trail */}
             <mesh scale={[trailScale, trailScale, trailScale]}>
-              <sphereGeometry args={[0.15, 8, 8]} />
+              <primitive object={sphereMedium} />
               <meshStandardMaterial
                 color="#00aa20" // Medium green
                 emissive="#00aa20"
@@ -129,7 +130,7 @@ const CobraShotProjectileVisual: React.FC<{ projectile: CobraShotProjectile }> =
 
             {/* Outer cobra glow */}
             <mesh scale={[trailScale * 1.5, trailScale * 1.5, trailScale * 1.5]}>
-              <sphereGeometry args={[0.2, 6, 6]} />
+              <primitive object={sphereLarge} />
               <meshStandardMaterial
                 color="#00ff60" // Light green
                 emissive="#00ff60"

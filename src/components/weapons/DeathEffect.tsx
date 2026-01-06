@@ -1,6 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { Group, Vector3 } from '@/utils/three-exports';
 import { useFrame } from '@react-three/fiber';
+import { deathMainSphere, deathMistParticle, deathRing, deathGlowSphere, disposeThreeJSResources } from '@/utils/sharedGeometries';
 
 interface DeathEffectProps {
   position: Vector3;
@@ -28,6 +29,23 @@ export default function DeathEffect({
   const [intensity, setIntensity] = useState(1);
   const [fadeProgress, setFadeProgress] = useState(1);
   const rotationSpeed = useRef(Math.random() * 0.01 + 0.005);
+
+  // Memoize mist particle data to prevent recreation
+  const mistParticles = useMemo(() => {
+    return [...Array(8)].map((_, i) => ({
+      position: [
+        (Math.random() - 0.5) * 1.5,
+        Math.random() * 1.5 + 0.2,
+        (Math.random() - 0.5) * 1.5
+      ] as [number, number, number],
+      rotation: [
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      ] as [number, number, number],
+      scale: 0.1 + Math.random() * 0.1
+    }));
+  }, []);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -82,11 +100,21 @@ export default function DeathEffect({
     effectRef.current.rotation.x = Math.sin(elapsed * 0.002) * 0.05;
   });
 
+  // Cleanup effect for component unmount
+  useEffect(() => {
+    return () => {
+      // Dispose of all Three.js resources in the effect group
+      if (effectRef.current) {
+        disposeThreeJSResources(effectRef.current);
+      }
+    };
+  }, []);
+
   return (
     <group ref={effectRef} position={position}>
       {/* Dark ethereal sphere */}
       <mesh position={[0, 0.5, 0]}>
-        <sphereGeometry args={[0.8, 16, 16]} />
+        <primitive object={deathMainSphere} />
         <meshStandardMaterial
           color="#2D1B69"
           emissive="#4A148C"
@@ -99,21 +127,14 @@ export default function DeathEffect({
       </mesh>
 
       {/* Death mist particles */}
-      {[...Array(8)].map((_, i) => (
+      {mistParticles.map((particle, i) => (
         <mesh
           key={`mist-${i}`}
-          position={[
-            (Math.random() - 0.5) * 1.5,
-            Math.random() * 1.5 + 0.2,
-            (Math.random() - 0.5) * 1.5
-          ]}
-          rotation={[
-            Math.random() * Math.PI,
-            Math.random() * Math.PI,
-            Math.random() * Math.PI
-          ]}
+          position={particle.position}
+          rotation={particle.rotation}
+          scale={particle.scale}
         >
-          <sphereGeometry args={[0.1 + Math.random() * 0.1, 8, 8]} />
+          <primitive object={deathMistParticle} />
           <meshStandardMaterial
             color="#6A1B9A"
             emissive="#9C27B0"
@@ -146,7 +167,7 @@ export default function DeathEffect({
 
       {/* Skull-like dark core */}
       <mesh position={[0, 0.8, 0]}>
-        <sphereGeometry args={[0.3, 12, 12]} />
+        <primitive object={deathRing} />
         <meshStandardMaterial
           color="#1A0033"
           emissive="#4A148C"
@@ -160,7 +181,7 @@ export default function DeathEffect({
 
       {/* Dark glow effect */}
       <mesh>
-        <sphereGeometry args={[1.2, 16, 16]} />
+        <primitive object={deathGlowSphere} />
         <meshStandardMaterial
           color="#4A148C"
           emissive="#6A1B9A"

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Group } from 'three';
 import { useFrame } from '@react-three/fiber';
+import { getCachedGeometry } from '@/utils/sharedGeometries';
 
 export default function UnholyAura() {
   const auraRef = useRef<Group>(null);
@@ -20,7 +21,7 @@ export default function UnholyAura() {
     <group ref={auraRef} scale={0.7}>
       {/* Outer corrupted circle */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <ringGeometry args={[1.0, 1.2, 64]} />
+        <primitive object={getCachedGeometry('ring', 1.0, 1.2, 64)} />
         <meshStandardMaterial
           color="#0099ff"
           emissive="#0099ff"
@@ -39,7 +40,7 @@ export default function UnholyAura() {
             rotation={[-Math.PI / 2, 0, (i / 8) * Math.PI * 2 + Date.now() * 0.001]}
             position={[0, 0, 0]}
           >
-            <planeGeometry args={[0.2, 1.3]} />
+            <primitive object={getCachedGeometry('plane', 0.2, 1.3)} />
             <meshStandardMaterial
               color="#0099ff"
               emissive="#0099ff"
@@ -67,7 +68,7 @@ export default function UnholyAura() {
               ]}
               rotation={[-Math.PI / 2, 0, angle + Math.PI / 2]}
             >
-              <planeGeometry args={[0.3, 0.3]} />
+              <primitive object={getCachedGeometry('plane', 0.3, 0.3)} />
               <meshStandardMaterial
                 color="#0088cc"
                 emissive="#0099ff"
@@ -96,7 +97,7 @@ export default function UnholyAura() {
               ]}
               rotation={[-Math.PI / 2, 0, angle + Date.now() * 0.0015]}
             >
-              <planeGeometry args={[0.1, 0.4]} />
+              <primitive object={getCachedGeometry('plane', 0.1, 0.4)} />
               <meshStandardMaterial
                 color="#002244"
                 emissive="#0099ff"
@@ -112,7 +113,7 @@ export default function UnholyAura() {
 
       {/* Center dark core */}
       <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.1, 0.5, 32]} />
+        <primitive object={getCachedGeometry('ring', 0.1, 0.5, 32)} />
         <meshStandardMaterial
           color="#001122"
           emissive="#0099ff"
@@ -125,7 +126,7 @@ export default function UnholyAura() {
 
       {/* Ambient glow */}
       <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <ringGeometry args={[1.0, 1.1, 64, 1]} />
+      <primitive object={getCachedGeometry('ring', 1.0, 1.1, 64, 1)} />
         <meshStandardMaterial
           color="#0099ff"
           emissive="#0099ff"

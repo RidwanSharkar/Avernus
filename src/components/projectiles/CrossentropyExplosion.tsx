@@ -1,5 +1,14 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Vector3, AdditiveBlending } from '@/utils/three-exports';
+import {
+  sharedGeometries,
+  sphereVariableSmall,
+  sphereVariableMedium,
+  sphereSparkSmall,
+  sphereSparkTiny,
+  torusRing,
+  getCachedGeometry
+} from '@/utils/sharedGeometries';
 
 interface CrossentropyExplosionProps {
   position: Vector3;
@@ -8,7 +17,7 @@ interface CrossentropyExplosionProps {
   onComplete?: () => void;
 }
 
-const IMPACT_DURATION = 0.5; // Slightly longer than the original for more dramatic effect
+const IMPACT_DURATION = 0.65; // Slightly longer than the original for more dramatic effect
 
 export default function CrossentropyExplosion({ 
   position, 
@@ -19,7 +28,7 @@ export default function CrossentropyExplosion({
   const startTime = useRef(explosionStartTime || Date.now());
   const [, forceUpdate] = useState({}); // Force updates to animate
   const normalizedCharge = Math.min(chargeTime / 4, 1.0);
-  const scale = 0.5 + (normalizedCharge * 1.0); // Increased base scale for more impact
+  const scale = 0.4 + (normalizedCharge * 1.0); // Increased base scale for more impact
   const intensity = 2.5 + (normalizedCharge * 4); // Higher intensity for Crossentropy
   const sparkCount = 10; // Reduced sparks while maintaining boldness
   
@@ -56,13 +65,13 @@ export default function CrossentropyExplosion({
   if (fade <= 0) return null;
 
   // More dynamic effect - faster expansion for initial impact
-  const expansionRate = 4 + (elapsed < 0.15 ? 10 : 0); // Faster initial expansion
+  const expansionRate = 3 + (elapsed < 0.15 ? 10 : 0); // Faster initial expansion
 
   return (
     <group position={position}>
       {/* Core explosion sphere - Deep orange fiery for Crossentropy */}
-      <mesh>
-        <sphereGeometry args={[0.4 * scale * (1 + elapsed * expansionRate), 32, 32]} />
+      <mesh scale={[0.4 * scale * (1 + elapsed * expansionRate), 0.4 * scale * (1 + elapsed * expansionRate), 0.4 * scale * (1 + elapsed * expansionRate)]}>
+        <primitive object={getCachedGeometry('sphere', 1, 32, 32)} />
         <meshStandardMaterial
           color="#FF4500" // Deep orange
           emissive="#FF6600"
@@ -73,10 +82,10 @@ export default function CrossentropyExplosion({
           blending={AdditiveBlending}
         />
       </mesh>
-      
+
       {/* Inner energy sphere - Brighter orange */}
-      <mesh>
-        <sphereGeometry args={[0.5 * scale * (1 + elapsed * (expansionRate + 1)), 24, 24]} />
+      <mesh scale={[0.5 * scale * (1 + elapsed * (expansionRate + 1)), 0.5 * scale * (1 + elapsed * (expansionRate + 1)), 0.5 * scale * (1 + elapsed * (expansionRate + 1))]}>
+        <primitive object={getCachedGeometry('sphere', 1, 24, 24)} />
         <meshStandardMaterial
           color="#FF6600" // Fire orange
           emissive="#FFA500" // Bright orange
@@ -89,8 +98,8 @@ export default function CrossentropyExplosion({
       </mesh>
 
       {/* Outer energy sphere - Bright orange */}
-      <mesh>
-        <sphereGeometry args={[0.6 * scale * (1 + elapsed * (expansionRate + 2)), 16, 16]} />
+      <mesh scale={[0.6 * scale * (1 + elapsed * (expansionRate + 2)), 0.6 * scale * (1 + elapsed * (expansionRate + 2)), 0.6 * scale * (1 + elapsed * (expansionRate + 2))]}>
+        <primitive object={getCachedGeometry('sphere', 1, 16, 16)} />
         <meshStandardMaterial
           color="#FFA500" // Bright orange
           emissive="#FFD700" // Gold
@@ -103,20 +112,23 @@ export default function CrossentropyExplosion({
       </mesh>
 
       {/* Multiple expanding rings with orange fiery theme */}
-      {[0.5, 0.7, 0.85, 1.0, 1.2, 1.4].map((ringSize, i) => (
-        <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-          <torusGeometry args={[ringSize * scale * (1 + elapsed * (expansionRate + 2)), 0.08 * scale, 16, 32]} />
-          <meshStandardMaterial
-            color="#FF4500"
-            emissive="#FF6600"
-            emissiveIntensity={intensity * fade * 0.4}
-            transparent
-            opacity={0.8 * fade * (1 - i * 0.12)}
-            depthWrite={false}
-            blending={AdditiveBlending}
-          />
-        </mesh>
-      ))}
+      {[0.5, 0.7, 0.85, 1.0, 1.2, 1.4].map((baseRingSize, i) => {
+        const ringScale = baseRingSize * scale * (1 + elapsed * (expansionRate + 2));
+        return (
+          <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]} scale={[ringScale, ringScale, ringScale]}>
+            <primitive object={torusRing} />
+            <meshStandardMaterial
+              color="#FF4500"
+              emissive="#FF6600"
+              emissiveIntensity={intensity * fade * 0.4}
+              transparent
+              opacity={0.8 * fade * (1 - i * 0.12)}
+              depthWrite={false}
+              blending={AdditiveBlending}
+            />
+          </mesh>
+        );
+      })}
 
       {/* Particle sparks - purple/magenta theme with more dynamic positioning */}
       {[...Array(sparkCount)].map((_, i) => {
@@ -125,7 +137,7 @@ export default function CrossentropyExplosion({
         const radius = scale * (1 + elapsed * (expansionRate - 0.5)) * (1 + randomOffset);
         const yOffset = (Math.random() - 0.5) * 0.6; // More vertical variation
         const zOffset = (Math.random() - 0.5) * 0.4; // Add depth variation
-        
+
         return (
           <mesh
             key={`spark-${i}`}
@@ -135,7 +147,7 @@ export default function CrossentropyExplosion({
               zOffset
             ]}
           >
-            <sphereGeometry args={[0.1 * scale, 8, 8]} />
+            <primitive object={sphereVariableSmall} />
             <meshStandardMaterial
               color="#FFA500" // Bright orange sparks
               emissive="#FFD700" // Gold emissive emissive
@@ -156,7 +168,7 @@ export default function CrossentropyExplosion({
         const radius = scale * 0.7 * (1 + elapsed * (expansionRate + 1)) * (1 + randomOffset);
         const yOffset = (Math.random() - 0.5) * 0.4;
         const zOffset = (Math.random() - 0.5) * 0.3;
-        
+
         return (
           <mesh
             key={`small-spark-${i}`}
@@ -166,7 +178,7 @@ export default function CrossentropyExplosion({
               zOffset
             ]}
           >
-            <sphereGeometry args={[0.05 * scale, 6, 6]} />
+            <primitive object={sphereSparkTiny} />
             <meshStandardMaterial
               color="#FF6600" // Fire orange
               emissive="#FFA500" // Bright orange

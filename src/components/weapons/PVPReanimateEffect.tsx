@@ -15,7 +15,8 @@ const PVPReanimateEffect: React.FC<PVPReanimateEffectProps> = React.memo(({ posi
     setTime(prev => {
       const newTime = prev + delta;
       if (newTime >= duration) {
-        onComplete();
+        // Defer the onComplete callback to avoid setState during render
+        setTimeout(() => onComplete(), 0);
       }
       return newTime;
     });

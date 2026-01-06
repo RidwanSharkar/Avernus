@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, AdditiveBlending } from '@/utils/three-exports';
+import { cylinderBeamThick, coneMedium, sphereSmall, sphereMedium, sphereLarge, getCachedGeometry } from '@/utils/sharedGeometries';
 
 interface ViperStingProjectile {
   id: number;
@@ -46,7 +47,7 @@ const ViperStingProjectileVisual: React.FC<{ projectile: ViperStingProjectile }>
     <group ref={groupRef}>
       {/* Main projectile body - sleek venomous arrow */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.04, 0.15, 2.5, 8]} />
+        <primitive object={cylinderBeamThick} />
         <meshStandardMaterial
           color="#8B3F9B" // Dark purple venom color
           emissive="#5A2B5F"
@@ -58,9 +59,9 @@ const ViperStingProjectileVisual: React.FC<{ projectile: ViperStingProjectile }>
 
       {/* Arrowhead */}
       <mesh position={[0, 0, 1.25]} rotation={[Math.PI / 2, 0, 0]}>
-        <coneGeometry args={[0.15, 0.6, 6]} />
+        <primitive object={coneMedium} />
         <meshStandardMaterial
-          color="#A855C7" 
+          color="#A855C7"
           emissive="#7E3A9F"
           emissiveIntensity={1.5}
           transparent
@@ -90,7 +91,7 @@ const ViperStingProjectileVisual: React.FC<{ projectile: ViperStingProjectile }>
 
       {/* Venom energy core */}
       <mesh>
-        <sphereGeometry args={[0.08, 8, 8]} />
+        <primitive object={sphereSmall} />
         <meshStandardMaterial
           color="#C084FC"
           emissive="#A855C7"
@@ -118,7 +119,7 @@ const ViperStingProjectileVisual: React.FC<{ projectile: ViperStingProjectile }>
           >
             {/* Venom energy trail */}
             <mesh scale={[trailScale, trailScale, trailScale]}>
-              <sphereGeometry args={[0.15, 8, 8]} />
+              <primitive object={sphereMedium} />
               <meshStandardMaterial
                 color="#A855C7" // Medium purple
                 emissive="#A855C7"
@@ -129,10 +130,10 @@ const ViperStingProjectileVisual: React.FC<{ projectile: ViperStingProjectile }>
                 depthWrite={false}
               />
             </mesh>
-            
+
             {/* Outer venom glow */}
             <mesh scale={[trailScale * 1.5, trailScale * 1.5, trailScale * 1.5]}>
-              <sphereGeometry args={[0.2, 6, 6]} />
+              <primitive object={sphereLarge} />
               <meshStandardMaterial
                 color="#C084FC" // Light purple
                 emissive="#C084FC"

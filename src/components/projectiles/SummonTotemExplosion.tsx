@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Vector3, AdditiveBlending } from '@/utils/three-exports';
+import { Vector3, AdditiveBlending, Group } from '@/utils/three-exports';
+import { totemExplosionSphere, totemEnergySphere, totemRing, sphereSparkSmall, disposeThreeJSResources } from '@/utils/sharedGeometries';
 
 interface SummonTotemExplosionProps {
   position: Vector3;
@@ -16,6 +17,7 @@ export default function SummonTotemExplosion({
 }: SummonTotemExplosionProps) {
   const startTime = useRef(explosionStartTime || Date.now());
   const [, forceUpdate] = useState({}); // Force updates to animate
+  const groupRef = useRef<Group>(null);
 
   useEffect(() => {
     // Animation timer - exact same timing as original
@@ -39,6 +41,10 @@ export default function SummonTotemExplosion({
     return () => {
       clearInterval(interval);
       clearTimeout(timer);
+      // Dispose of Three.js resources
+      if (groupRef.current) {
+        disposeThreeJSResources(groupRef.current);
+      }
     };
   }, [onComplete]);
 
@@ -50,10 +56,9 @@ export default function SummonTotemExplosion({
   if (fade <= 0) return null;
 
   return (
-    <group position={position}>
+    <group ref={groupRef} position={position}>
       {/* Core explosion sphere - Exact same as original */}
-      <mesh>
-        <sphereGeometry args={[0.35 * (1 + elapsed * 2), 32, 32]} />
+      <mesh scale={[0.35 * (1 + elapsed * 2), 0.35 * (1 + elapsed * 2), 0.35 * (1 + elapsed * 2)]} geometry={totemExplosionSphere}>
         <meshStandardMaterial
           color="#0099ff"
           emissive="#0088cc"
@@ -66,8 +71,7 @@ export default function SummonTotemExplosion({
       </mesh>
 
       {/* Inner energy sphere - Exact same as original */}
-      <mesh>
-        <sphereGeometry args={[0.25 * (1 + elapsed * 3), 24, 24]} />
+      <mesh scale={[0.25 * (1 + elapsed * 3), 0.25 * (1 + elapsed * 3), 0.25 * (1 + elapsed * 3)]} geometry={totemEnergySphere}>
         <meshStandardMaterial
           color="#0077aa"
           emissive="#cceeff"
@@ -80,20 +84,23 @@ export default function SummonTotemExplosion({
       </mesh>
 
       {/* Expanding rings - Exact same as original */}
-      {[0.45, 0.65, 0.85].map((size, i) => (
-        <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-          <torusGeometry args={[size * (1 + elapsed * 3), 0.045, 16, 32]} />
-          <meshStandardMaterial
-            color="#0099ff"
-            emissive="#0088cc"
-            emissiveIntensity={1 * fade}
-            transparent
-            opacity={0.6 * fade * (1 - i * 0.2)}
-            depthWrite={false}
-            blending={AdditiveBlending}
-          />
-        </mesh>
-      ))}
+      {[0.45, 0.65, 0.85].map((baseSize, i) => {
+        const scale = baseSize * (1 + elapsed * 3);
+        return (
+          <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]} scale={[scale, scale, scale]}>
+            <primitive object={totemRing} />
+            <meshStandardMaterial
+              color="#0099ff"
+              emissive="#0088cc"
+              emissiveIntensity={1 * fade}
+              transparent
+              opacity={0.6 * fade * (1 - i * 0.2)}
+              depthWrite={false}
+              blending={AdditiveBlending}
+            />
+          </mesh>
+        );
+      })}
 
       {/* Particle sparks - Exact same as original */}
       {[...Array(4)].map((_, i) => {
@@ -108,7 +115,7 @@ export default function SummonTotemExplosion({
               0
             ]}
           >
-            <sphereGeometry args={[0.05, 8, 8]} />
+            <primitive object={sphereSparkSmall} />
             <meshStandardMaterial
               color="#0077aa"
               emissive="#cceeff"

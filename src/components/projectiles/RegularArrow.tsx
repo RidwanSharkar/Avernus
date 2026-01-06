@@ -11,7 +11,7 @@ interface RegularArrowProps {
   projectileType?: string; // Add projectile type to support different colors
 }
 
-// Shared geometries to prevent memory leaks
+// Shared geometries to prevent memory leaks - these persist across component instances
 const sharedGeometries = {
   head: new ConeGeometry(0.08, 0.25, 8),
   shaft: new CylinderGeometry(0.02, 0.03, 0.4, 8),
@@ -20,15 +20,6 @@ const sharedGeometries = {
 };
 
 export default function RegularArrow({ position, direction, onImpact, distanceTraveled = 0, maxDistance = 25, projectileType }: RegularArrowProps) {
-  // Cleanup geometries on unmount
-  useEffect(() => {
-    return () => {
-      sharedGeometries.head.dispose();
-      sharedGeometries.shaft.dispose();
-      sharedGeometries.fletching.dispose();
-      sharedGeometries.aura.dispose();
-    };
-  }, []);
 
   const arrowRef = useRef<Group>(null);
 

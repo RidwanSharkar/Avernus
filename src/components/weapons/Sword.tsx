@@ -1,9 +1,10 @@
-import { useRef, useState, useEffect, memo } from 'react';
+import { useRef, useState, useEffect, memo, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, Color, Shape, AdditiveBlending } from '@/utils/three-exports';
 import { WeaponSubclass } from '@/components/dragon/weapons';
 import DeflectShield from './DeflectShield';
 import { calculationCache } from '@/utils/CalculationCache';
+import { getCachedGeometry, sphereSmall, sphereMedium, sphereLarge, sphereExtraLarge } from '@/utils/sharedGeometries';
 
 // Cleanup utility for Three.js resources
 const disposeThreeJSResources = (object: any) => {
@@ -954,55 +955,54 @@ const SwordComponent = memo(function Sword({
   };
 
 
-  // Create custom sword blade shape
-  const createBladeShape = () => {
+  // Memoized blade shapes to prevent recreation on every render
+  const bladeShape = useMemo(() => {
     const shape = new Shape();
-    
+
     // Start at center
     shape.moveTo(0, 0);
-    
+
     // Left side guard (fixed symmetry)
-    shape.lineTo(-0.25, 0.25);  
-    shape.lineTo(-0.15, -0.15); 
+    shape.lineTo(-0.25, 0.25);
+    shape.lineTo(-0.15, -0.15);
     shape.lineTo(0, 0);
-    
+
     // Right side guard (matches left exactly)
     shape.lineTo(0.175, 0.175);
     shape.lineTo(0.15, -0.15);
     shape.lineTo(0, 0);
-    
+
     // Blade shape with symmetry
     shape.lineTo(0, 0.08);    // Reduced from 0.12
     shape.lineTo(0.2, 0.2);   // Reduced from 0.25
     shape.quadraticCurveTo(0.8, 0.15, 1.875, 0.18); // Reduced y values
     shape.quadraticCurveTo(2.0, 0.15, 2.375, 0);     // Reduced y value
-    
+
     shape.quadraticCurveTo(2.0, -0.15, 1.825, -0.18); // Mirror of upper curve
     shape.quadraticCurveTo(0.8, -0.15, 0.15, -0.3);
     shape.lineTo(0, -0.08);   // Reduced from -0.12
     shape.lineTo(0, 0);
-    
-    return shape;
-  };
 
-  // inner blade shape 
-  const createInnerBladeShape = () => {
+    return shape;
+  }, []);
+
+  const innerBladeShape = useMemo(() => {
     const shape = new Shape();
     shape.moveTo(0, 0);
-    
-    shape.lineTo(0, 0.06);   
-    shape.lineTo(0.15, 0.15); 
-    shape.quadraticCurveTo(1.2, 0.12, 1.75, 0.15); 
-    shape.quadraticCurveTo(2.0, 0.08, 2.15, 0);    
-    shape.quadraticCurveTo(2.0, -0.08, 1.75, -0.15); 
-    shape.quadraticCurveTo(1.2, -0.12, 0.15, -0.275);
-    shape.lineTo(0, -0.05);  
-    shape.lineTo(0, 0);
-    
-    return shape;
-  };
 
-  const bladeExtrudeSettings = {
+    shape.lineTo(0, 0.06);
+    shape.lineTo(0.15, 0.15);
+    shape.quadraticCurveTo(1.2, 0.12, 1.75, 0.15);
+    shape.quadraticCurveTo(2.0, 0.08, 2.15, 0);
+    shape.quadraticCurveTo(2.0, -0.08, 1.75, -0.15);
+    shape.quadraticCurveTo(1.2, -0.12, 0.15, -0.275);
+    shape.lineTo(0, -0.05);
+    shape.lineTo(0, 0);
+
+    return shape;
+  }, []);
+
+  const bladeExtrudeSettings = useMemo(() => ({
     steps: 2,
     depth: 0.05,
     bevelEnabled: true,
@@ -1010,16 +1010,16 @@ const SwordComponent = memo(function Sword({
     bevelSize: 0.02,
     bevelOffset: 0.04,
     bevelSegments: 2
-  }; 
+  }), []);
 
-  const innerBladeExtrudeSettings = {
+  const innerBladeExtrudeSettings = useMemo(() => ({
     ...bladeExtrudeSettings,
     depth: 0.06,
     bevelThickness: 0.02,
     bevelSize: 0.02,
     bevelOffset: 0,
     bevelSegments: 6
-  };
+  }), [bladeExtrudeSettings]);
 
   // Consolidated electrical effects
   const createElectricalEffects = () => {
@@ -1030,7 +1030,7 @@ const SwordComponent = memo(function Sword({
             {/* Electrical aura around blade */}
             <group position={[0.25, 0.55, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]} scale={[0.95, 1.10, 0.95]}>
               <mesh>
-                <extrudeGeometry args={[createBladeShape(), { ...bladeExtrudeSettings, depth: 0.07 }]} />
+                <extrudeGeometry args={[bladeShape, { ...bladeExtrudeSettings, depth: 0.07 }]} />
                 <meshStandardMaterial
                   color={new Color(0x87CEEB)}
                   emissive={new Color(0x4682B4)}
@@ -1049,7 +1049,7 @@ const SwordComponent = memo(function Sword({
                 position={spark.position.toArray()}
                 scale={[spark.scale, spark.scale, spark.scale]}
               >
-                <sphereGeometry args={[1.25, 6, 6]} />
+                <primitive object={sphereExtraLarge} />
                 <meshStandardMaterial
                   color={new Color(0x87CEEB)}
                   emissive={new Color(0x4682B4)}
@@ -1080,14 +1080,14 @@ const SwordComponent = memo(function Sword({
         {/* Handle */}
         <group position={[0.25, -0.55, 0.35]} rotation={[0, 0, -Math.PI]}>
           <mesh>
-            <cylinderGeometry args={[0.03, 0.04, 0.9, 12]} />
+            <primitive object={getCachedGeometry('cylinder', 0.03, 0.04, 0.9, 12)} />
             <meshStandardMaterial color="#2a3b4c" roughness={0.7} />
           </mesh>
           
           {/* Handle wrappings */}
           {[...Array(8)].map((_, i) => (
             <mesh key={i} position={[0, +0.35 - i * 0.11, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.045, 0.016, 8, 16]} />
+              <primitive object={getCachedGeometry('torus', 0.045, 0.016, 8, 16)} />
               <meshStandardMaterial color="#1a2b3c" metalness={0.6} roughness={0.4} />
             </mesh>
           ))}
@@ -1097,7 +1097,7 @@ const SwordComponent = memo(function Sword({
         <group position={[0.25, 0.225, 0.35]} rotation={[Math.PI, 1.5, Math.PI]}>
           {/* Large torus */}
           <mesh>
-            <torusGeometry args={[0.26, 0.07, 16, 32]} />
+            <primitive object={getCachedGeometry('torus', 0.26, 0.07, 16, 32)} />
             <meshStandardMaterial 
               color="#4a5b6c" 
               metalness={0.9}
@@ -1116,8 +1116,8 @@ const SwordComponent = memo(function Sword({
               ]}
               rotation={[0, 0, i * Math.PI / 4 - Math.PI / 2]}
             >
-              <coneGeometry args={[0.070, 0.55, 3]} />
-              <meshStandardMaterial 
+            <primitive object={getCachedGeometry('cone', 0.070, 0.55, 3)} />
+            <meshStandardMaterial
                 color="#4a5b6c"
                 metalness={0.9}
                 roughness={0.1}
@@ -1127,7 +1127,7 @@ const SwordComponent = memo(function Sword({
           
           {/* REAL Core orb -   yellow */}
           <mesh>
-            <sphereGeometry args={[0.155, 16, 16]} />
+            <primitive object={getCachedGeometry('sphere', 0.155, 16, 16)} />
             <meshStandardMaterial
               color={new Color(0xB5B010)}         // Pure yellow
               emissive={new Color(0xB5B010)}      // Yellow emission
@@ -1139,7 +1139,7 @@ const SwordComponent = memo(function Sword({
           
           {/* Multiple glow layers for depth */}
           <mesh>
-            <sphereGeometry args={[0.1, 16, 16]} />
+            <primitive object={getCachedGeometry('sphere', 0.1, 16, 16)} />
             <meshStandardMaterial
               color={new Color(0x1097B5)}
               emissive={new Color(0x1097B5)}
@@ -1152,7 +1152,7 @@ const SwordComponent = memo(function Sword({
           
           
           <mesh>
-            <sphereGeometry args={[0.145, 16, 16]} />
+            <primitive object={getCachedGeometry('sphere', 0.145, 16, 16)} />
             <meshStandardMaterial
               color={new Color(0x1097B5)}
               emissive={new Color(0x1097B5)}
@@ -1163,7 +1163,7 @@ const SwordComponent = memo(function Sword({
           </mesh>
           
           <mesh>
-            <sphereGeometry args={[.175, 16, 16]} />
+            <primitive object={getCachedGeometry('sphere', 0.175, 16, 16)} />
             <meshStandardMaterial
               color={new Color(0x1097B5)}
               emissive={new Color(0x1097B5)}
@@ -1180,7 +1180,7 @@ const SwordComponent = memo(function Sword({
         <group position={[0.25, 0.5, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
           {/* Base blade */}
           <mesh>
-            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+            <extrudeGeometry args={[bladeShape, bladeExtrudeSettings]} />
             <meshStandardMaterial 
               color={new Color(0x1097B5)}  
               emissive={new Color(0x1097B5)}
@@ -1192,7 +1192,7 @@ const SwordComponent = memo(function Sword({
           
           {/* BLADE Glowing core */}
           <mesh>
-            <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
+            <extrudeGeometry args={[innerBladeShape, innerBladeExtrudeSettings]} />
             <meshStandardMaterial 
               color={new Color(0x1097B5)}  
               emissive={new Color(0x1097B5)}
@@ -1217,7 +1217,7 @@ const SwordComponent = memo(function Sword({
           position={[particle.position.x, particle.position.y, particle.position.z]}
           scale={[particle.life * 0.2, particle.life * 0.2, particle.life * 0.2]}
         >
-          <sphereGeometry args={[0.5, 6, 6]} />
+          <primitive object={getCachedGeometry('sphere', 0.5, 6, 6)} />
           <meshStandardMaterial
             color={new Color(0xB5B010)}
             emissive={new Color(0xB5B010)}

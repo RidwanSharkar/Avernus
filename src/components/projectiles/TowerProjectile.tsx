@@ -14,7 +14,7 @@ interface TowerProjectileProps {
   opacity?: number;
 }
 
-// Shared geometries to prevent memory leaks
+// Shared geometries to prevent memory leaks - these persist across component instances
 const sharedGeometries = {
   main: new OctahedronGeometry(0.2, 0),
   core: new OctahedronGeometry(0.12, 0),
@@ -33,17 +33,6 @@ export default function TowerProjectile({
 }: TowerProjectileProps) {
   const groupRef = useRef<Group>(null);
   const timeRef = useRef(0);
-
-  // Cleanup geometries on unmount
-  useEffect(() => {
-    return () => {
-      sharedGeometries.main.dispose();
-      sharedGeometries.core.dispose();
-      sharedGeometries.aura.dispose();
-      sharedGeometries.trail.dispose();
-      sharedGeometries.particle.dispose();
-    };
-  }, []);
 
   // Determine color based on owner ID - match tower colors exactly
   const projectileColor = useMemo(() => {

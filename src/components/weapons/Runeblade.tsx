@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, Color, Shape, AdditiveBlending } from '@/utils/three-exports';
 import { WeaponSubclass } from '@/components/dragon/weapons';
@@ -685,23 +685,23 @@ export default function Runeblade({
     }
   };
 
-  // Create custom runeblade shape
-  const createBladeShape = () => {
+  // Memoized blade shape to prevent recreation on every render
+  const bladeShape = useMemo(() => {
     const shape = new Shape();
-    
+
     // Start at center
     shape.moveTo(0, 0);
-    
+
     // Left side guard (fixed symmetry)
-    shape.lineTo(-0.25, 0.25);  
-    shape.lineTo(-0.15, -0.15); 
+    shape.lineTo(-0.25, 0.25);
+    shape.lineTo(-0.15, -0.15);
     shape.lineTo(0, 0);
-    
+
     // Right side guard (matches left exactly)
     shape.lineTo(0.25, 0.25);
     shape.lineTo(0.15, -0.15);
     shape.lineTo(0, 0);
-    
+
     // Curved blade shape - asymmetrical with curve flipped to bottom edge
     // Upper edge (back edge) - straighter, more subtle curve
     shape.lineTo(0, 0.08);
@@ -709,19 +709,19 @@ export default function Runeblade({
     shape.quadraticCurveTo(0.8, -0.15, -0.15, 0.12);  // Subtle curve along back
     shape.quadraticCurveTo(1.8, -0, 1.75, 0.05);  // Gentle curve towards tip
     shape.quadraticCurveTo(2.15, 0.05, 2.35, 0.225);    // Sharp point
-    
+
     // Lower edge (cutting edge) - more curved and pronounced (flipped)
     shape.quadraticCurveTo(2.125, -0.125, 2.0, -0.25); // Start curve from tip
     shape.quadraticCurveTo(1.8, -0.45, 1.675, -0.55);  // Peak of the curve (increased)
     shape.quadraticCurveTo(0.9, -0.35, 0.125, -0.325);   // Curve back towards guard
     shape.lineTo(0, -0.08);
     shape.lineTo(0, 0);
-    
-    return shape;
-  };
 
-  // inner blade shape
-  const createInnerBladeShape = () => {
+    return shape;
+  }, []);
+
+  // Memoized inner blade shape to prevent recreation on every render
+  const innerBladeShape = useMemo(() => {
     const shape = new Shape();
     shape.moveTo(0, 0);
 
@@ -741,10 +741,9 @@ export default function Runeblade({
     shape.lineTo(0, 0);
 
     return shape;
-  };
+  }, []);
 
-
-  const bladeExtrudeSettings = {
+  const bladeExtrudeSettings = useMemo(() => ({
     steps: 2,
     depth: 0.05,
     bevelEnabled: true,
@@ -752,16 +751,16 @@ export default function Runeblade({
     bevelSize: 0.02,
     bevelOffset: 0.04,
     bevelSegments: 2
-  };
+  }), []);
 
-  const innerBladeExtrudeSettings = {
+  const innerBladeExtrudeSettings = useMemo(() => ({
     ...bladeExtrudeSettings,
     depth: 0.06,
     bevelThickness: 0.02,
     bevelSize: 0.02,
     bevelOffset: 0,
     bevelSegments: 6
-  };
+  }), [bladeExtrudeSettings]);
 
   return (
     <>
@@ -873,7 +872,7 @@ export default function Runeblade({
         <group position={[0.25, 0.5, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
           {/* Base blade */}
           <mesh>
-            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+            <extrudeGeometry args={[bladeShape, bladeExtrudeSettings]} />
             <meshStandardMaterial
               color={isCorruptedAuraActive ? new Color(0xFF4444) : new Color(0x00AA44)}  // Red when corrupted, green normally
               emissive={isCorruptedAuraActive ? new Color(0xFF4444) : new Color(0x00AA44)}
@@ -885,7 +884,7 @@ export default function Runeblade({
 
           {/* Blade glowing core */}
           <mesh>
-            <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
+            <extrudeGeometry args={[innerBladeShape, innerBladeExtrudeSettings]} />
             <meshStandardMaterial
               color={isCorruptedAuraActive ? new Color(0xFF4444) : new Color(0x00AA44)}  // Red when corrupted, green normally
               emissive={isCorruptedAuraActive ? new Color(0xFF4444) : new Color(0x00AA44)}
@@ -904,7 +903,7 @@ export default function Runeblade({
             {/* Electrical aura around blade */}
             <group position={[0.25, 0.7, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]} scale={[0.95, 1.10, 0.95]}>
               <mesh>
-                <extrudeGeometry args={[createBladeShape(), { ...bladeExtrudeSettings, depth: 0.07 }]} />
+                <extrudeGeometry args={[bladeShape, { ...bladeExtrudeSettings, depth: 0.07 }]} />
                 <meshStandardMaterial
                   color={isCorruptedAuraActive ? new Color(0xFF8888) : new Color(0x00FF88)}
                   emissive={isCorruptedAuraActive ? new Color(0xFF4444) : new Color(0x00AA44)}

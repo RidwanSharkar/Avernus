@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Vector3, Group, AdditiveBlending, DoubleSide } from '@/utils/three-exports';
 import { useFrame } from '@react-three/fiber';
+import { getCachedGeometry, sphereMedium } from '@/utils/sharedGeometries';
 
 interface SoulStealEffectProps {
   id: number;
@@ -61,7 +62,7 @@ export default function SoulStealEffect({
     <group ref={groupRef} position={startPosition}>
       {/* Core soul orb */}
       <mesh>
-        <sphereGeometry args={[0.15, 8, 8]} />
+        <primitive object={getCachedGeometry('sphere', 0.15, 8, 8)} />
         <meshStandardMaterial
           color="#E879F9"
           emissive="#E879F9"
@@ -74,7 +75,7 @@ export default function SoulStealEffect({
 
       {/* Outer glow */}
       <mesh>
-        <sphereGeometry args={[0.25, 8, 8]} />
+        <primitive object={getCachedGeometry('sphere', 0.25, 8, 8)} />
         <meshStandardMaterial
           color="#C084FC"
           emissive="#C084FC"
@@ -87,7 +88,7 @@ export default function SoulStealEffect({
 
       {/* Healing energy aura */}
       <mesh rotation={[Math.PI / 2, 0, Date.now() * 0.005]}>
-        <ringGeometry args={[0.1, 0.3, 8]} />
+        <primitive object={getCachedGeometry('ring', 0.1, 0.3, 8)} />
         <meshStandardMaterial
           color="#A855F7"
           emissive="#A855F7"

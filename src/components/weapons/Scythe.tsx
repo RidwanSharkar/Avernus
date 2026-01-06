@@ -1,9 +1,46 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Shape } from '@/utils/three-exports';
 import { DoubleSide } from '@/utils/three-exports';
 import { WeaponSubclass } from '@/components/dragon/weapons';
 import SpellCastingAura from './SpellCastingAura';
+import { getCachedGeometry } from '@/utils/sharedGeometries';
+
+// Cleanup utility for Three.js resources
+const disposeThreeJSResources = (object: any) => {
+  if (!object) return;
+
+  // Dispose geometry
+  if (object.geometry) {
+    object.geometry.dispose();
+  }
+
+  // Dispose material
+  if (object.material) {
+    if (Array.isArray(object.material)) {
+      object.material.forEach((material: any) => {
+        if (material.map) material.map.dispose();
+        if (material.normalMap) material.normalMap.dispose();
+        if (material.roughnessMap) material.roughnessMap.dispose();
+        if (material.metalnessMap) material.metalnessMap.dispose();
+        if (material.emissiveMap) material.emissiveMap.dispose();
+        material.dispose();
+      });
+    } else {
+      if (object.material.map) object.material.map.dispose();
+      if (object.material.normalMap) object.material.normalMap.dispose();
+      if (object.material.roughnessMap) object.material.roughnessMap.dispose();
+      if (object.material.metalnessMap) object.material.metalnessMap.dispose();
+      if (object.material.emissiveMap) object.material.emissiveMap.dispose();
+      object.material.dispose();
+    }
+  }
+
+  // Recursively dispose children
+  if (object.children) {
+    object.children.forEach((child: any) => disposeThreeJSResources(child));
+  }
+};
 
 interface ScytheProps {
   parentRef: React.RefObject<Group>;
@@ -15,20 +52,32 @@ interface ScytheProps {
 }
 
 // Reusable ScytheModel component
-function ScytheModel({ 
-  scytheRef, 
-  basePosition, 
+function ScytheModel({
+  scytheRef,
+  basePosition,
   isEmpowered = false,
-}: { 
-  scytheRef: React.RefObject<Group>; 
+  ring1Rotation,
+  ring2Rotation,
+  handleRing1Rotation,
+  handleRing2Rotation,
+  handleRing3Rotation,
+  handleRing4Rotation,
+}: {
+  scytheRef: React.RefObject<Group>;
   basePosition: readonly [number, number, number];
   isEmpowered?: boolean;
+  ring1Rotation: React.MutableRefObject<number>;
+  ring2Rotation: React.MutableRefObject<number>;
+  handleRing1Rotation: React.MutableRefObject<number>;
+  handleRing2Rotation: React.MutableRefObject<number>;
+  handleRing3Rotation: React.MutableRefObject<number>;
+  handleRing4Rotation: React.MutableRefObject<number>;
 }) {
-  // Create custom blade shape
-  const createBladeShape = () => {
+  // Memoize blade shape to prevent recreation on every render
+  const bladeShape = useMemo(() => {
     const shape = new Shape();
     shape.moveTo(0, 0);
-    
+
     // Create thick back edge first
     shape.lineTo(0.4, -0.130);
     shape.bezierCurveTo(
@@ -36,7 +85,7 @@ function ScytheModel({
       1.33, 0.5,    // control point 2
       1.6, 0.515    // end point (tip)
     );
-    
+
     // Create sharp edge
     shape.lineTo(1.125, 0.75);
     shape.bezierCurveTo(
@@ -46,9 +95,9 @@ function ScytheModel({
     );
     shape.lineTo(0, 0);
     return shape;
-  };
+  }, []);
 
-  const bladeExtradeSettings = {
+  const bladeExtrudeSettings = useMemo(() => ({
     steps: 1,
     depth: 0.00010,
     bevelEnabled: true,
@@ -56,7 +105,7 @@ function ScytheModel({
     bevelSize: 0.035,
     bevelSegments: 1,
     curveSegments: 16
-  };
+  }), []);
 
   return (
     <group 
@@ -68,14 +117,14 @@ function ScytheModel({
       {/* Handle */}
       <group position={[0, -0, 0]} rotation={[0, 0, Math.PI + 0.3]}>
         <mesh>
-          <cylinderGeometry args={[0.04, 0.04, 1.5, 12]} />
+          <primitive object={getCachedGeometry('cylinder', 0.04, 0.04, 1.5, 12)} />
           <meshStandardMaterial color="#a86432" roughness={0.7} />
         </mesh>
         
         {/* Decorative wrappings handle */}
         {[...Array(7)].map((_, i) => (
           <mesh key={i} position={[0, 0.6 - i * 0.2, 0]} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.07, 0.01, 8, 16]} />
+            <primitive object={getCachedGeometry('torus', 0.07, 0.01, 8, 16)} />
             <meshStandardMaterial color="#a86432" metalness={0.3} roughness={0.7} />
           </mesh>
         ))}
@@ -85,14 +134,14 @@ function ScytheModel({
       <group position={[-.0, 0., 0]} rotation={[Math.PI / 1, 0, Math.PI - 0.3]}>
         {/* Base connector */}
         <mesh>
-          <cylinderGeometry args={[0.06, 0.06, 0.3, 8]} />
+          <primitive object={getCachedGeometry('cylinder', 0.06, 0.06, 0.3, 8)} />
           <meshStandardMaterial color="#2c1810" roughness={0.6} />
         </mesh>
 
         {/* Rotating glow rings */}
-        <group rotation-x={useFrame((state) => state.clock.getElapsedTime() * 2)}>
+        <group rotation-x={ring1Rotation.current}>
           <mesh position-y={0.55} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.14, 0.02, 16, 32]} />
+            <primitive object={getCachedGeometry('torus', 0.14, 0.02, 16, 32)} />
             <meshStandardMaterial
               color={isEmpowered ? "#4169E1" : "#00BFFF"}
               emissive={isEmpowered ? "#1E90FF" : "#87CEEB"}
@@ -104,9 +153,9 @@ function ScytheModel({
         </group>
 
         {/* Second ring rotating opposite direction */}
-        <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+        <group rotation-x={ring2Rotation.current}>
           <mesh position-y={-0.55} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.14, 0.02, 16, 32]} />
+            <primitive object={getCachedGeometry('torus', 0.14, 0.02, 16, 32)} />
             <meshStandardMaterial
               color={isEmpowered ? "#4169E1" : "#00BFFF"}
               emissive={isEmpowered ? "#1E90FF" : "#87CEEB"}
@@ -119,9 +168,9 @@ function ScytheModel({
 
 
         {/* HANDLE RING 1 */}
-        <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+        <group rotation-x={handleRing1Rotation.current}>
           <mesh position-y={-0.4} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.075, 0.02, 16, 32]} />
+            <primitive object={getCachedGeometry('torus', 0.075, 0.02, 16, 32)} />
             <meshStandardMaterial
               color={isEmpowered ? "#4169E1" : "#00BFFF"}
               emissive={isEmpowered ? "#1E90FF" : "#87CEEB"}
@@ -133,9 +182,9 @@ function ScytheModel({
         </group>
 
         {/* HANDLE RING 2 */}
-        <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+        <group rotation-x={handleRing2Rotation.current}>
           <mesh position-y={-0.2} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.075, 0.02, 16, 32]} />
+            <primitive object={getCachedGeometry('torus', 0.075, 0.02, 16, 32)} />
             <meshStandardMaterial
               color={isEmpowered ? "#4169E1" : "#00BFFF"}
               emissive={isEmpowered ? "#1E90FF" : "#87CEEB"}
@@ -147,9 +196,9 @@ function ScytheModel({
         </group>
 
         {/* HANDLE RING 3 */}
-        <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+        <group rotation-x={handleRing3Rotation.current}>
           <mesh position-y={0.2} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.075, 0.02, 16, 32]} />
+            <primitive object={getCachedGeometry('torus', 0.075, 0.02, 16, 32)} />
             <meshStandardMaterial
               color={isEmpowered ? "#4169E1" : "#00BFFF"}
               emissive={isEmpowered ? "#1E90FF" : "#87CEEB"}
@@ -161,9 +210,9 @@ function ScytheModel({
         </group>
 
                 {/* HANDLE RING 4 */}
-                <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+                <group rotation-x={handleRing4Rotation.current}>
           <mesh position-y={0.4} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.075, 0.02, 16, 32]} />
+            <primitive object={getCachedGeometry('torus', 0.075, 0.02, 16, 32)} />
             <meshStandardMaterial
               color={isEmpowered ? "#4169E1" : "#00BFFF"}
               emissive={isEmpowered ? "#1E90FF" : "#87CEEB"}
@@ -176,7 +225,7 @@ function ScytheModel({
 
         {/* Static outer glow */}
         <mesh>
-          <cylinderGeometry args={[0.0725, 0.0725, 0.4, 8]} />
+          <primitive object={getCachedGeometry('cylinder', 0.0725, 0.0725, 0.4, 8)} />
           <meshStandardMaterial
             color={isEmpowered ? "#00BFFF" : "#00BFFF"}
             emissive={isEmpowered ? "#00BFFF" : "#00BFFF"}
@@ -191,7 +240,7 @@ function ScytheModel({
       <group position={[0.375, 0.45, 0.65]} rotation={[0.2, -Math.PI / 3.6, Math.PI -0.4]} scale={[0.8, 0.45, 0.8]}>
         {/* Base blade */}
         <mesh>
-          <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.03 }]} />
+          <extrudeGeometry args={[bladeShape, { ...bladeExtrudeSettings, depth: 0.03 }]} />
           <meshStandardMaterial
             color={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
             emissive={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
@@ -209,7 +258,7 @@ function ScytheModel({
       <group position={[-0.375, -0.45, -0.65]} rotation={[0.2, Math.PI/14 - 1.1, -0.4]} scale={[0.8, 0.45, 0.8]}>
         {/* Second blade */}
         <mesh>
-          <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.03 }]} />
+          <extrudeGeometry args={[bladeShape, { ...bladeExtrudeSettings, depth: 0.03 }]} />
           <meshStandardMaterial
             color={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
             emissive={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
@@ -234,7 +283,7 @@ export default function Scythe({
   isSpinning = false,
   hasCryoflame = false
 }: ScytheProps) {
-  
+
   // Debug: Log when empowerment changes
   useEffect(() => {
     if (isEmpowered) {
@@ -259,10 +308,26 @@ export default function Scythe({
   const leftClickStartTime = useRef(0);
   const lastLeftClickState = useRef(false);
 
+  // Rotation refs for animated elements (fix memory leak)
+  const ring1Rotation = useRef(0);
+  const ring2Rotation = useRef(0);
+  const handleRing1Rotation = useRef(0);
+  const handleRing2Rotation = useRef(0);
+  const handleRing3Rotation = useRef(0);
+  const handleRing4Rotation = useRef(0);
+
   const basePosition = [-0.9, 0.65, 0.3] as const;
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (!scytheRef.current) return;
+
+    // Update rotation refs for animated rings (fix memory leak)
+    ring1Rotation.current = state.clock.getElapsedTime() * 2;
+    ring2Rotation.current = -state.clock.getElapsedTime() * 2;
+    handleRing1Rotation.current = -state.clock.getElapsedTime() * 2;
+    handleRing2Rotation.current = -state.clock.getElapsedTime() * 2;
+    handleRing3Rotation.current = -state.clock.getElapsedTime() * 2;
+    handleRing4Rotation.current = -state.clock.getElapsedTime() * 2;
 
     // Handle aura timing logic
     const currentTime = Date.now();
@@ -321,10 +386,30 @@ export default function Scythe({
     }
   });
 
+  // Cleanup effect for component unmount
+  useEffect(() => {
+    return () => {
+      // Dispose of all Three.js resources in the scythe group
+      if (scytheRef.current) {
+        disposeThreeJSResources(scytheRef.current);
+      }
+    };
+  }, []);
+
   // Single scythe only
   return (
     <>
-      <ScytheModel scytheRef={scytheRef} basePosition={basePosition} isEmpowered={isEmpowered} />
+      <ScytheModel
+        scytheRef={scytheRef}
+        basePosition={basePosition}
+        isEmpowered={isEmpowered}
+        ring1Rotation={ring1Rotation}
+        ring2Rotation={ring2Rotation}
+        handleRing1Rotation={handleRing1Rotation}
+        handleRing2Rotation={handleRing2Rotation}
+        handleRing3Rotation={handleRing3Rotation}
+        handleRing4Rotation={handleRing4Rotation}
+      />
       <SpellCastingAura parentRef={parentRef} isActive={showAura} hasCryoflame={hasCryoflame} />
     </>
   );

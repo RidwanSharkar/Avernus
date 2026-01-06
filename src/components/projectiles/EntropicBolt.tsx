@@ -2,42 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, Mesh, Color, AdditiveBlending } from '@/utils/three-exports';
 import EntropicBoltTrail from './EntropicBoltTrail';
-
-// Cleanup utility for Three.js resources
-const disposeThreeJSResources = (object: any) => {
-  if (!object) return;
-
-  // Dispose geometry
-  if (object.geometry) {
-    object.geometry.dispose();
-  }
-
-  // Dispose material
-  if (object.material) {
-    if (Array.isArray(object.material)) {
-      object.material.forEach((material: any) => {
-        if (material.map) material.map.dispose();
-        if (material.normalMap) material.normalMap.dispose();
-        if (material.roughnessMap) material.roughnessMap.dispose();
-        if (material.metalnessMap) material.metalnessMap.dispose();
-        if (material.emissiveMap) material.emissiveMap.dispose();
-        material.dispose();
-      });
-    } else {
-      if (object.material.map) object.material.map.dispose();
-      if (object.material.normalMap) object.material.normalMap.dispose();
-      if (object.material.roughnessMap) object.material.roughnessMap.dispose();
-      if (object.material.metalnessMap) object.material.metalnessMap.dispose();
-      if (object.material.emissiveMap) object.material.emissiveMap.dispose();
-      object.material.dispose();
-    }
-  }
-
-  // Recursively dispose children
-  if (object.children) {
-    object.children.forEach((child: any) => disposeThreeJSResources(child));
-  }
-};
+import { disposeThreeJSResources, torusEnergyRing, entropicEnergySphere, entropicEnergyCore, entropicEnergyTip } from '@/utils/sharedGeometries';
 
 interface EntropicBoltProps {
   id: number;
@@ -254,8 +219,7 @@ function EntropicBoltImpact({ position, onComplete, isCryoflame = false }: Entro
   return (
     <group position={position}>
       {/* Main entropic explosion effect */}
-      <mesh>
-        <sphereGeometry args={[0.675 * (1 + elapsed * 1.5), 12, 12]} />
+      <mesh scale={[0.675 * (1 + elapsed * 1.5), 0.675 * (1 + elapsed * 1.5), 0.675 * (1 + elapsed * 1.5)]} geometry={entropicEnergySphere}>
         <meshStandardMaterial
           color={isCryoflame ? "#1e40af" : "#FF4500"}
           emissive={isCryoflame ? "#3b82f6" : "#FF6600"}
@@ -268,8 +232,7 @@ function EntropicBoltImpact({ position, onComplete, isCryoflame = false }: Entro
       </mesh>
 
       {/* Secondary explosion ring */}
-      <mesh>
-        <sphereGeometry args={[0.45 * (1 + elapsed * 2), 8, 8]} />
+      <mesh scale={[0.45 * (1 + elapsed * 2), 0.45 * (1 + elapsed * 2), 0.45 * (1 + elapsed * 2)]} geometry={entropicEnergyCore}>
         <meshStandardMaterial
           color={isCryoflame ? "#3b82f6" : "#FFA500"}
           emissive={isCryoflame ? "#60a5fa" : "#FFA500"}
@@ -296,7 +259,7 @@ function EntropicBoltImpact({ position, onComplete, isCryoflame = false }: Entro
             ]}
             rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
           >
-            <coneGeometry args={[0.08, 0.4, 4]} />
+            <primitive object={entropicEnergyTip} />
             <meshStandardMaterial
               color={isCryoflame ? "#dbeafe" : "#FFD700"}
               emissive={isCryoflame ? "#bfdbfe" : "#FFD700"}
@@ -309,22 +272,26 @@ function EntropicBoltImpact({ position, onComplete, isCryoflame = false }: Entro
       })}
 
       {/* Expanding energy rings */}
-      {[...Array(2)].map((_, i) => (
-        <mesh
-          key={`energy-ring-${i}`}
-          rotation={[-Math.PI/2, 0, i * Math.PI/2]}
-        >
-          <torusGeometry args={[1 * (1 + elapsed * 1.5) + i * 0.2, 0.08, 6, 16]} />
-          <meshStandardMaterial
-            color={isCryoflame ? "#1e40af" : "#FF4500"}
-            emissive={isCryoflame ? "#3b82f6" : "#FF6600"}
-            emissiveIntensity={(isCryoflame ? 3.0 : 2) * fade}
-            transparent
-            opacity={0.5 * fade * (1 - i * 0.3)}
-            blending={AdditiveBlending}
-          />
-        </mesh>
-      ))}
+      {[...Array(2)].map((_, i) => {
+        const ringScale = 1 * (1 + elapsed * 1.5) + i * 0.2;
+        return (
+          <mesh
+            key={`energy-ring-${i}`}
+            rotation={[-Math.PI/2, 0, i * Math.PI/2]}
+            scale={[ringScale, ringScale, ringScale]}
+            geometry={torusEnergyRing}
+          >
+            <meshStandardMaterial
+              color={isCryoflame ? "#1e40af" : "#FF4500"}
+              emissive={isCryoflame ? "#3b82f6" : "#FF6600"}
+              emissiveIntensity={(isCryoflame ? 3.0 : 2) * fade}
+              transparent
+              opacity={0.5 * fade * (1 - i * 0.3)}
+              blending={AdditiveBlending}
+            />
+          </mesh>
+        );
+      })}
 
       {/* Bright flash */}
       <pointLight

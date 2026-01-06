@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { AdditiveBlending } from '@/utils/three-exports';
+import { getCachedGeometry, sphereSparkTiny } from '@/utils/sharedGeometries';
 
 import { Vector3, Group } from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -109,7 +110,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
       >
         {/* Core beam - ultra thin, enhanced for perfect shots */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-          <cylinderGeometry args={[isPerfectShot ? 0.035 : 0.025, isPerfectShot ? 0.035 : 0.025, 20, 8]} />
+          <primitive object={getCachedGeometry('cylinder', isPerfectShot ? 0.035 : 0.025, isPerfectShot ? 0.035 : 0.025, 20, 8)} />
           <meshStandardMaterial
             color={colors.core}
             emissive={colors.emissive}
@@ -121,7 +122,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
 
         {/* Inner glow - enhanced for perfect shots */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-          <cylinderGeometry args={[isPerfectShot ? 0.08 : 0.0625, isPerfectShot ? 0.08 : 0.0625, 20, 8]} />
+          <primitive object={getCachedGeometry('cylinder', isPerfectShot ? 0.08 : 0.0625, isPerfectShot ? 0.08 : 0.0625, 20, 8)} />
           <meshStandardMaterial
             color={colors.core}
             emissive={colors.emissive}
@@ -133,7 +134,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
 
         {/* Outer glow - enhanced for perfect shots */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-          <cylinderGeometry args={[isPerfectShot ? 0.095 : 0.075, isPerfectShot ? 0.095 : 0.075, 20, 8]} />
+          <primitive object={getCachedGeometry('cylinder', isPerfectShot ? 0.095 : 0.075, isPerfectShot ? 0.095 : 0.075, 20, 8)} />
           <meshStandardMaterial
             color={colors.outer}
             emissive={colors.emissive}
@@ -160,7 +161,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
                 rotation={[0, Date.now() * 0.002 + i, 0]}
                 scale={[scale, scale, scale]}
               >
-                <torusGeometry args={[0.4, 0.08, 6, 12]} />
+                <primitive object={getCachedGeometry('torus', 0.4, 0.08, 6, 12)} />
                 <meshStandardMaterial
                   color={colors.outer}
                   emissive={colors.emissive}
@@ -176,7 +177,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
                 rotation={[Math.PI/2, Date.now() * -0.003 + i, 0]}
                 scale={[scale * 0.7, scale * 0.7, scale * 0.7]}
               >
-                <torusGeometry args={[0.3, 0.06, 6, 12]} />
+                <primitive object={getCachedGeometry('torus', 0.3, 0.06, 6, 12)} />
                 <meshStandardMaterial
                   color={colors.core}
                   emissive={colors.emissive}
@@ -213,7 +214,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
                   10 + Math.sin(Date.now() * 0.005 + i) * 2
                 ]}>
                   <mesh>
-                    <sphereGeometry args={[0.02, 4, 4]} />
+                    <primitive object={sphereSparkTiny} />
                     <meshStandardMaterial
                       color="#ffffff"
                       emissive="#ffffff"
@@ -229,7 +230,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
             
             {/* Perfect shot aura */}
             <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-              <cylinderGeometry args={[0.12, 0.12, 20, 8]} />
+              <primitive object={getCachedGeometry('cylinder', 0.12, 0.12, 20, 8)} />
               <meshStandardMaterial
                 color="#ffffff"
                 emissive="#ffffff"

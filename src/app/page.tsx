@@ -17,6 +17,7 @@ import { MultiplayerProvider, useMultiplayer } from '../contexts/MultiplayerCont
 import RoomJoin from '../components/ui/RoomJoin';
 import MerchantUI from '../components/ui/MerchantUI';
 import { weaponAbilities, getAbilityIcon, type AbilityData } from '../utils/weaponAbilities';
+import { disposeCachedGeometries } from '../utils/sharedGeometries';
 
 // Extend Window interface to include audioSystem
 declare global {
@@ -642,6 +643,13 @@ function HomeContent() {
     };
 
     initAudioSystem();
+  }, []);
+
+  // Cleanup cached geometries when component unmounts
+  useEffect(() => {
+    return () => {
+      disposeCachedGeometries();
+    };
   }, []);
 
   return (

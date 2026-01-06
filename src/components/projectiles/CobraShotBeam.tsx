@@ -3,6 +3,7 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, AdditiveBlending } from '@/utils/three-exports';
+import { getCachedGeometry, sphereSmall, cylinderBeamLongThin, cylinderBeamLongMedium, cylinderBeamLongThick, cylinderBeamExtraLong } from '@/utils/sharedGeometries';
 
 interface CobraShotBeamProps {
   position: Vector3;
@@ -64,7 +65,7 @@ const CobraShotBeam: React.FC<CobraShotBeamProps> = ({
       >
         {/* Core beam - ultra thin with cobra glow */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-          <cylinderGeometry args={[0.045, 0.045, 20, 8]} />
+          <primitive object={getCachedGeometry('cylinder', 0.045, 0.045, 20, 8)} />
           <meshStandardMaterial
             color={colors.core}
             emissive={colors.emissive}
@@ -76,7 +77,7 @@ const CobraShotBeam: React.FC<CobraShotBeamProps> = ({
 
         {/* Inner glow - cobra aura */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-          <cylinderGeometry args={[0.08, 0.08, 20, 8]} />
+          <primitive object={getCachedGeometry('cylinder', 0.08, 0.08, 20, 8)} />
           <meshStandardMaterial
             color={colors.emissive}
             emissive={colors.emissive}
@@ -88,7 +89,7 @@ const CobraShotBeam: React.FC<CobraShotBeamProps> = ({
 
         {/* Outer glow - toxic mist */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-          <cylinderGeometry args={[0.12, 0.12, 20, 8]} />
+          <primitive object={getCachedGeometry('cylinder', 0.12, 0.12, 20, 8)} />
           <meshStandardMaterial
             color={colors.outer}
             emissive={colors.core}
@@ -115,7 +116,7 @@ const CobraShotBeam: React.FC<CobraShotBeamProps> = ({
                 rotation={[0, Date.now() * 0.0025 + i, 0]}
                 scale={[scale, scale, scale]}
               >
-                <torusGeometry args={[0.35, 0.07, 6, 12]} />
+                <primitive object={getCachedGeometry('torus', 0.35, 0.07, 6, 12)} />
                 <meshStandardMaterial
                   color={colors.outer}
                   emissive={colors.emissive}
@@ -131,7 +132,7 @@ const CobraShotBeam: React.FC<CobraShotBeamProps> = ({
                 rotation={[Math.PI/2, Date.now() * -0.0035 + i, 0]}
                 scale={[scale * 0.75, scale * 0.75, scale * 0.75]}
               >
-                <torusGeometry args={[0.28, 0.05, 6, 12]} />
+                <primitive object={getCachedGeometry('torus', 0.28, 0.05, 6, 12)} />
                 <meshStandardMaterial
                   color={colors.core}
                   emissive={colors.emissive}
@@ -158,7 +159,7 @@ const CobraShotBeam: React.FC<CobraShotBeamProps> = ({
               position={[particleOffset, 0, particlePosition]}
               scale={[0.3, 0.3, 0.3]}
             >
-              <sphereGeometry args={[0.08, 6, 6]} />
+              <primitive object={sphereSmall} />
               <meshStandardMaterial
                 color={colors.outer}
                 emissive={colors.outer}
