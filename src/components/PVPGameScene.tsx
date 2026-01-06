@@ -1476,7 +1476,8 @@ const [maxMana, setMaxMana] = useState(150);
       if (casterId === socket?.id) {
         const damageNumberManager = engineRef.current?.getWorld().getSystem(CombatSystem)?.getDamageNumberManager();
         if (damageNumberManager && damageNumberManager.addDamageNumber) {
-          const targetPlayer = players.get(playerId);
+          // Use playersRef.current to get the latest player position (not the stale closure value)
+          const targetPlayer = playersRef.current.get(playerId);
           if (targetPlayer) {
             const damagePosition = new Vector3(
               targetPlayer.position.x,
