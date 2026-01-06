@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Color, Group, Mesh, SphereGeometry, OctahedronGeometry, AdditiveBlending, MathUtils } from '@/utils/three-exports';
+import { Vector3, Color, Group, Mesh, SphereGeometry, OctahedronGeometry, BoxGeometry, RingGeometry, CylinderGeometry, MeshBasicMaterial, AdditiveBlending, MathUtils } from '@/utils/three-exports';
 
 interface SummonedUnitDeathEffectProps {
   position: Vector3;
@@ -15,6 +15,7 @@ export default function SummonedUnitDeathEffect({
   playerNumber,
   onComplete
 }: SummonedUnitDeathEffectProps) {
+
   const groupRef = useRef<Group>(null);
   const [isActive, setIsActive] = useState(true);
   const [phase, setPhase] = useState<'explosion' | 'spirit'>('explosion');
@@ -29,17 +30,66 @@ export default function SummonedUnitDeathEffect({
   const playerColor = playerNumber === 1 ? new Color(0x4444FF) : new Color(0xFF4444); // Blue for P1, Red for P2
   const spiritColor = playerColor.clone().multiplyScalar(1.5); // Brighter for spirit
 
-  // Geometries
-  const explosionGeometry = new SphereGeometry(0.1, 8, 6);
-  const spiritGeometry = new OctahedronGeometry(0.3, 0);
+  // Memoized geometries to prevent recreation every frame and memory leaks
+  const geometries = useMemo(() => ({
+    explosionParticle: new SphereGeometry(0.1, 8, 6),
+    explosionFlash: new SphereGeometry(0.2, 16, 12),
+    debugBox: new BoxGeometry(1, 1, 1),
+    shockwaveRing: new RingGeometry(0.8, 1.2, 16),
+    spiritCrystal: new OctahedronGeometry(0.3, 0),
+    spiritParticle: new OctahedronGeometry(0.1, 0),
+    spiritTrail: new CylinderGeometry(0.05, 0.1, 1, 8),
+  }), []);
+
+  // Memoized materials to prevent recreation every frame and memory leaks
+  const materials = useMemo(() => ({
+    debugBox: new MeshBasicMaterial({ color: "red" }),
+    explosionFlash: new MeshBasicMaterial({
+      color: playerColor,
+      transparent: true,
+      opacity: 0.9,
+      blending: AdditiveBlending,
+    }),
+    explosionParticle: new MeshBasicMaterial({
+      color: playerColor,
+      transparent: true,
+      opacity: 0.8,
+      blending: AdditiveBlending,
+    }),
+    shockwaveRing: new MeshBasicMaterial({
+      color: playerColor,
+      transparent: true,
+      opacity: 0.4,
+      blending: AdditiveBlending,
+      side: 2, // DoubleSide
+    }),
+    spiritCrystal: new MeshBasicMaterial({
+      color: spiritColor,
+      transparent: true,
+      opacity: 0.9,
+      blending: AdditiveBlending,
+    }),
+    spiritParticle: new MeshBasicMaterial({
+      color: spiritColor,
+      transparent: true,
+      opacity: 0.6,
+      blending: AdditiveBlending,
+    }),
+    spiritTrail: new MeshBasicMaterial({
+      color: spiritColor,
+      transparent: true,
+      opacity: 0.3,
+      blending: AdditiveBlending,
+    }),
+  }), [playerColor, spiritColor]);
 
   useEffect(() => {
-    // Cleanup geometries on unmount
+    // Cleanup geometries and materials on unmount
     return () => {
-      explosionGeometry.dispose();
-      spiritGeometry.dispose();
+      Object.values(geometries).forEach(geometry => geometry.dispose());
+      Object.values(materials).forEach(material => material.dispose());
     };
-  }, []);
+  }, [geometries, materials]);
 
   useFrame((state) => {
     if (!groupRef.current || !isActive) return;
@@ -78,6 +128,7 @@ export default function SummonedUnitDeathEffect({
 
       if (spiritProgress >= 1.0) {
         // Effect complete
+        //console.log('💀 SummonedUnitDeathEffect completed');
         setIsActive(false);
         onComplete?.();
         return;
@@ -112,19 +163,14 @@ export default function SummonedUnitDeathEffect({
 
   return (
     <group ref={groupRef} position={[position.x, position.y, position.z]}>
+      {/* DEBUG: Bright colored box to verify rendering */}
+      <mesh position={[0, 2, 0]} geometry={geometries.debugBox} material={materials.debugBox} />
+
       {/* Explosion Phase */}
       {phase === 'explosion' && (
         <group>
           {/* Core explosion flash */}
-          <mesh>
-            <sphereGeometry args={[0.2, 16, 12]} />
-            <meshBasicMaterial
-              color={playerColor}
-              transparent
-              opacity={0.9}
-              blending={AdditiveBlending}
-            />
-          </mesh>
+          <mesh geometry={geometries.explosionFlash} material={materials.explosionFlash} />
 
           {/* Explosion particles */}
           {Array.from({ length: 12 }, (_, i) => {
@@ -138,29 +184,14 @@ export default function SummonedUnitDeathEffect({
               <mesh
                 key={`explosion-particle-${i}`}
                 position={[x, y, z]}
-                geometry={explosionGeometry}
-              >
-                <meshBasicMaterial
-                  color={playerColor}
-                  transparent
-                  opacity={0.8}
-                  blending={AdditiveBlending}
-                />
-              </mesh>
+                geometry={geometries.explosionParticle}
+                material={materials.explosionParticle}
+              />
             );
           })}
 
           {/* Shockwave ring */}
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.8, 1.2, 16]} />
-            <meshBasicMaterial
-              color={playerColor}
-              transparent
-              opacity={0.4}
-              blending={AdditiveBlending}
-              side={2} // DoubleSide
-            />
-          </mesh>
+          <mesh rotation={[Math.PI / 2, 0, 0]} geometry={geometries.shockwaveRing} material={materials.shockwaveRing} />
         </group>
       )}
 
@@ -168,14 +199,7 @@ export default function SummonedUnitDeathEffect({
       {phase === 'spirit' && (
         <group>
           {/* Main spirit crystal */}
-          <mesh geometry={spiritGeometry}>
-            <meshBasicMaterial
-              color={spiritColor}
-              transparent
-              opacity={0.9}
-              blending={AdditiveBlending}
-            />
-          </mesh>
+          <mesh geometry={geometries.spiritCrystal} material={materials.spiritCrystal} />
 
           {/* Spirit aura particles */}
           {Array.from({ length: 8 }, (_, i) => {
@@ -189,28 +213,14 @@ export default function SummonedUnitDeathEffect({
                 key={`spirit-particle-${i}`}
                 position={[x, 0, z]}
                 scale={[0.2, 0.2, 0.2]}
-              >
-                <octahedronGeometry args={[0.1, 0]} />
-                <meshBasicMaterial
-                  color={spiritColor}
-                  transparent
-                  opacity={0.6}
-                  blending={AdditiveBlending}
-                />
-              </mesh>
+                geometry={geometries.spiritParticle}
+                material={materials.spiritParticle}
+              />
             );
           })}
 
           {/* Spirit trail effect */}
-          <mesh position={[0, -0.5, 0]}>
-            <cylinderGeometry args={[0.05, 0.1, 1, 8]} />
-            <meshBasicMaterial
-              color={spiritColor}
-              transparent
-              opacity={0.3}
-              blending={AdditiveBlending}
-            />
-          </mesh>
+          <mesh position={[0, -0.5, 0]} geometry={geometries.spiritTrail} material={materials.spiritTrail} />
         </group>
       )}
     </group>

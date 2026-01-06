@@ -203,7 +203,10 @@ const ColossusStrikeComponent = memo(function ColossusStrike({
   // Create geometries and materials
   const geometries = useMemo(() => ({
     bolt: new SphereGeometry(1, 8, 8),
-    impact: new SphereGeometry(0.8, 16, 16)
+    impact: new SphereGeometry(0.8, 16, 16),
+    impactRing1: new RingGeometry(1, 1.2, 32),
+    impactRing2: new RingGeometry(1.4, 1.6, 32),
+    impactRing3: new RingGeometry(1.8, 2.0, 32)
   }), []);
   
   // Updated materials for yellow lightning
@@ -225,6 +228,11 @@ const ColossusStrikeComponent = memo(function ColossusStrike({
       emissive: new Color('#FFD700'), // Golden yellow
       emissiveIntensity: 1,
       transparent: true
+    }),
+    impactRing: new MeshBasicMaterial({
+      color: '#FFD700', // Golden yellow
+      transparent: true,
+      blending: AdditiveBlending
     })
   }), []);
 
@@ -233,9 +241,13 @@ const ColossusStrikeComponent = memo(function ColossusStrike({
     return () => {
       geometries.bolt.dispose();
       geometries.impact.dispose();
+      geometries.impactRing1.dispose();
+      geometries.impactRing2.dispose();
+      geometries.impactRing3.dispose();
       materials.coreBolt.dispose();
       materials.secondaryBolt.dispose();
       materials.impact.dispose();
+      materials.impactRing.dispose();
     };
   }, [geometries, materials]);
 
@@ -455,17 +467,20 @@ const ColossusStrikeComponent = memo(function ColossusStrike({
         />
         
         {/* Impact rings */}
-        {[1, 1.4, 1.8].map((size, i) => (
-          <mesh 
-            key={i} 
+        {[
+          { geometry: geometries.impactRing1, opacity: 0.8 },
+          { geometry: geometries.impactRing2, opacity: 0.65 },
+          { geometry: geometries.impactRing3, opacity: 0.5 }
+        ].map((ring, i) => (
+          <mesh
+            key={i}
+            geometry={ring.geometry}
             rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
           >
-            <ringGeometry args={[size, size + 0.2, 32]} />
-            <meshBasicMaterial
-              color="#FFD700" // Golden yellow
-              transparent
-              opacity={(0.8 - (i * 0.15)) * (1 - (startTimeRef.current ? (Date.now() - startTimeRef.current) / (duration * 1000) : 0))}
-              blending={AdditiveBlending}
+            <primitive
+              object={materials.impactRing.clone()}
+              attach="material"
+              opacity={ring.opacity * (1 - (startTimeRef.current ? (Date.now() - startTimeRef.current) / (duration * 1000) : 0))}
             />
           </mesh>
         ))}

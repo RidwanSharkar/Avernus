@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Group, Vector3 } from '@/utils/three-exports';
+import React, { useRef, useMemo, useEffect } from 'react';
+import { Group, Vector3, SphereGeometry, PlaneGeometry, MeshStandardMaterial } from '@/utils/three-exports';
 import { useFrame } from '@react-three/fiber';
 
 interface HauntedSoulEffectProps {
@@ -11,6 +11,51 @@ export default function HauntedSoulEffect({ position, onComplete }: HauntedSoulE
   const soulRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const startPosition = useRef(position.clone());
+
+  // Memoized geometries to prevent memory leaks
+  const geometries = useMemo(() => ({
+    mainOrb: new SphereGeometry(0.3, 16, 16),
+    coreOrb: new SphereGeometry(0.15, 8, 8),
+    particle: new SphereGeometry(0.05, 6, 6),
+    wisp: new PlaneGeometry(0.1, 0.8),
+  }), []);
+
+  // Memoized materials to prevent memory leaks
+  const materials = useMemo(() => ({
+    mainOrb: new MeshStandardMaterial({
+      color: "#4a148c",
+      transparent: true,
+      emissive: "#6a1b9a",
+      emissiveIntensity: 0.5,
+    }),
+    coreOrb: new MeshStandardMaterial({
+      color: "#ba68c8",
+      transparent: true,
+      emissive: "#e1bee7",
+      emissiveIntensity: 1.0,
+    }),
+    particle: new MeshStandardMaterial({
+      color: "#9c27b0",
+      transparent: true,
+      emissive: "#ce93d8",
+      emissiveIntensity: 0.3,
+    }),
+    wisp: new MeshStandardMaterial({
+      color: "#7b1fa2",
+      transparent: true,
+      emissive: "#ab47bc",
+      emissiveIntensity: 0.2,
+      side: 2, // DoubleSide
+    }),
+  }), []);
+
+  useEffect(() => {
+    // Cleanup geometries and materials on unmount
+    return () => {
+      Object.values(geometries).forEach(geometry => geometry.dispose());
+      Object.values(materials).forEach(material => material.dispose());
+    };
+  }, [geometries, materials]);
 
   useFrame((_, delta) => {
     if (!soulRef.current) return;
@@ -43,27 +88,13 @@ export default function HauntedSoulEffect({ position, onComplete }: HauntedSoulE
   return (
     <group ref={soulRef} position={[startPosition.current.x, startPosition.current.y, startPosition.current.z]}>
       {/* Main soul orb */}
-      <mesh>
-        <sphereGeometry args={[0.3, 16, 16]} />
-        <meshStandardMaterial
-          color="#4a148c"
-          transparent
-          opacity={1 - progressRef.current}
-          emissive="#6a1b9a"
-          emissiveIntensity={0.5}
-        />
+      <mesh geometry={geometries.mainOrb}>
+        <primitive object={materials.mainOrb.clone()} attach="material" opacity={1 - progressRef.current} />
       </mesh>
 
       {/* Inner glowing core */}
-      <mesh>
-        <sphereGeometry args={[0.15, 8, 8]} />
-        <meshStandardMaterial
-          color="#ba68c8"
-          transparent
-          opacity={1 - progressRef.current}
-          emissive="#e1bee7"
-          emissiveIntensity={1.0}
-        />
+      <mesh geometry={geometries.coreOrb}>
+        <primitive object={materials.coreOrb.clone()} attach="material" opacity={1 - progressRef.current} />
       </mesh>
 
       {/* Particle trail effect */}
@@ -78,15 +109,8 @@ export default function HauntedSoulEffect({ position, onComplete }: HauntedSoulE
           if (y < 0) return null;
 
           return (
-            <mesh key={i} position={[x, y, z]}>
-              <sphereGeometry args={[0.05, 6, 6]} />
-              <meshStandardMaterial
-                color="#9c27b0"
-                transparent
-                opacity={(1 - progressRef.current) * 0.7}
-                emissive="#ce93d8"
-                emissiveIntensity={0.3}
-              />
+            <mesh key={i} position={[x, y, z]} geometry={geometries.particle}>
+              <primitive object={materials.particle.clone()} attach="material" opacity={(1 - progressRef.current) * 0.7} />
             </mesh>
           );
         })}
@@ -100,16 +124,8 @@ export default function HauntedSoulEffect({ position, onComplete }: HauntedSoulE
         const z = Math.sin(angle) * radius;
 
         return (
-          <mesh key={`wisp-${i}`} position={[x, progressRef.current * 6, z]}>
-            <planeGeometry args={[0.1, 0.8]} />
-            <meshStandardMaterial
-              color="#7b1fa2"
-              transparent
-              opacity={(1 - progressRef.current) * 0.4}
-              emissive="#ab47bc"
-              emissiveIntensity={0.2}
-              side={2} // DoubleSide
-            />
+          <mesh key={`wisp-${i}`} position={[x, progressRef.current * 6, z]} geometry={geometries.wisp}>
+            <primitive object={materials.wisp.clone()} attach="material" opacity={(1 - progressRef.current) * 0.4} />
           </mesh>
         );
       })}

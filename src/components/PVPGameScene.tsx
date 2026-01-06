@@ -5057,6 +5057,8 @@ const hasMana = useCallback((amount: number) => {
       // Process pending summoned unit death events
       const pendingDeath = (window as any).pendingSummonedUnitDeath;
       if (pendingDeath && pendingDeath.length > 0) {
+        console.log('💀 Processing', pendingDeath.length, 'summoned unit death events:', pendingDeath);
+
         // Play minion death sound effect and create death effects for all players
         const newDeathEffects: Array<{
           id: string;
@@ -5066,6 +5068,8 @@ const hasMana = useCallback((amount: number) => {
         }> = [];
 
         for (const deathEvent of pendingDeath) {
+          console.log('💀 Creating death effect for unit:', deathEvent.unitId, 'at position:', deathEvent.position);
+
           // Play sound
           if (window.audioSystem) {
             window.audioSystem.playMinionDeathSound();
@@ -5093,6 +5097,7 @@ const hasMana = useCallback((amount: number) => {
 
         // Add new death effects to state
         if (newDeathEffects.length > 0) {
+          console.log('💀 Adding', newDeathEffects.length, 'death effects to state');
           setSummonedUnitDeathEffects(prev => [...prev, ...newDeathEffects]);
         }
 
