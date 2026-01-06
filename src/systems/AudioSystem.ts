@@ -67,7 +67,11 @@ export class AudioSystem extends System {
       { id: 'ui_selection', file: 'ui/selection.mp3' },
       { id: 'ui_interface', file: 'ui/interface.mp3' },
       { id: 'ui_dash', file: 'ui/dash.mp3' },
-      { id: 'hit_box', file: 'ui/HitBox.mp3' }
+      { id: 'hit_box', file: 'ui/HitBox.mp3' },
+      { id: 'lightning_1', file: 'ui/lightning1.mp3' },
+      { id: 'lightning_2', file: 'ui/lightning2.mp3' },
+      { id: 'lightning_3', file: 'ui/lightning3.mp3' },
+      { id: 'lightning_4', file: 'ui/lightning4.mp3' }
       // Removed background_music from preload - loaded lazily
     ];
 
@@ -509,6 +513,13 @@ export class AudioSystem extends System {
   // Play hit box sound (when any weapon deals damage to enemy players/summoned units/pillars)
   public playHitBoxSound(position: Vector3) {
     return this.playWeaponSound('hit_box', position, { volume: 0.7 });
+  }
+
+  // Play random lightning strike sound (when lightning hits the map)
+  public playLightningStrikeSound(position: Vector3) {
+    const lightningSounds = ['lightning_1', 'lightning_2', 'lightning_3', 'lightning_4'];
+    const randomSoundId = lightningSounds[Math.floor(Math.random() * lightningSounds.length)];
+    return this.playWeaponSound(randomSoundId, position, { volume: 0.5 }); // Half volume as requested
   }
 
   // Background music controls (local only, 50% volume)

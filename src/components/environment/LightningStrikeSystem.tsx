@@ -19,7 +19,7 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
   onComplete
 }) => {
   const startTimeRef = useRef(Date.now());
-  const duration = 0.625; // seconds
+  const duration = 0.575; // seconds
   const flickerRef = useRef(1);
 
   // Calculate the sky position (directly above the hit position)
@@ -28,8 +28,8 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
   }, [position]);
 
   // Create more concentrated branching geometry for lightning bolt
-  const mainBoltSegments = 128; // Increased for more detail
-  const branchCount = 48; // Doubled for more branches
+  const mainBoltSegments = 96; // Increased for more detail
+  const branchCount = 20; // Doubled for more branches
 
   const branches = useMemo(() => {
     const distance = position.clone().sub(skyPosition).length();
@@ -125,7 +125,7 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
     coreBolt: new MeshStandardMaterial({
       color: new Color('#FFFFFF'),
       emissive: new Color('#80D9FF'),
-      emissiveIntensity: 22,
+      emissiveIntensity: 18,
       transparent: true
     }),
     secondaryBolt: new MeshStandardMaterial({
@@ -137,7 +137,7 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
     impact: new MeshStandardMaterial({
       color: new Color('#FFFFFF'),
       emissive: new Color('#B6EAFF'),
-      emissiveIntensity: 12,
+      emissiveIntensity: 10,
       transparent: true
     }),
     ring: new MeshBasicMaterial({
@@ -187,8 +187,8 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
         <mesh
           geometry={geometries.impact}
           material={materials.impact}
-          scale={[0.25, 0.25, 0.25]}
-          position={[0, 0.125, 0]}
+          scale={[0.3, 0.3, 0.3]}
+          position={[0, 0.025, 0]}
         />
 
         {/* Impact rings - using memoized geometries and shared material */}
@@ -226,7 +226,7 @@ interface LightningStrikeSystemProps {
 }
 
 const LightningStrikeSystem: React.FC<LightningStrikeSystemProps> = ({
-  groundRadius = 29
+  groundRadius = 32
 }) => {
   const [activeStrikes, setActiveStrikes] = useState<LightningStrike[]>([]);
   const strikeIdCounterRef = useRef(0);
@@ -248,7 +248,7 @@ const LightningStrikeSystem: React.FC<LightningStrikeSystemProps> = ({
       id: strikeIdCounterRef.current++,
       position,
       startTime: currentTime,
-      duration: 0.625, // 0.5 seconds duration
+      duration: 0.575, // 0.5 seconds duration
     };
 
     setActiveStrikes(prev => [...prev, newStrike]);
@@ -256,7 +256,14 @@ const LightningStrikeSystem: React.FC<LightningStrikeSystemProps> = ({
 
   // Handle strike completion
   const handleStrikeComplete = useCallback((strikeId: number) => {
-    setActiveStrikes(prev => prev.filter(strike => strike.id !== strikeId));
+    setActiveStrikes(prev => {
+      const strike = prev.find(s => s.id === strikeId);
+      if (strike && (window as any).audioSystem) {
+        // Play lightning strike sound when the strike hits the map
+        (window as any).audioSystem.playLightningStrikeSound(strike.position);
+      }
+      return prev.filter(s => s.id !== strikeId);
+    });
   }, []);
 
   useFrame(({ clock }) => {
@@ -264,7 +271,7 @@ const LightningStrikeSystem: React.FC<LightningStrikeSystemProps> = ({
 
     // Spawn new lightning strikes every 12-18 seconds (less frequent than eruptions)
     const timeSinceLastStrike = t - lastStrikeTimeRef.current;
-    const nextStrikeInterval = 7 + Math.random() * 23; // 7-30 seconds
+    const nextStrikeInterval = 12 + Math.random() * 30; // 12-38 seconds
 
     if (timeSinceLastStrike > nextStrikeInterval || lastStrikeTimeRef.current === 0) {
       // Spawn 1 lightning strike at a time (less frequent than eruptions)

@@ -318,7 +318,7 @@ const SimpleBorderEffectsInner: React.FC<SimpleBorderEffectsInnerProps> = ({
 
     // Gentle rotation (reverse for purple theme)
     const rotationDirection = reverseRotation ? -1 : 1;
-    groupRef.current.rotation.y = time * 0.02 * rotationDirection;
+    groupRef.current.rotation.y = time * 0.03 * rotationDirection;
 
     // Update particle positions for floating animation
     if (particleRef.current) {
