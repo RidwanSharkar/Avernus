@@ -120,7 +120,7 @@ const volcanicEruptionFragmentShader = `
   }
 `;
 
-// Ground splash vertex shader - expanding ring effect
+// Ground splash vertex shader - expanding sphere effect
 const groundSplashVertexShader = `
   uniform float uTime;
   uniform float uSplashTime;
@@ -141,18 +141,25 @@ const groundSplashVertexShader = `
     // Calculate expansion progress
     float progress = clamp(uSplashTime / uDuration, 0.0, 1.0);
 
-    // Expand radius over time
+    // Expand radius over time (sphere grows outward)
     float currentRadius = progress * uMaxRadius;
 
-    // Position on the ground plane (XZ plane, Y =1)
-    vec3 worldPos = vec3(
-      uOrigin.x + aUV.x * currentRadius,
-      0.0, // Ground level
-      uOrigin.z + aUV.y * currentRadius
+    // Convert UV to spherical coordinates
+    float theta = aUV.x * 3.14159 * 2.0; // Full circle around
+    float phi = aUV.y * 3.14159 / 2.0;   // From center to hemisphere top
+
+    // Position on sphere surface
+    vec3 spherePos = vec3(
+      sin(phi) * cos(theta) * currentRadius,
+      cos(phi) * currentRadius, // Height from center
+      sin(phi) * sin(theta) * currentRadius
     );
 
-    // Distance from center for alpha falloff
-    vDist = length(aUV);
+    // World position: origin + sphere position
+    vec3 worldPos = uOrigin + spherePos;
+
+    // Distance from center for alpha falloff (using UV distance from center)
+    vDist = length(aUV - vec2(0.5));
 
     // Alpha: fade in at start, fade out at end, with distance falloff
     float fadeIn = smoothstep(0.0, 0.2, progress);
@@ -166,31 +173,35 @@ const groundSplashVertexShader = `
   }
 `;
 
-// Ground splash fragment shader - green shockwave colors
+// Ground splash fragment shader - spherical green shockwave colors
 const groundSplashFragmentShader = `
   varying vec2 vUV;
   varying float vAlpha;
   varying float vDist;
 
   void main() {
-    // Create ring pattern - stronger at the expanding edge
-    float ring = 1.0 - smoothstep(0.8, 1.0, vDist);
-    float innerRing = smoothstep(0.3, 0.5, vDist) * (1.0 - smoothstep(0.7, 0.9, vDist));
+    // Create spherical expansion pattern - stronger at the expanding surface
+    float surfaceRing = 1.0 - smoothstep(0.85, 1.0, vDist);
+    float innerGlow = smoothstep(0.2, 0.4, vDist) * (1.0 - smoothstep(0.6, 0.8, vDist));
+
+    // Height-based effects - brighter at the top of the sphere
+    float heightEffect = vUV.y; // Higher values = closer to top
 
     // Color gradient - matching volcanic eruption greens
     vec3 hotCore = vec3(0.7, 1.0, 0.8);        // Bright green-white core
     vec3 brightGreen = vec3(0.2, 1.0, 0.3);    // Bright green
     vec3 deepGreen = vec3(0.0, 0.8, 0.1);      // Deep green
 
-    // Outer ring is brighter, inner areas more diffuse
-    vec3 color = mix(deepGreen, brightGreen, ring);
-    color = mix(color, hotCore, innerRing * 0.4);
+    // Surface is brighter, inner areas more diffuse, height adds glow
+    vec3 color = mix(deepGreen, brightGreen, surfaceRing);
+    color = mix(color, hotCore, innerGlow * 0.5 + heightEffect * 0.3);
 
-    // Add some noise-like variation
-    float variation = sin(vUV.x * 20.0 + vUV.y * 20.0) * 0.1 + 0.9;
+    // Add some spherical variation
+    float variation = sin(vUV.x * 15.0 + vUV.y * 15.0) * 0.1 + 0.9;
     color *= variation;
 
-    gl_FragColor = vec4(color, vAlpha * ring * 0.6);
+    // More intense alpha for spherical effect
+    gl_FragColor = vec4(color, vAlpha * (surfaceRing * 0.8 + innerGlow * 0.4));
   }
 `;
 
@@ -273,7 +284,7 @@ const GroundSplash: React.FC<GroundSplashProps> = ({ eruption }) => {
         uDuration: { value: eruption.duration * 0.6 }, // Shorter duration than eruption
         uOrigin: { value: eruption.origin },
         uScale: { value: eruption.scale },
-        uMaxRadius: { value: eruption.scale * 2.0 }, // Scale affects splash size
+        uMaxRadius: { value: eruption.scale * 0.4 }, // Scale affects splash size
       },
       vertexShader: groundSplashVertexShader,
       fragmentShader: groundSplashFragmentShader,
@@ -285,28 +296,46 @@ const GroundSplash: React.FC<GroundSplashProps> = ({ eruption }) => {
   }, [eruption.origin, eruption.duration, eruption.scale]);
 
   const geometry = useMemo(() => {
-    // Create a circular quad geometry for the splash
-    const segments = 32;
+    // Create a spherical geometry that radiates outward from the center
+    const radialSegments = 16; // Around the sphere
+    const heightSegments = 8;  // From center to outer edge
     const positions = [];
     const uvs = [];
 
-    // Center vertex
-    positions.push(0, 0, 0);
-    uvs.push(0, 0);
+    // Create sphere vertices using spherical coordinates
+    for (let h = 0; h <= heightSegments; h++) {
+      const heightRatio = h / heightSegments;
+      const phi = heightRatio * Math.PI / 2; // 0 to π/2 for hemisphere
 
-    // Outer ring vertices
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2;
-      const x = Math.cos(angle);
-      const z = Math.sin(angle);
-      positions.push(x, 0, z);
-      uvs.push((x + 1) * 0.5, (z + 1) * 0.5);
+      for (let r = 0; r <= radialSegments; r++) {
+        const radialRatio = r / radialSegments;
+        const theta = radialRatio * Math.PI * 2;
+
+        // Convert spherical to cartesian coordinates
+        const x = Math.sin(phi) * Math.cos(theta);
+        const y = Math.cos(phi); // Y is height
+        const z = Math.sin(phi) * Math.sin(theta);
+
+        positions.push(x, y, z);
+
+        // UV coordinates for shader effects
+        uvs.push(radialRatio, heightRatio);
+      }
     }
 
     const indices = [];
-    // Create triangles from center to outer ring
-    for (let i = 0; i < segments; i++) {
-      indices.push(0, i + 1, i + 2);
+    // Create triangles for the sphere mesh
+    for (let h = 0; h < heightSegments; h++) {
+      for (let r = 0; r < radialSegments; r++) {
+        const current = h * (radialSegments + 1) + r;
+        const next = current + 1;
+        const below = (h + 1) * (radialSegments + 1) + r;
+        const belowNext = below + 1;
+
+        // Two triangles per quad
+        indices.push(current, below, next);
+        indices.push(below, belowNext, next);
+      }
     }
 
     const geometry = new BufferGeometry();
@@ -321,7 +350,7 @@ const GroundSplash: React.FC<GroundSplashProps> = ({ eruption }) => {
     const t = clock.getElapsedTime();
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value = t;
-      materialRef.current.uniforms.uSplashTime.value = Math.max(0, t - eruption.startTime);
+      materialRef.current.uniforms.uSplashTime.value = Math.max(0, t - (eruption.startTime - 0.25));
     }
   });
 
