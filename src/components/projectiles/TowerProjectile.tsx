@@ -3,6 +3,7 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Color, Group, Mesh, AdditiveBlending, MathUtils, OctahedronGeometry, SphereGeometry, ConeGeometry } from '@/utils/three-exports';
+import TowerProjectileTrail from './TowerProjectileTrail';
 
 interface TowerProjectileProps {
   position: Vector3;
@@ -74,8 +75,23 @@ export default function TowerProjectile({
     return playerColors[playerIndex];
   }, [ownerId]);
 
-  const emissiveColor = useMemo(() => 
+  const emissiveColor = useMemo(() =>
     projectileColor.clone().multiplyScalar(0.6), [projectileColor]);
+
+  // Determine team based on owner ID for trail color
+  const team = useMemo(() => {
+    if (!ownerId) return 'Red'; // Default to Red team
+
+    // Extract player number from ownerId (e.g., "player1" -> 0, "player2" -> 1)
+    const playerMatch = ownerId.match(/player(\d+)/);
+    let playerIndex = 0;
+    if (playerMatch) {
+      playerIndex = parseInt(playerMatch[1]) - 1; // Convert to 0-based index
+    }
+
+    // In PVP: player1 (index 0) = Red team, player2 (index 1) = Blue team
+    return playerIndex === 0 ? 'Red' : 'Blue';
+  }, [ownerId]);
 
   useFrame((_, delta) => {
     timeRef.current += delta;
@@ -117,111 +133,121 @@ export default function TowerProjectile({
   });
 
   return (
-    <group ref={groupRef}>
-      {/* Main projectile body - crystalline energy shard */}
-      <mesh geometry={sharedGeometries.main}>
-        <meshStandardMaterial
-          color={projectileColor}
-          emissive={emissiveColor}
-          emissiveIntensity={0.8}
-          transparent
-          opacity={opacity}
-          metalness={0.9}
-          roughness={0.1}
-        />
-      </mesh>
-
-      {/* Energy core - spinning inner crystal */}
-      <group name="CoreSpinner">
-        <mesh geometry={sharedGeometries.core}>
+    <group>
+      {/* Energy trail effect - rendered outside the projectile group to avoid coordinate space issues */}
+      <TowerProjectileTrail
+        team={team}
+        size={0.3}
+        meshRef={groupRef}
+        opacity={opacity}
+      />
+      
+      <group ref={groupRef}>
+        {/* Main projectile body - crystalline energy shard */}
+        <mesh geometry={sharedGeometries.main}>
           <meshStandardMaterial
-            color={projectileColor.clone().multiplyScalar(1.5)}
-            emissive={projectileColor.clone().multiplyScalar(0.8)}
-            emissiveIntensity={1.2}
+            color={projectileColor}
+            emissive={emissiveColor}
+            emissiveIntensity={0.8}
             transparent
-            opacity={opacity * 0.9}
-            metalness={1.0}
-            roughness={0.0}
+            opacity={opacity}
+            metalness={0.9}
+            roughness={0.1}
           />
         </mesh>
-      </group>
 
-      {/* Outer glow sphere */}
-      <mesh name="GlowSphere" geometry={sharedGeometries.aura}>
-        <meshStandardMaterial
-          color={projectileColor}
-          emissive={emissiveColor}
-          emissiveIntensity={0.3}
-          transparent
-          opacity={opacity * 0.2}
-          depthWrite={false}
-          blending={AdditiveBlending}
-        />
-      </mesh>
-
-      {/* Energy tendrils - 4 small spikes around the projectile */}
-      {[...Array(4)].map((_, i) => {
-        const angle = (i / 4) * Math.PI * 2;
-        const radius = 0.25;
-        const x = Math.cos(angle) * radius;
-        const z = Math.sin(angle) * radius;
-
-        return (
-          <mesh
-            key={`tendril-${i}`}
-            position={[x, 0, z]}
-            rotation={[0, angle, 0]}
-            geometry={sharedGeometries.trail}
-          >
+        {/* Energy core - spinning inner crystal */}
+        <group name="CoreSpinner">
+          <mesh geometry={sharedGeometries.core}>
             <meshStandardMaterial
-              color={projectileColor.clone().multiplyScalar(1.3)}
-              emissive={emissiveColor}
-              emissiveIntensity={0.6}
+              color={projectileColor.clone().multiplyScalar(1.5)}
+              emissive={projectileColor.clone().multiplyScalar(0.8)}
+              emissiveIntensity={1.2}
               transparent
-              opacity={opacity * 0.8}
-              metalness={0.8}
-              roughness={0.2}
+              opacity={opacity * 0.9}
+              metalness={1.0}
+              roughness={0.0}
             />
           </mesh>
-        );
-      })}
+        </group>
 
-      {/* Trailing particles */}
-      <group name="TrailParticles">
-        {[...Array(6)].map((_, i) => {
-          const angle = (i / 6) * Math.PI * 2;
-          const radius = 0.15;
+        {/* Outer glow sphere */}
+        <mesh name="GlowSphere" geometry={sharedGeometries.aura}>
+          <meshStandardMaterial
+            color={projectileColor}
+            emissive={emissiveColor}
+            emissiveIntensity={0.3}
+            transparent
+            opacity={opacity * 0.2}
+            depthWrite={false}
+            blending={AdditiveBlending}
+          />
+        </mesh>
+
+        {/* Energy tendrils - 4 small spikes around the projectile */}
+        {[...Array(4)].map((_, i) => {
+          const angle = (i / 4) * Math.PI * 2;
+          const radius = 0.25;
           const x = Math.cos(angle) * radius;
           const z = Math.sin(angle) * radius;
-          const y = -0.1 - (i * 0.05); // Trail behind
 
           return (
             <mesh
-              key={`particle-${i}`}
-              position={[x, y, z]}
-              geometry={sharedGeometries.particle}
+              key={`tendril-${i}`}
+              position={[x, 0, z]}
+              rotation={[0, angle, 0]}
+              geometry={sharedGeometries.trail}
             >
               <meshStandardMaterial
-                color={projectileColor}
+                color={projectileColor.clone().multiplyScalar(1.3)}
                 emissive={emissiveColor}
-                emissiveIntensity={0.8}
+                emissiveIntensity={0.6}
                 transparent
-                opacity={opacity * (1 - i * 0.15)} // Fade out towards the back
-                depthWrite={false}
-                blending={AdditiveBlending}
+                opacity={opacity * 0.8}
+                metalness={0.8}
+                roughness={0.2}
               />
             </mesh>
           );
         })}
-      </group>
 
-      {/* Point light for dynamic lighting */}
-      <pointLight
-        color={projectileColor}
-        intensity={0.5}
-        distance={2}
-        decay={2}
-      />
+        {/* Trailing particles */}
+        <group name="TrailParticles">
+          {[...Array(6)].map((_, i) => {
+            const angle = (i / 6) * Math.PI * 2;
+            const radius = 0.15;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            const y = -0.1 - (i * 0.05); // Trail behind
+
+            return (
+              <mesh
+                key={`particle-${i}`}
+                position={[x, y, z]}
+                geometry={sharedGeometries.particle}
+              >
+                <meshStandardMaterial
+                  color={projectileColor}
+                  emissive={emissiveColor}
+                  emissiveIntensity={0.8}
+                  transparent
+                  opacity={opacity * (1 - i * 0.15)} // Fade out towards the back
+                  depthWrite={false}
+                  blending={AdditiveBlending}
+                />
+              </mesh>
+            );
+          })}
+        </group>
+
+        {/* Point light for dynamic lighting */}
+        <pointLight
+          color={projectileColor}
+          intensity={0.5}
+          distance={2}
+          decay={2}
+        />
+      </group>
     </group>
   );
 }

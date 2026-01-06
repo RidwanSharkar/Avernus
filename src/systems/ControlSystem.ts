@@ -74,6 +74,9 @@ export class ControlSystem extends System {
   // Callback for Cobra Shot activation
   private onCobraShotCallback?: (position: Vector3, direction: Vector3) => void;
 
+  // Callback for Tempest Rounds activation
+  private onTempestRoundsCallback?: (position: Vector3, direction: Vector3) => void;
+
   // Callback for Summon Totem activation
   private onSummonTotemCallback?: (position: Vector3) => void;
   
@@ -995,6 +998,8 @@ export class ControlSystem extends System {
       if (hasTempestRounds) {
         console.log('🎵 Playing tempest round sound for charged arrow');
         this.audioSystem?.playBowTempestRoundSound(playerTransform.position, this.chargeProgress);
+        console.log('🎯 Calling tempest rounds callback for charged arrow');
+        this.onTempestRoundsCallback?.(playerTransform.position.clone(), direction);
       } else {
         console.log('🎵 Playing regular release sound for charged arrow');
         this.audioSystem?.playBowReleaseSound(playerTransform.position, this.chargeProgress);
@@ -1004,6 +1009,11 @@ export class ControlSystem extends System {
       // Play power release sound for perfect shots
       console.log('🎵 Playing power release sound for perfect shot');
       this.audioSystem?.playBowPowerReleaseSound(playerTransform.position);
+      // Trigger tempest rounds visual effect for perfect shots if unlocked
+      if (hasTempestRounds) {
+        console.log('🎯 Calling tempest rounds callback for perfect shot');
+        this.onTempestRoundsCallback?.(playerTransform.position.clone(), direction);
+      }
     } else {
       // Debug: Log the firing angle to verify it's changing with camera rotation
       const angle = Math.atan2(direction.x, direction.z);
@@ -1012,6 +1022,8 @@ export class ControlSystem extends System {
       if (hasTempestRounds) {
         console.log('🎵 Playing tempest round sound for regular arrow');
         this.audioSystem?.playBowTempestRoundSound(playerTransform.position, this.chargeProgress);
+        console.log('🎯 Calling tempest rounds callback for regular arrow');
+        this.onTempestRoundsCallback?.(playerTransform.position.clone(), direction);
       } else {
         console.log('🎵 Playing regular release sound for regular arrow');
         this.audioSystem?.playBowReleaseSound(playerTransform.position, this.chargeProgress);
@@ -1305,6 +1317,10 @@ export class ControlSystem extends System {
 
     // Play tempest round sound locally for Tempest Rounds burst (since the ability is unlocked)
     this.audioSystem?.playBowTempestRoundSound(spawnPosition, 1.0);
+
+    // Trigger tempest rounds visual effect for each burst projectile
+    console.log('🎯 Calling tempest rounds callback for burst projectile');
+    this.onTempestRoundsCallback?.(spawnPosition, direction);
 
     // Broadcast projectile creation to other players
     if (this.onProjectileCreatedCallback) {
@@ -1831,6 +1847,10 @@ export class ControlSystem extends System {
   
   public setCobraShotCallback(callback: (position: Vector3, direction: Vector3) => void): void {
     this.onCobraShotCallback = callback;
+  }
+
+  public setTempestRoundsCallback(callback: (position: Vector3, direction: Vector3) => void): void {
+    this.onTempestRoundsCallback = callback;
   }
 
   public setSummonTotemCallback(callback: (position: Vector3) => void): void {

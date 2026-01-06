@@ -1753,7 +1753,8 @@ const [maxMana, setMaxMana] = useState(150);
     isBackstabbing: false,
     isSundering: false,
     isCorruptedAuraActive: false,
-    isFrozen: false
+    isFrozen: false,
+    isTempestRoundsActive: false
   });
 
   // Use a ref to store current weapon state to avoid infinite re-renders
@@ -4394,7 +4395,30 @@ const hasMana = useCallback((amount: number) => {
       controlSystem.setCobraShotCallback((position, direction) => {
         // Don't broadcast as ability - the projectile is already broadcast via onProjectileCreatedCallback
       });
-      
+
+      // Set up Tempest Rounds callback
+      controlSystem.setTempestRoundsCallback((position, direction) => {
+        console.log('🌩️ Tempest Rounds callback triggered!');
+        // Trigger a brief flash for each projectile in the burst
+        const flashDuration = 80; // 80ms per flash
+
+        const activeState = {
+          ...weaponStateRef.current,
+          isTempestRoundsActive: true
+        };
+        weaponStateRef.current = activeState;
+        setWeaponState(activeState);
+
+        setTimeout(() => {
+          const inactiveState = {
+            ...weaponStateRef.current,
+            isTempestRoundsActive: false
+          };
+          weaponStateRef.current = inactiveState;
+          setWeaponState(inactiveState);
+        }, flashDuration);
+      });
+
       // Set up Charge callback
       controlSystem.setChargeCallback((position, direction) => {
         // Store charge direction for trail effect
@@ -4776,6 +4800,7 @@ const hasMana = useCallback((amount: number) => {
           isBackstabbing: controlSystemRef.current.isBackstabActive(),
           isSundering: controlSystemRef.current.isSunderActive(),
           isCorruptedAuraActive: controlSystemRef.current.isCorruptedAuraActive(),
+          isTempestRoundsActive: weaponStateRef.current.isTempestRoundsActive,
           isFrozen: weaponStateRef.current.isFrozen
         };
 
@@ -5096,6 +5121,7 @@ const hasMana = useCallback((amount: number) => {
           isWraithStriking={controlSystemRef.current?.isWraithStrikeActive() || false}
           isCorruptedAuraActive={controlSystemRef.current?.isCorruptedAuraActive() || false}
           hasCryoflame={controlSystemRef.current?.isPassiveAbilityUnlocked?.('P', WeaponType.SCYTHE, weaponState.currentWeapon === selectedWeapons?.primary ? 'primary' : 'secondary') || false}
+          isTempestRoundsActive={weaponState.isTempestRoundsActive}
           reanimateRef={reanimateRef}
           isLocalPlayer={true}
           isStealthing={controlSystemRef.current?.getIsStealthing() || false}

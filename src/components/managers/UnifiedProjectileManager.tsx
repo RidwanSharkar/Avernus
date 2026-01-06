@@ -107,6 +107,11 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
   const checkEntropicBoltCollisions = (boltId: number, position: Vector3): boolean => {
     if (!world || !spatialHashRef.current) return false;
 
+    // Check ground collision first - ground is at y = -0.5 (EnhancedGround position)
+    if (position.y <= -0.125) {
+      return true; // Hit the ground
+    }
+
     // Use spatial hash to find nearby enemies
     const nearbyEntries = spatialHashRef.current.queryRadius(position, 2.0); // Slightly larger than hit radius
 
@@ -134,6 +139,11 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
   // Collision detection for CrossentropyBolt using spatial partitioning
   const checkCrossentropyBoltCollisions = (boltId: number, position: Vector3): boolean => {
     if (!world || !spatialHashRef.current) return false;
+
+    // Check ground collision first - ground is at y = -0.5 (EnhancedGround position)
+    if (position.y <= -0.25) {
+      return true; // Hit the ground
+    }
 
     // Use spatial hash to find nearby enemies
     const nearbyEntries = spatialHashRef.current.queryRadius(position, 2.1); // Slightly larger than hit radius
@@ -394,10 +404,10 @@ export default function UnifiedProjectileManager({ world }: UnifiedProjectileMan
           position={bolt.position}
           direction={bolt.direction}
           checkCollisions={checkCrossentropyBoltCollisions}
-          onImpact={(impactPosition?: Vector3) => {
-            
-            // Create Crossentropy explosion effect at impact position
-            if (impactPosition) {
+          onImpact={(impactPosition?: Vector3, isEnemyCollision?: boolean) => {
+
+            // Only create Crossentropy explosion effect if it didn't collide with an enemy
+            if (impactPosition && !isEnemyCollision) {
               const explosion = {
                 id: explosionIdCounter.current++,
                 position: impactPosition.clone(),

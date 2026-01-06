@@ -89,6 +89,7 @@ interface DragonUnitProps {
   cobraShotChargeProgress?: number;
   isCloudkillCharging?: boolean;
   cloudkillChargeProgress?: number;
+  isTempestRoundsActive?: boolean;
   // Reanimate ability props
   reanimateRef?: React.RefObject<ReanimateRef>;
   setActiveEffects?: (callback: (prev: Array<{
@@ -183,6 +184,7 @@ export default function DragonUnit({
   cobraShotChargeProgress = 0,
   isCloudkillCharging = false,
   cloudkillChargeProgress = 0,
+  isTempestRoundsActive = false,
   reanimateRef,
   setActiveEffects = () => {},
   targetPlayerData,
@@ -216,6 +218,7 @@ export default function DragonUnit({
           cobraShotChargeProgress={cobraShotChargeProgress}
           isCloudkillCharging={isCloudkillCharging}
           cloudkillChargeProgress={cloudkillChargeProgress}
+          isTempestRoundsActive={isTempestRoundsActive}
         />
       );
     } else if (currentWeapon === WeaponType.SCYTHE) {

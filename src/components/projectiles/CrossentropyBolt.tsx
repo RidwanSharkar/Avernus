@@ -9,7 +9,7 @@ interface CrossentropyBoltProps {
   id: number;
   position: Vector3;
   direction: Vector3;
-  onImpact?: (position?: Vector3) => void;
+  onImpact?: (position?: Vector3, isEnemyCollision?: boolean) => void;
   checkCollisions?: (boltId: number, position: Vector3) => boolean;
 }
 
@@ -94,7 +94,7 @@ export default function CrossentropyBolt({ id, position, direction, onImpact, ch
       hasExploded.current = true;
       fadeStartTime.current = currentTime;
       if (onImpact) {
-        onImpact(currentPosition.current.clone()); // Impact at max range position
+        onImpact(currentPosition.current.clone(), false); // Impact at max range position (not enemy collision)
       }
       return;
     }
@@ -102,6 +102,10 @@ export default function CrossentropyBolt({ id, position, direction, onImpact, ch
     // Check collisions each frame
     if (checkCollisions) {
       const currentPos = currentPosition.current.clone();
+
+      // Check ground collision first - ground is at y = -0.5 (EnhancedGround position)
+      const isGroundCollision = currentPos.y <= -0.25;
+
       const hitSomething = checkCollisions(id, currentPos);
 
       if (hitSomething && !hasExploded.current) {
@@ -109,7 +113,8 @@ export default function CrossentropyBolt({ id, position, direction, onImpact, ch
         hasExploded.current = true;
         fadeStartTime.current = currentTime;
         if (onImpact) {
-          onImpact(currentPos); // Impact at collision position
+          // Only mark as enemy collision if it's not a ground collision
+          onImpact(currentPos, !isGroundCollision);
         }
         return;
       }

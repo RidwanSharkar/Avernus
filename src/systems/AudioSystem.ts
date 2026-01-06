@@ -541,14 +541,14 @@ export class AudioSystem extends System {
 
   // Play hit box sound (when any weapon deals damage to enemy players/summoned units/pillars)
   public playHitBoxSound(position: Vector3) {
-    return this.playWeaponSound('hit_box', position, { volume: 0.7 });
+    return this.playWeaponSound('hit_box', position, { volume: 0.45 });
   }
 
   // Play random lightning strike sound (when lightning hits the map)
   public playLightningStrikeSound(position: Vector3) {
     const lightningSounds = ['lightning_1', 'lightning_2', 'lightning_3', 'lightning_4'];
     const randomSoundId = lightningSounds[Math.floor(Math.random() * lightningSounds.length)];
-    return this.playWeaponSound(randomSoundId, position, { volume: 0.5 }); // Half volume as requested
+    return this.playWeaponSound(randomSoundId, position, { volume: 0.4 }); // Half volume as requested
   }
 
   // Play inhibitor destroyed sound (when a pillar/inhibitor is destroyed)

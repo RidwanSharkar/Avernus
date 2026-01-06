@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useMemo, useState, useCallback, useEffect, Fragment } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
   ShaderMaterial,
@@ -120,6 +120,80 @@ const volcanicEruptionFragmentShader = `
   }
 `;
 
+// Ground splash vertex shader - expanding ring effect
+const groundSplashVertexShader = `
+  uniform float uTime;
+  uniform float uSplashTime;
+  uniform float uDuration;
+  uniform vec3 uOrigin;
+  uniform float uScale;
+  uniform float uMaxRadius;
+
+  attribute vec2 aUV;
+
+  varying vec2 vUV;
+  varying float vAlpha;
+  varying float vDist;
+
+  void main() {
+    vUV = aUV;
+
+    // Calculate expansion progress
+    float progress = clamp(uSplashTime / uDuration, 0.0, 1.0);
+
+    // Expand radius over time
+    float currentRadius = progress * uMaxRadius;
+
+    // Position on the ground plane (XZ plane, Y =1)
+    vec3 worldPos = vec3(
+      uOrigin.x + aUV.x * currentRadius,
+      0.0, // Ground level
+      uOrigin.z + aUV.y * currentRadius
+    );
+
+    // Distance from center for alpha falloff
+    vDist = length(aUV);
+
+    // Alpha: fade in at start, fade out at end, with distance falloff
+    float fadeIn = smoothstep(0.0, 0.2, progress);
+    float fadeOut = 1.0 - smoothstep(0.6, 1.0, progress);
+    float distanceFalloff = 1.0 - smoothstep(0.7, 1.0, vDist);
+
+    vAlpha = fadeIn * fadeOut * distanceFalloff * uScale;
+
+    vec4 mvPosition = modelViewMatrix * vec4(worldPos, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`;
+
+// Ground splash fragment shader - green shockwave colors
+const groundSplashFragmentShader = `
+  varying vec2 vUV;
+  varying float vAlpha;
+  varying float vDist;
+
+  void main() {
+    // Create ring pattern - stronger at the expanding edge
+    float ring = 1.0 - smoothstep(0.8, 1.0, vDist);
+    float innerRing = smoothstep(0.3, 0.5, vDist) * (1.0 - smoothstep(0.7, 0.9, vDist));
+
+    // Color gradient - matching volcanic eruption greens
+    vec3 hotCore = vec3(0.7, 1.0, 0.8);        // Bright green-white core
+    vec3 brightGreen = vec3(0.2, 1.0, 0.3);    // Bright green
+    vec3 deepGreen = vec3(0.0, 0.8, 0.1);      // Deep green
+
+    // Outer ring is brighter, inner areas more diffuse
+    vec3 color = mix(deepGreen, brightGreen, ring);
+    color = mix(color, hotCore, innerRing * 0.4);
+
+    // Add some noise-like variation
+    float variation = sin(vUV.x * 20.0 + vUV.y * 20.0) * 0.1 + 0.9;
+    color *= variation;
+
+    gl_FragColor = vec4(color, vAlpha * ring * 0.6);
+  }
+`;
+
 // Interface for tracking active eruptions
 interface VolcanicEruption {
   id: number;
@@ -181,6 +255,80 @@ const VolcanicEruptionParticles: React.FC<VolcanicEruptionParticlesProps> = ({ e
     <points geometry={geometry}>
       <primitive object={material} attach="material" ref={materialRef} />
     </points>
+  );
+};
+
+interface GroundSplashProps {
+  eruption: VolcanicEruption;
+}
+
+const GroundSplash: React.FC<GroundSplashProps> = ({ eruption }) => {
+  const materialRef = useRef<ShaderMaterial>(null!);
+
+  const material = useMemo(() => {
+    return new ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uSplashTime: { value: 0 },
+        uDuration: { value: eruption.duration * 0.6 }, // Shorter duration than eruption
+        uOrigin: { value: eruption.origin },
+        uScale: { value: eruption.scale },
+        uMaxRadius: { value: eruption.scale * 2.0 }, // Scale affects splash size
+      },
+      vertexShader: groundSplashVertexShader,
+      fragmentShader: groundSplashFragmentShader,
+      transparent: true,
+      blending: AdditiveBlending,
+      depthWrite: false,
+      side: 2, // DoubleSide
+    });
+  }, [eruption.origin, eruption.duration, eruption.scale]);
+
+  const geometry = useMemo(() => {
+    // Create a circular quad geometry for the splash
+    const segments = 32;
+    const positions = [];
+    const uvs = [];
+
+    // Center vertex
+    positions.push(0, 0, 0);
+    uvs.push(0, 0);
+
+    // Outer ring vertices
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * Math.PI * 2;
+      const x = Math.cos(angle);
+      const z = Math.sin(angle);
+      positions.push(x, 0, z);
+      uvs.push((x + 1) * 0.5, (z + 1) * 0.5);
+    }
+
+    const indices = [];
+    // Create triangles from center to outer ring
+    for (let i = 0; i < segments; i++) {
+      indices.push(0, i + 1, i + 2);
+    }
+
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('aUV', new Float32BufferAttribute(uvs, 2));
+    geometry.setIndex(indices);
+
+    return geometry;
+  }, []);
+
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime();
+    if (materialRef.current) {
+      materialRef.current.uniforms.uTime.value = t;
+      materialRef.current.uniforms.uSplashTime.value = Math.max(0, t - eruption.startTime);
+    }
+  });
+
+  return (
+    <mesh geometry={geometry}>
+      <primitive object={material} attach="material" ref={materialRef} />
+    </mesh>
   );
 };
 
@@ -338,11 +486,13 @@ const VolcanicEruptionSystem: React.FC<VolcanicEruptionSystemProps> = ({
   return (
     <group name="volcanic-eruptions">
       {activeEruptions.map(eruption => (
-        <VolcanicEruptionParticles
-          key={eruption.id}
-          eruption={eruption}
-          geometry={eruptionGeometry}
-        />
+        <React.Fragment key={eruption.id}>
+          <VolcanicEruptionParticles
+            eruption={eruption}
+            geometry={eruptionGeometry}
+          />
+          <GroundSplash eruption={eruption} />
+        </React.Fragment>
       ))}
     </group>
   );

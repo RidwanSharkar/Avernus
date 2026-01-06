@@ -87,7 +87,7 @@ export default function EntropicBolt({
     if (checkCollisions) {
       const currentPos = boltRef.current.position.clone();
       const hitSomething = checkCollisions(id, currentPos);
-      
+
       if (hitSomething) {
         hasCollided.current = true;
         setImpactPosition(currentPos);
@@ -99,7 +99,7 @@ export default function EntropicBolt({
       }
     }
 
-    // Check if we've reached the target (progress >= 1)
+    // Check if we've reached the target (progress >= 1) - explode at final position even if no collision
     if (progress >= 1) {
       if (!hasCollided.current) {
         hasCollided.current = true;
