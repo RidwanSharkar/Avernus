@@ -14,6 +14,7 @@ import TreeCollision from './TreeCollision';
 import AtmosphericParticles from './AtmosphericParticles';
 import SimpleBorderEffects, { CompactPurpleBorderEffects } from './SimpleBorderEffects';
 import CustomSkeleton from './CustomSkeleton';
+import StarField from './StarField';
 
 import { generateMountains } from '@/utils/MountainGenerator';
 import { World } from '@/ecs/World';
@@ -86,14 +87,28 @@ const Environment: React.FC<EnvironmentProps> = ({
       {/* Custom sky with level-based colors */}
       {enableSky && <CustomSky theme={skyTheme} />}
 
+      {/* Star field - brightness varies by sky theme */}
+      {enableSky && (
+        <StarField
+          count={1500}
+          radius={350}
+          brightness={
+            skyTheme === 'purple' ? 1 :
+            skyTheme === 'red' ? 2 :
+            skyTheme === 'lightBlue' || skyTheme === 'lightGreen' ? 2.1 :
+            1.3 // default
+          }
+        />
+      )}
+
       {/* Enhanced ground with procedural textures */}
       <EnhancedGround level={level} />
 
       {/* Volcanic eruptions - periodic green flares from random ground locations */}
-      <VolcanicEruptionSystem groundRadius={29} />
+      <VolcanicEruptionSystem groundRadius={28} />
 
       {/* Lightning strikes - periodic electrical discharges from random locations */}
-      <LightningStrikeSystem groundRadius={29} />
+      <LightningStrikeSystem groundRadius={32} />
 
       {/* Perimeter clouds - red atmospheric clouds around map boundary */}
       <PerimeterCloudSystem radius={23.5} />

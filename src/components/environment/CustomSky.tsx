@@ -10,22 +10,22 @@ const SKY_THEMES = {
   purple: {
     topColor: '#FC5656',
     middleColor: '#FC5656',
-    bottomColor: '#9B97D8'
+    bottomColor: '#AEA8FF'
   },
   lightBlue: {
-    topColor: '#4682B4',
-    middleColor: '#5CB4FC',
-    bottomColor: '#87ceeb'
+    topColor: '#063053',
+    middleColor: '#0D63A9',
+    bottomColor: '#91E0FF'
   },
   lightGreen: {
     topColor: '#084508',
     middleColor: '#084508',
-    bottomColor: '#A4FFA5'
+    bottomColor: '#B4F7B6'
   },
   red: {
-    topColor: '#FF6347',
-    middleColor: '#FF7F7F',
-    bottomColor: '#FFE4E1'
+    topColor: '#640E05',
+    middleColor: '#B31706',
+    bottomColor: '#FFD3CE'
   }
 };
 

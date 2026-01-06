@@ -8,3 +8,4 @@ export { default as VolcanicEruptionSystem } from './VolcanicEruption';
 export { default as LightningStrikeSystem } from './LightningStrikeSystem';
 export { default as PillarCollision } from './PillarCollision';
 export { default as SimpleBorderEffects } from './SimpleBorderEffects';
+export { default as StarField } from './StarField';
