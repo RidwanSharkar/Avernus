@@ -1,6 +1,89 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Shape } from '@/utils/three-exports';
+
+// Cache blade shapes outside component to prevent recreation on every render
+const createCachedBladeShape = (() => {
+  let cachedShape: Shape | null = null;
+  return () => {
+    if (!cachedShape) {
+      cachedShape = new Shape();
+
+      // Start at center
+      cachedShape.moveTo(0, 0);
+
+      // Ornate guard shape
+      cachedShape.lineTo(-0.15, 0.1);
+      cachedShape.lineTo(-0.2, 0);  // Deeper notch
+      cachedShape.lineTo(-0.2, -0.05);
+      cachedShape.lineTo(0, 0);
+
+      // Mirror for right side of guard
+      cachedShape.lineTo(0.15, 0.1);
+      cachedShape.lineTo(0.2, 0);   // Deeper notch
+      cachedShape.lineTo(0.3, 0.0);
+      cachedShape.lineTo(0, 0);
+
+      // Elegant curved blade shape
+      cachedShape.lineTo(0, 0.05);
+      // Graceful curve up
+      cachedShape.quadraticCurveTo(0.3, 0.15, 0.5, 0.2);
+      cachedShape.quadraticCurveTo(0.7, 0.25, 0.9, 0.15);
+      // Sharp elegant tip
+      cachedShape.quadraticCurveTo(1.0, 0.1, 1.1, 0);
+      // Sweeping bottom curve with notch
+      cachedShape.quadraticCurveTo(1.0, -0.0, 0.8, -0.1);
+      // Distinctive notch
+      cachedShape.lineTo(0.7, -0.15);
+      cachedShape.lineTo(0.65, -0.1);
+      // Continue curve to handle
+      cachedShape.quadraticCurveTo(0.4, -0.08, 0.2, -0.05);
+      cachedShape.quadraticCurveTo(0.4, -0.02, 0, 0);
+    }
+    return cachedShape;
+  };
+})();
+
+const createCachedInnerBladeShape = (() => {
+  let cachedShape: Shape | null = null;
+  return () => {
+    if (!cachedShape) {
+      cachedShape = new Shape();
+
+      // Start at center
+      cachedShape.moveTo(0, 0);
+
+      // Ornate guard shape (slightly smaller)
+      cachedShape.lineTo(-0.13, 0.08);
+      cachedShape.lineTo(-0.18, 0);
+      cachedShape.lineTo(-0.08, -0.04);
+      cachedShape.lineTo(0, 0);
+
+      // Mirror for right side
+      cachedShape.lineTo(0.13, 0.08);
+      cachedShape.lineTo(0.18, 0);
+      cachedShape.lineTo(0.08, 0.04);
+      cachedShape.lineTo(0, 0);
+
+      // Elegant curved blade shape (slightly smaller)
+      cachedShape.lineTo(0, 0.04);
+      // Graceful curve up
+      cachedShape.quadraticCurveTo(0.28, 0.13, 0.48, 0.18);
+      cachedShape.quadraticCurveTo(0.68, 0.23, 0.88, 0.13);
+      // Sharp elegant tip
+      cachedShape.quadraticCurveTo(0.98, 0.08, 1.08, 0);
+      // Sweeping bottom curve with notch
+      cachedShape.quadraticCurveTo(0.98, 0.04, 0.78, -0.08);
+      // Distinctive notch
+      cachedShape.lineTo(0.68, -0.14);
+      cachedShape.lineTo(0.7, -0.08);
+      // Continue curve to handle
+      cachedShape.quadraticCurveTo(0.38, -0.04, 0, -0.04);
+      cachedShape.quadraticCurveTo(0.08, -0.04, 0, -0.04);
+    }
+    return cachedShape;
+  };
+})();
 
 const lerp = (start: number, end: number, t: number) => {
   return start * (1 - t) + end * t;
@@ -548,99 +631,34 @@ export default function Sabres({
     }
   });
 
-  // Create custom sabre blade shape (scimitar)
-  const createBladeShape = () => {
-    const shape = new Shape();
+  // Cache blade shapes to prevent recreation on every render
+  const bladeShape = useMemo(() => createCachedBladeShape(), []);
+  const innerBladeShape = useMemo(() => createCachedInnerBladeShape(), []);
 
-    // Start at center
-    shape.moveTo(0, 0);
-
-    // Ornate guard shape
-    shape.lineTo(-0.15, 0.1);
-    shape.lineTo(-0.2, 0);  // Deeper notch
-    shape.lineTo(-0.2, -0.05);
-    shape.lineTo(0, 0);
-
-    // Mirror for right side of guard
-    shape.lineTo(0.15, 0.1);
-    shape.lineTo(0.2, 0);   // Deeper notch
-    shape.lineTo(0.3, 0.0);
-    shape.lineTo(0, 0);
-
-    // Elegant curved blade shape
-    shape.lineTo(0, 0.05);
-    // Graceful curve up
-    shape.quadraticCurveTo(0.3, 0.15, 0.5, 0.2);
-    shape.quadraticCurveTo(0.7, 0.25, 0.9, 0.15);
-    // Sharp elegant tip
-    shape.quadraticCurveTo(1.0, 0.1, 1.1, 0);
-    // Sweeping bottom curve with notch
-    shape.quadraticCurveTo(1.0, -0.0, 0.8, -0.1);
-    // Distinctive notch
-    shape.lineTo(0.7, -0.15);
-    shape.lineTo(0.65, -0.1);
-    // Continue curve to handle
-    shape.quadraticCurveTo(0.4, -0.08, 0.2, -0.05);
-    shape.quadraticCurveTo(0.4, -0.02, 0, 0);
-
-    return shape;
-  };
-
-  // Make inner blade shape match outer blade
-  const createInnerBladeShape = () => {
-    const shape = new Shape();
-
-    // Start at center
-    shape.moveTo(0, 0);
-
-    // Ornate guard shape (slightly smaller)
-    shape.lineTo(-0.13, 0.08);
-    shape.lineTo(-0.18, 0);
-    shape.lineTo(-0.08, -0.04);
-    shape.lineTo(0, 0);
-
-    // Mirror for right side
-    shape.lineTo(0.13, 0.08);
-    shape.lineTo(0.18, 0);
-    shape.lineTo(0.08, 0.04);
-    shape.lineTo(0, 0);
-
-    // Elegant curved blade shape (slightly smaller)
-    shape.lineTo(0, 0.04);
-    // Graceful curve up
-    shape.quadraticCurveTo(0.28, 0.13, 0.48, 0.18);
-    shape.quadraticCurveTo(0.68, 0.23, 0.88, 0.13);
-    // Sharp elegant tip
-    shape.quadraticCurveTo(0.98, 0.08, 1.08, 0);
-    // Sweeping bottom curve with notch
-    shape.quadraticCurveTo(0.98, 0.04, 0.78, -0.08);
-    // Distinctive notch
-    shape.lineTo(0.68, -0.14);
-    shape.lineTo(0.7, -0.08);
-    // Continue curve to handle
-    shape.quadraticCurveTo(0.38, -0.04, 0, -0.04);
-    shape.quadraticCurveTo(0.08, -0.04, 0, -0.04);
-
-    return shape;
-  };
-
-  // Update blade extrude settings for an even thinner blade
-  const bladeExtrudeSettings = {
+  // Cache extrude settings to prevent recreation on every render
+  const bladeExtrudeSettings = useMemo(() => ({
     steps: 2,
-    depth: 0.02, 
+    depth: 0.02,
     bevelEnabled: true,
     bevelThickness: 0.004,
     bevelSize: 0.01,
     bevelSegments: 3,
-  };
+  }), []);
 
-  const innerBladeExtrudeSettings = {
+  const innerBladeExtrudeSettings = useMemo(() => ({
     ...bladeExtrudeSettings,
     depth: 0.025,
     bevelThickness: 0.003,
     bevelSize: 0.004,
     bevelOffset: 0,
-  };
+  }), [bladeExtrudeSettings]);
+
+  // Cache geometry args to prevent recreation on every render (prevents memory leaks)
+  const bladeGeometryArgs = useMemo(() => [bladeShape, bladeExtrudeSettings] as [Shape, typeof bladeExtrudeSettings], [bladeShape, bladeExtrudeSettings]);
+  const innerBladeGeometryArgs = useMemo(() => [innerBladeShape, {
+    ...innerBladeExtrudeSettings,
+    depth: 0.06
+  }] as [Shape, typeof innerBladeExtrudeSettings & { depth: number }], [innerBladeShape, innerBladeExtrudeSettings]);
 
   // Get colors based on subclass
   const getBladeColors = () => {
@@ -717,8 +735,8 @@ export default function Sabres({
         <group position={[0.2, 0.3, 0.0]} rotation={[0, Math.PI / 2, Math.PI / 2]}>
           {/* Base blade */}
           <mesh>
-            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
-            <meshStandardMaterial 
+            <extrudeGeometry args={bladeGeometryArgs} />
+            <meshStandardMaterial
               color={colors.primary}
               emissive={colors.emissive}
               emissiveIntensity={3}
@@ -728,14 +746,11 @@ export default function Sabres({
               transparent
             />
           </mesh>
-          
+
           {/* Outer ethereal glow */}
           <mesh position={[0, 0, -0.02]}>
-            <extrudeGeometry args={[createInnerBladeShape(), {
-              ...innerBladeExtrudeSettings,
-              depth: 0.06
-            }]} />
-            <meshStandardMaterial 
+            <extrudeGeometry args={innerBladeGeometryArgs} />
+            <meshStandardMaterial
               color={colors.secondary}
               emissive={colors.secondaryEmissive}
               emissiveIntensity={8}
@@ -776,8 +791,8 @@ export default function Sabres({
         <group position={[-0.2, 0.3, 0.]} rotation={[0, Math.PI / 2, Math.PI / 2]}>
           {/* Base blade */}
           <mesh>
-            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
-            <meshStandardMaterial 
+            <extrudeGeometry args={bladeGeometryArgs} />
+            <meshStandardMaterial
               color={colors.primary}
               emissive={colors.emissive}
               emissiveIntensity={2}
@@ -787,14 +802,11 @@ export default function Sabres({
               transparent
             />
           </mesh>
-          
+
           {/* Outer ethereal glow */}
           <mesh position={[0, 0, -0.02]}>
-            <extrudeGeometry args={[createInnerBladeShape(), {
-              ...innerBladeExtrudeSettings,
-              depth: 0.06
-            }]} />
-            <meshStandardMaterial 
+            <extrudeGeometry args={innerBladeGeometryArgs} />
+            <meshStandardMaterial
               color={colors.secondary}
               emissive={colors.secondaryEmissive}
               emissiveIntensity={3.5}

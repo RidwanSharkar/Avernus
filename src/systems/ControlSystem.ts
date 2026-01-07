@@ -997,32 +997,24 @@ export class ControlSystem extends System {
       bowWeaponSlot = 'secondary';
     }
     const hasTempestRounds = bowWeaponSlot ? this.isPassiveAbilityUnlocked('P', WeaponType.BOW, bowWeaponSlot) : false;
-    // Debug: Log tempest rounds status
-    if (hasTempestRounds) {
-      console.log('🎯 Tempest Rounds passive detected for bow in slot:', bowWeaponSlot);
-    }
+
 
     // Check if bow is fully charged for special projectile
     if (this.chargeProgress >= 1.0) {
       this.createChargedArrowProjectile(playerTransform.position.clone(), direction);
       // Play bow release sound for charged arrows (always full volume since chargeProgress >= 1.0)
       if (hasTempestRounds) {
-        console.log('🎵 Playing tempest round sound for charged arrow');
         this.audioSystem?.playBowTempestRoundSound(playerTransform.position, this.chargeProgress);
-        console.log('🎯 Calling tempest rounds callback for charged arrow');
         this.onTempestRoundsCallback?.(playerTransform.position.clone(), direction);
       } else {
-        console.log('🎵 Playing regular release sound for charged arrow');
         this.audioSystem?.playBowReleaseSound(playerTransform.position, this.chargeProgress);
       }
     } else if (isPerfectShot) {
       this.createPerfectShotProjectile(playerTransform.position.clone(), direction);
       // Play power release sound for perfect shots
-      console.log('🎵 Playing power release sound for perfect shot');
       this.audioSystem?.playBowPowerReleaseSound(playerTransform.position);
       // Trigger tempest rounds visual effect for perfect shots if unlocked
       if (hasTempestRounds) {
-        console.log('🎯 Calling tempest rounds callback for perfect shot');
         this.onTempestRoundsCallback?.(playerTransform.position.clone(), direction);
       }
     } else {
@@ -1031,12 +1023,9 @@ export class ControlSystem extends System {
       this.createProjectile(playerTransform.position.clone(), direction);
       // Play bow release sound for regular arrows (volume based on charge progress)
       if (hasTempestRounds) {
-        console.log('🎵 Playing tempest round sound for regular arrow');
         this.audioSystem?.playBowTempestRoundSound(playerTransform.position, this.chargeProgress);
-        console.log('🎯 Calling tempest rounds callback for regular arrow');
         this.onTempestRoundsCallback?.(playerTransform.position.clone(), direction);
       } else {
-        console.log('🎵 Playing regular release sound for regular arrow');
         this.audioSystem?.playBowReleaseSound(playerTransform.position, this.chargeProgress);
       }
     }
@@ -1330,7 +1319,6 @@ export class ControlSystem extends System {
     this.audioSystem?.playBowTempestRoundSound(spawnPosition, 1.0);
 
     // Trigger tempest rounds visual effect for each burst projectile
-    console.log('🎯 Calling tempest rounds callback for burst projectile');
     this.onTempestRoundsCallback?.(spawnPosition, direction);
 
     // Broadcast projectile creation to other players

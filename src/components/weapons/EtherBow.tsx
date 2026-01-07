@@ -1,7 +1,56 @@
-import React, { useRef, memo } from 'react';
+import React, { useRef, memo, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, CatmullRomCurve3, CubicBezierCurve3, Shape, DoubleSide } from '@/utils/three-exports';
 import { WeaponSubclass } from '@/components/dragon/weapons';
+
+// Cache bow curve outside component to prevent recreation on every render
+const createCachedBowCurve = (() => {
+  let cachedCurve: CatmullRomCurve3 | null = null;
+  return () => {
+    if (!cachedCurve) {
+      cachedCurve = new CatmullRomCurve3([
+        new Vector3(-0.875, 0, 0),
+        new Vector3(-0.85, 0.2, 0),
+        new Vector3(-0.25, 0.5, 0),
+        new Vector3(-0.4, 0.35, 0),
+        new Vector3(0.4, 0.35, 0),
+        new Vector3(0.25, 0.5, 0),
+        new Vector3(0.85, 0.2, 0),
+        new Vector3(0.875, 0, 0)
+      ]);
+    }
+    return cachedCurve;
+  };
+})();
+
+// Cache blade shape outside component to prevent recreation on every render
+const createCachedBladeShape = (() => {
+  let cachedShape: Shape | null = null;
+  return () => {
+    if (!cachedShape) {
+      cachedShape = new Shape();
+      cachedShape.moveTo(0, 0);
+
+      // Create thick back edge first
+      cachedShape.lineTo(0.4, -0.130);
+      cachedShape.bezierCurveTo(
+        0.8, 0.22,    // control point 1
+        1.33, 0.5,    // control point 2
+        1.6, 0.515    // end point (tip)
+      );
+
+      // Create sharp edge
+      cachedShape.lineTo(1.125, 0.75);
+      cachedShape.bezierCurveTo(
+        0.5, 0.2,
+        0.225, 0.0,
+        0.1, 0.7
+      );
+      cachedShape.lineTo(0, 0);
+    }
+    return cachedShape;
+  };
+})();
 
 interface EtherealBowProps {
   position: Vector3;
@@ -43,7 +92,7 @@ const EtherBowComponent = memo(function EtherealBow({
   // Debug logging for tempest rounds
   React.useEffect(() => {
     if (isTempestRoundsActive) {
-      console.log('🌊 EtherBow: Tempest Rounds ACTIVE!');
+      // console.log('🌊 EtherBow: Tempest Rounds ACTIVE!');
     }
   }, [isTempestRoundsActive]);
   const bowRef = useRef<Group>(null);
@@ -73,54 +122,22 @@ const EtherBowComponent = memo(function EtherealBow({
     prevIsCharging.current = actualIsCharging;
   });
 
-  // Rest of the curve creation functions remain the same
-  const createBowCurve = () => {
-    return new CatmullRomCurve3([
-      new Vector3(-0.875, 0, 0),
-      new Vector3(-0.85, 0.2, 0),
-      new Vector3(-0.25, 0.5, 0),
-      new Vector3(-0.4, 0.35, 0),
-      new Vector3(0.4, 0.35, 0),
-      new Vector3(0.25, 0.5, 0),
-      new Vector3(0.85, 0.2, 0),
-      new Vector3(0.875, 0, 0)
-    ]);
-  };
+  // Cache geometries to prevent recreation on every render
+  const bowCurve = useMemo(() => createCachedBowCurve(), []);
+  const bladeShape = useMemo(() => createCachedBladeShape(), []);
 
-  const createStringCurve = (drawAmount: number) => {
-    const pullback = drawAmount * maxDrawDistance;
-    const curve = new CubicBezierCurve3(
-      new Vector3(-0.8, 0, 0),
-      new Vector3(0, 0, -pullback),
-      new Vector3(0, 0, -pullback),
-      new Vector3(0.8, 0, 0)
-    );
-    return curve;
-  };
-
-  // Create custom blade shape (similar to scythe blades)
-  const createBladeShape = () => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    
-    // Create thick back edge first
-    shape.lineTo(0.4, -0.130);
-    shape.bezierCurveTo(
-      0.8, 0.22,    // control point 1
-      1.33, 0.5,    // control point 2
-      1.6, 0.515    // end point (tip)
-    );
-    
-    // Create sharp edge
-    shape.lineTo(1.125, 0.75);
-    shape.bezierCurveTo(
-      0.5, 0.2,
-      0.225, 0.0,
-      0.1, 0.7
-    );
-    shape.lineTo(0, 0);
-    return shape;
-  };
+  // Memoize string curve creation function
+  const createStringCurve = useMemo(() => {
+    return (drawAmount: number) => {
+      const pullback = drawAmount * maxDrawDistance;
+      return new CubicBezierCurve3(
+        new Vector3(-0.8, 0, 0),
+        new Vector3(0, 0, -pullback),
+        new Vector3(0, 0, -pullback),
+        new Vector3(0.8, 0, 0)
+      );
+    };
+  }, [maxDrawDistance]);
 
   const bladeExtrudeSettings = {
     steps: 1,
@@ -145,7 +162,7 @@ const EtherBowComponent = memo(function EtherealBow({
       >
         {/* Bow body with dynamic color for instant powershot, charging, and perfect shot timing */}
         <mesh rotation={[Math.PI/2, 0, 0]}>
-          <tubeGeometry args={[createBowCurve(), 64, 0.035, 8, false]} />
+          <tubeGeometry args={[bowCurve, 64, 0.035, 8, false]} />
           <meshStandardMaterial
             color={
               isPerfectShotWindow ? "#ffffff" : // Flash white during perfect shot window
@@ -279,7 +296,7 @@ const EtherBowComponent = memo(function EtherealBow({
         <group>
           {/* Left blade */}
           <mesh position={[-1, 0, -0.2]} rotation={[Math.PI/2, 0, Math.PI/2]} scale={[0.4, -0.4, 0.4]}>
-            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+            <extrudeGeometry args={[bladeShape, bladeExtrudeSettings]} />
             <meshStandardMaterial
               color={
                 isPerfectShotWindow ? "#ffffff" : // Flash white during perfect shot window
@@ -320,7 +337,7 @@ const EtherBowComponent = memo(function EtherealBow({
 
           {/* Right blade */}
           <mesh position={[1.0, 0, -0.2]} rotation={[Math.PI/2, 0, Math.PI/2]} scale={[0.4, 0.4, 0.4]}>
-            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+            <extrudeGeometry args={[bladeShape, bladeExtrudeSettings]} />
             <meshStandardMaterial
               color={
                 isPerfectShotWindow ? "#ffffff" : // Flash white during perfect shot window

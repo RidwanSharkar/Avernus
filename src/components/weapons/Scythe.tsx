@@ -1,9 +1,38 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Shape } from '@/utils/three-exports';
 import { DoubleSide } from '@/utils/three-exports';
 import { WeaponSubclass } from '@/components/dragon/weapons';
 import SpellCastingAura from './SpellCastingAura';
+
+// Cache blade shape outside component to prevent recreation on every render
+const createCachedBladeShape = (() => {
+  let cachedShape: Shape | null = null;
+  return () => {
+    if (!cachedShape) {
+      cachedShape = new Shape();
+      cachedShape.moveTo(0, 0);
+
+      // Create thick back edge first
+      cachedShape.lineTo(0.4, -0.130);
+      cachedShape.bezierCurveTo(
+        0.8, 0.22,    // control point 1
+        1.33, 0.5,    // control point 2
+        1.6, 0.515    // end point (tip)
+      );
+
+      // Create sharp edge
+      cachedShape.lineTo(1.125, 0.75);
+      cachedShape.bezierCurveTo(
+        0.5, 0.2,
+        0.225, 0.0,
+        0.1, 0.7
+      );
+      cachedShape.lineTo(0, 0);
+    }
+    return cachedShape;
+  };
+})();
 
 interface ScytheProps {
   parentRef: React.RefObject<Group>;
@@ -15,40 +44,19 @@ interface ScytheProps {
 }
 
 // Reusable ScytheModel component
-function ScytheModel({ 
-  scytheRef, 
-  basePosition, 
+function ScytheModel({
+  scytheRef,
+  basePosition,
   isEmpowered = false,
-}: { 
-  scytheRef: React.RefObject<Group>; 
+}: {
+  scytheRef: React.RefObject<Group>;
   basePosition: readonly [number, number, number];
   isEmpowered?: boolean;
 }) {
-  // Create custom blade shape
-  const createBladeShape = () => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    
-    // Create thick back edge first
-    shape.lineTo(0.4, -0.130);
-    shape.bezierCurveTo(
-      0.8, 0.22,    // control point 1
-      1.33, 0.5,    // control point 2
-      1.6, 0.515    // end point (tip)
-    );
-    
-    // Create sharp edge
-    shape.lineTo(1.125, 0.75);
-    shape.bezierCurveTo(
-      0.5, 0.2,
-      0.225, 0.0,
-      0.1, 0.7
-    );
-    shape.lineTo(0, 0);
-    return shape;
-  };
+  // Cache blade shape to prevent recreation on every render
+  const bladeShape = useMemo(() => createCachedBladeShape(), []);
 
-  const bladeExtradeSettings = {
+  const bladeExtradeSettings = useMemo(() => ({
     steps: 1,
     depth: 0.00010,
     bevelEnabled: true,
@@ -56,7 +64,7 @@ function ScytheModel({
     bevelSize: 0.035,
     bevelSegments: 1,
     curveSegments: 16
-  };
+  }), []);
 
   return (
     <group 
@@ -191,7 +199,7 @@ function ScytheModel({
       <group position={[0.375, 0.45, 0.65]} rotation={[0.2, -Math.PI / 3.6, Math.PI -0.4]} scale={[0.8, 0.45, 0.8]}>
         {/* Base blade */}
         <mesh>
-          <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.03 }]} />
+          <extrudeGeometry args={[bladeShape, { ...bladeExtradeSettings, depth: 0.03 }]} />
           <meshStandardMaterial
             color={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
             emissive={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
@@ -209,7 +217,7 @@ function ScytheModel({
       <group position={[-0.375, -0.45, -0.65]} rotation={[0.2, Math.PI/14 - 1.1, -0.4]} scale={[0.8, 0.45, 0.8]}>
         {/* Second blade */}
         <mesh>
-          <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.03 }]} />
+          <extrudeGeometry args={[bladeShape, { ...bladeExtradeSettings, depth: 0.03 }]} />
           <meshStandardMaterial
             color={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
             emissive={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
