@@ -56,7 +56,7 @@ function ScytheModel({
   // Cache blade shape to prevent recreation on every render
   const bladeShape = useMemo(() => createCachedBladeShape(), []);
 
-  const bladeExtradeSettings = useMemo(() => ({
+  const bladeExtrudeSettings = useMemo(() => ({
     steps: 1,
     depth: 0.00010,
     bevelEnabled: true,
@@ -65,6 +65,12 @@ function ScytheModel({
     bevelSegments: 1,
     curveSegments: 16
   }), []);
+
+  // Cache geometry args to prevent recreation on every render (prevents memory leaks)
+  const bladeGeometryArgs = useMemo(() => [bladeShape, {
+    ...bladeExtrudeSettings,
+    depth: 0.03
+  }] as [Shape, typeof bladeExtrudeSettings & { depth: number }], [bladeShape, bladeExtrudeSettings]);
 
   return (
     <group 
@@ -199,7 +205,7 @@ function ScytheModel({
       <group position={[0.375, 0.45, 0.65]} rotation={[0.2, -Math.PI / 3.6, Math.PI -0.4]} scale={[0.8, 0.45, 0.8]}>
         {/* Base blade */}
         <mesh>
-          <extrudeGeometry args={[bladeShape, { ...bladeExtradeSettings, depth: 0.03 }]} />
+          <extrudeGeometry args={bladeGeometryArgs} />
           <meshStandardMaterial
             color={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
             emissive={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
@@ -217,7 +223,7 @@ function ScytheModel({
       <group position={[-0.375, -0.45, -0.65]} rotation={[0.2, Math.PI/14 - 1.1, -0.4]} scale={[0.8, 0.45, 0.8]}>
         {/* Second blade */}
         <mesh>
-          <extrudeGeometry args={[bladeShape, { ...bladeExtradeSettings, depth: 0.03 }]} />
+          <extrudeGeometry args={bladeGeometryArgs} />
           <meshStandardMaterial
             color={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
             emissive={isEmpowered ? "#3FAEFC" : "#3FAEFC"}
