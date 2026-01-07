@@ -19,7 +19,7 @@ const Planet: React.FC = () => {
     color: "#56FCF7",
     roughness: 0.7,
     metalness: 0.2,
-    emissive: "#56FCF7",
+    emissive: "#2DE1FC",
     emissiveIntensity: 0.675
   }), []);
 

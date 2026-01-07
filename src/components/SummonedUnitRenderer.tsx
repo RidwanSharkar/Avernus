@@ -2,7 +2,7 @@
 
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Color, Group, Mesh, MeshBasicMaterial, PlaneGeometry, OctahedronGeometry, SphereGeometry, CylinderGeometry, AdditiveBlending, MathUtils } from '@/utils/three-exports';
+import { Vector3, Color, Group, Mesh, MeshBasicMaterial, PlaneGeometry, OctahedronGeometry, SphereGeometry, CylinderGeometry, AdditiveBlending, MathUtils, DoubleSide } from '@/utils/three-exports';
 import { World } from '@/ecs/World';
 
 interface SummonedUnitRendererProps {
@@ -77,40 +77,47 @@ export default function SummonedUnitRenderer({
       transparent: true,
       opacity: 0.95,
       depthWrite: false,
-      vertexColors: true
+      vertexColors: true,
+      side: DoubleSide
     }),
     glow: new MeshBasicMaterial({
       transparent: true,
       depthWrite: false,
+      side: DoubleSide
     }),
     background: new MeshBasicMaterial({
       color: "#2a2a2a",
       transparent: true,
       opacity: 0.85,
       depthWrite: false,
+      side: DoubleSide
     }),
     border: new MeshBasicMaterial({
       color: "#1a1a1a",
       transparent: true,
       opacity: 0.9,
       depthWrite: false,
+      side: DoubleSide
     }),
     shadow: new MeshBasicMaterial({
       color: "#1a1a1a",
       transparent: true,
       opacity: 0.5,
       depthWrite: false,
+      side: DoubleSide
     }),
     highlight: new MeshBasicMaterial({
       color: "#ffffff",
       transparent: true,
       opacity: 0.2,
       depthWrite: false,
+      side: DoubleSide
     }),
     borderHighlight: new MeshBasicMaterial({
       transparent: true,
       opacity: 0.4,
       depthWrite: false,
+      side: DoubleSide
     }),
   }), []);
 
@@ -398,11 +405,11 @@ export default function SummonedUnitRenderer({
         <mesh
           key={`aura-particle-${i}`}
           position={[
-            Math.cos(currentTimeRef.current * 2 + i * Math.PI / (isElite ? 6 : 3)) * unitBaseRadius * 2.2,
+            Math.cos(currentTimeRef.current * 2 + i * Math.PI / (isElite ? 6 : 3)) * unitBaseRadius * 2,
             unitHeight * 0.75 + Math.sin(currentTimeRef.current * 3 + i) * 0.2,
-            Math.sin(currentTimeRef.current * 2 + i * Math.PI / (isElite ? 6 : 3)) * unitBaseRadius * 2.2
+            Math.sin(currentTimeRef.current * 2 + i * Math.PI / (isElite ? 6 : 3)) * unitBaseRadius * 2
           ]}
-          scale={[0.1, 0.1, 0.1]}
+          scale={[0.2, 0.2, 0.2]}
           geometry={geometries.shoulder}
         >
           <meshBasicMaterial
@@ -424,6 +431,7 @@ export default function SummonedUnitRenderer({
               transparent
               opacity={0.3}
               depthWrite={false}
+              side={DoubleSide}
             />
           </mesh>
 
@@ -434,6 +442,7 @@ export default function SummonedUnitRenderer({
               transparent
               opacity={0.9}
               depthWrite={false}
+              side={DoubleSide}
             />
           </mesh>
 
@@ -445,6 +454,7 @@ export default function SummonedUnitRenderer({
               transparent
               opacity={0.85}
               depthWrite={false}
+              side={DoubleSide}
             />
           </mesh>
 
@@ -456,6 +466,7 @@ export default function SummonedUnitRenderer({
               transparent
               opacity={0.5}
               depthWrite={false}
+              side={DoubleSide}
             />
           </mesh>
 
@@ -476,6 +487,7 @@ export default function SummonedUnitRenderer({
               transparent
               opacity={0.2}
               depthWrite={false}
+              side={DoubleSide}
             />
           </mesh>
 
@@ -487,25 +499,12 @@ export default function SummonedUnitRenderer({
               transparent
               opacity={0.4}
               depthWrite={false}
+              side={DoubleSide}
             />
           </mesh>
         </group>
       )}
 
-      {/* Death Effect */}
-      {isDead && (
-        <group>
-          {/* Simple death particles */}
-          <mesh position={[0, unitHeight * 0.4, 0]} geometry={geometries.deathEffect}>
-            <meshBasicMaterial
-              color={0x666666}
-              transparent
-              opacity={0.1}
-              wireframe
-            />
-          </mesh>
-        </group>
-      )}
 
 
     </group>

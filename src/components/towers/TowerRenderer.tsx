@@ -417,7 +417,6 @@ export default function TowerRenderer({
         </>
       )}
 
-      ELEMENTAL VORTEX
 
       {/* Energy tendrils orbital rings - Static refs for performance */}
       {[...Array(8)].map((_, i) => (

@@ -18,7 +18,8 @@ import {
   MeshBasicMaterial,
   Object3D,
   Quaternion,
-  AdditiveBlending
+  AdditiveBlending,
+  DoubleSide
 } from '@/utils/three-exports';
 import { World } from '@/ecs/World';
 import { Transform } from '@/ecs/components/Transform';
@@ -107,13 +108,15 @@ const sharedMaterials = {
     color: "#2a2a2a",
     transparent: true,
     opacity: 0.85,
-    depthWrite: false
+    depthWrite: false,
+    side: DoubleSide
   }),
   healthBarFill: new MeshBasicMaterial({
     transparent: true,
     opacity: 0.95,
     depthWrite: false,
-    vertexColors: true
+    vertexColors: true,
+    side: DoubleSide
   }),
   // Death Effect
   deathEffect: new MeshBasicMaterial({

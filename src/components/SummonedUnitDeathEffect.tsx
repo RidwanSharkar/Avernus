@@ -3,16 +3,16 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Color, Group, Mesh, SphereGeometry, OctahedronGeometry, BoxGeometry, RingGeometry, CylinderGeometry, MeshBasicMaterial, AdditiveBlending, MathUtils } from '@/utils/three-exports';
+import SummonedUnitSoulEffect from './SummonedUnitSoulEffect';
 
 // Shared geometries to prevent memory leaks - these persist across component instances
 const sharedGeometries = {
-  explosionParticle: new SphereGeometry(0.1, 8, 6),
+  explosionParticle: new SphereGeometry(0.075, 8, 6),
   explosionFlash: new SphereGeometry(0.2, 16, 12),
   debugBox: new BoxGeometry(1, 1, 1),
-  shockwaveRing: new RingGeometry(0.8, 1.2, 16),
-  spiritCrystal: new OctahedronGeometry(0.3, 0),
-  spiritParticle: new OctahedronGeometry(0.1, 0),
-  spiritTrail: new CylinderGeometry(0.05, 0.1, 1, 8),
+  shockwaveRing: new RingGeometry(0.6, 0.85, 16),
+  spiritParticle: new OctahedronGeometry(0.3, 0), // Larger particles
+  spiritTrail: new CylinderGeometry(0.2, 0.4, 2, 8), // Much larger trail
 };
 
 interface SummonedUnitDeathEffectProps {
@@ -45,7 +45,6 @@ export default function SummonedUnitDeathEffect({
 
   // Memoized materials - these need to be disposed since they're created per instance
   const materials = useMemo(() => ({
-    debugBox: new MeshBasicMaterial({ color: "red" }),
     explosionFlash: new MeshBasicMaterial({
       color: playerColor,
       transparent: true,
@@ -66,21 +65,21 @@ export default function SummonedUnitDeathEffect({
       side: 2, // DoubleSide
     }),
     spiritCrystal: new MeshBasicMaterial({
-      color: spiritColor,
+      color: 0xffffff, // Pure white for visibility testing
       transparent: true,
-      opacity: 0.9,
+      opacity: 1.0, // Full opacity
       blending: AdditiveBlending,
     }),
     spiritParticle: new MeshBasicMaterial({
-      color: spiritColor,
+      color: 0xffffff, // Pure white for visibility testing
       transparent: true,
-      opacity: 0.6,
+      opacity: 1.0, // Full opacity
       blending: AdditiveBlending,
     }),
     spiritTrail: new MeshBasicMaterial({
-      color: spiritColor,
+      color: 0xffffff, // Pure white for visibility testing
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.8, // High opacity
       blending: AdditiveBlending,
     }),
   }), [playerColor, spiritColor]);
@@ -136,7 +135,7 @@ export default function SummonedUnitDeathEffect({
       }
 
       // Spirit floats upward with gentle rotation and scaling
-      const spiritY = MathUtils.lerp(position.y, position.y + 8, spiritProgress);
+      const spiritY = MathUtils.lerp(position.y, position.y + 3, spiritProgress);
       const spiritScale = MathUtils.lerp(1.0, 0.3, spiritProgress);
       const spiritOpacity = Math.max(0, 1 - spiritProgress * 0.7);
 
@@ -164,8 +163,12 @@ export default function SummonedUnitDeathEffect({
 
   return (
     <group ref={groupRef} position={[position.x, position.y, position.z]}>
-      {/* DEBUG: Bright colored box to verify rendering */}
-      <mesh position={[0, 2, 0]} geometry={sharedGeometries.debugBox} material={materials.debugBox} />
+      {/* Summoned Unit Soul Effect - runs for full duration */}
+      <SummonedUnitSoulEffect
+        position={position}
+        playerNumber={playerNumber}
+        duration={explosionDuration + spiritDuration}
+      />
 
       {/* Explosion Phase */}
       {phase === 'explosion' && (
@@ -174,12 +177,12 @@ export default function SummonedUnitDeathEffect({
           <mesh geometry={sharedGeometries.explosionFlash} material={materials.explosionFlash} />
 
           {/* Explosion particles */}
-          {Array.from({ length: 12 }, (_, i) => {
-            const angle = (i / 12) * Math.PI * 2;
-            const radius = 0.5 + Math.random() * 0.5;
+          {Array.from({ length: 8 }, (_, i) => {
+            const angle = (i / 8) * Math.PI * 2;
+            const radius = 0.25 + Math.random() * 0.5;
             const x = Math.cos(angle) * radius;
             const z = Math.sin(angle) * radius;
-            const y = Math.random() * 0.5;
+            const y = Math.random() * 0.5  + 0.175;
 
             return (
               <mesh
@@ -192,38 +195,11 @@ export default function SummonedUnitDeathEffect({
           })}
 
           {/* Shockwave ring */}
-          <mesh rotation={[Math.PI / 2, 0, 0]} geometry={sharedGeometries.shockwaveRing} material={materials.shockwaveRing} />
+          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0.125, 0]} geometry={sharedGeometries.shockwaveRing} material={materials.shockwaveRing} />
         </group>
       )}
 
-      {/* Spirit Phase */}
-      {phase === 'spirit' && (
-        <group>
-          {/* Main spirit crystal */}
-          <mesh geometry={sharedGeometries.spiritCrystal} material={materials.spiritCrystal} />
 
-          {/* Spirit aura particles */}
-          {Array.from({ length: 8 }, (_, i) => {
-            const angle = (i / 8) * Math.PI * 2;
-            const radius = 0.8;
-            const x = Math.cos(angle) * radius;
-            const z = Math.sin(angle) * radius;
-
-            return (
-              <mesh
-                key={`spirit-particle-${i}`}
-                position={[x, 0, z]}
-                scale={[0.2, 0.2, 0.2]}
-                geometry={sharedGeometries.spiritParticle}
-                material={materials.spiritParticle}
-              />
-            );
-          })}
-
-          {/* Spirit trail effect */}
-          <mesh position={[0, -0.5, 0]} geometry={sharedGeometries.spiritTrail} material={materials.spiritTrail} />
-        </group>
-      )}
     </group>
   );
 }
