@@ -299,7 +299,7 @@ export default function DragonRenderer({
           
           // Update dash charges state
           if (typeof movement.getDashChargeStatus === 'function') {
-            const currentChargeStatus = movement.getDashChargeStatus();
+            const currentChargeStatus = movement.getDashChargeStatus(currentWeapon || WeaponType.BOW);
             setDashCharges(currentChargeStatus);
           } else {
 

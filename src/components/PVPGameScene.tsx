@@ -829,7 +829,7 @@ export function PVPGameScene({ onDamageNumbersUpdate, onDamageNumberComplete, on
         console.error('❌ Memory monitor error:', error);
       }
 
-    }, 3000); // Check every 10 seconds
+    }, 10000); // Check every 10 seconds
 
     return () => {
       console.log('🛑 Memory monitor stopped');

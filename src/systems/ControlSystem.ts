@@ -4173,7 +4173,7 @@ export class ControlSystem extends System {
         
         // Attempt to start dash
         const currentTime = Date.now() / 1000; // Convert to seconds
-        const dashStarted = movement.startDash(worldDirection, transform.position, currentTime);
+        const dashStarted = movement.startDash(worldDirection, transform.position, currentTime, this.currentWeapon);
         
         if (dashStarted) {
           // Play dash sound

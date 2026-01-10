@@ -1,6 +1,7 @@
 // Movement component for velocity and movement properties
 import { Vector3 } from '@/utils/three-exports';
 import { Component } from '../Entity';
+import { WeaponType } from '@/components/dragon/weapons';
 
 export class Movement extends Component {
   public static readonly componentType = 'Movement'; // Explicit type identifier
@@ -71,7 +72,7 @@ export class Movement extends Component {
   constructor(
     maxSpeed: number = 3.75,
     friction: number = 0.8,
-    jumpForce: number = 20.0,
+    jumpForce: number = 30.0,
     gravity: number = -12.5
   ) {
     super();
@@ -236,7 +237,7 @@ export class Movement extends Component {
     return speed;
   }
 
-  public startDash(direction: Vector3, currentPosition: Vector3, currentTime: number): boolean {
+  public startDash(direction: Vector3, currentPosition: Vector3, currentTime: number, weapon: WeaponType): boolean {
     // Check if already dashing
     if (this.isDashing) {
       return false;
@@ -258,7 +259,8 @@ export class Movement extends Component {
     this.dashCharges[availableChargeIndex].isAvailable = false;
     this.dashCharges[availableChargeIndex].cooldownStartTime = currentTime;
 
-    // Set cooldown timer for this specific charge (6 seconds)
+    // Set cooldown timer for this specific charge (weapon-specific)
+    const cooldownDuration = this.getDashCooldownDuration(weapon);
     // Store timeout ID for cleanup
     if (this.dashCharges[availableChargeIndex].cooldownTimeoutId) {
       clearTimeout(this.dashCharges[availableChargeIndex].cooldownTimeoutId);
@@ -267,7 +269,7 @@ export class Movement extends Component {
       this.dashCharges[availableChargeIndex].isAvailable = true;
       this.dashCharges[availableChargeIndex].cooldownStartTime = null;
       this.dashCharges[availableChargeIndex].cooldownTimeoutId = undefined;
-    }, 6000); // 6 second cooldown
+    }, cooldownDuration);
 
     return true;
   }
@@ -337,12 +339,30 @@ export class Movement extends Component {
     return this.dashCharges.filter(charge => charge.isAvailable).length;
   }
 
-  public getDashChargeStatus(): Array<{ isAvailable: boolean; cooldownRemaining: number }> {
+  private getDashCooldownDuration(weapon: WeaponType): number {
+    switch (weapon) {
+      case WeaponType.SCYTHE:
+        return 7000; // 7 seconds
+      case WeaponType.BOW:
+        return 7000; // 7 seconds
+      case WeaponType.SWORD: // GREATSWORD
+        return 6000; // 6 seconds
+      case WeaponType.RUNEBLADE:
+        return 6000; // 6 seconds
+      case WeaponType.SABRES:
+        return 5000; // 5 seconds
+      default:
+        return 6000; // Default 6 seconds
+    }
+  }
+
+  public getDashChargeStatus(weapon: WeaponType): Array<{ isAvailable: boolean; cooldownRemaining: number }> {
     const currentTime = Date.now() / 1000;
+    const cooldownDuration = this.getDashCooldownDuration(weapon) / 1000; // Convert to seconds
     return this.dashCharges.map(charge => ({
       isAvailable: charge.isAvailable,
-      cooldownRemaining: charge.cooldownStartTime 
-        ? Math.max(0, 6 - (currentTime - charge.cooldownStartTime))
+      cooldownRemaining: charge.cooldownStartTime
+        ? Math.max(0, cooldownDuration - (currentTime - charge.cooldownStartTime))
         : 0
     }));
   }

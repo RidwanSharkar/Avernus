@@ -3,7 +3,10 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Avernus',
-  description: '3D action game built with React Three Fiber and ECS architecture',
+  description: '1v1 Arena',
+  icons: {
+    icon: '/Flavicon.svg',
+  },
 }
 
 export default function RootLayout({
