@@ -998,8 +998,9 @@ function HomeContent() {
                     <li>• Each player has a Tower and 3 Inhibitors.</li>
                     <li>• Each player's Tower summons 3 Units every 45 seconds.</li>
                     <li>• Player kills and Summoned Unit kills award experience points.</li>
+                    <li>• Clearing the wave of Summoned Units before your opponent awards additional experience points.</li>
                     <li>• Leveling up grants a Skill Point to unlock additional abilities.</li>
-                    <li>• Players respawn upon 10 seconds after death.</li>
+                    <li>• Players respawn 15 seconds after death.</li>
                     <li>• Only Summoned Units can damage the opposing player's Tower.</li>
                     <li>• Players can destroy the opposing player's Inhibitors to upgrade their Summoned Units into ELITES.</li>
                     <li>• The first player to destroy the opposing player's Tower wins.</li>
@@ -1010,7 +1011,7 @@ function HomeContent() {
                 <div className="border-b border-gray-600 pb-4">
                   <h3 className="text-lg font-semibold text-blue-400 mb-2">⚔️ WEAPON SYSTEM</h3>
                   <p className="text-gray-300 mb-2">
-                    Choose 2 weapons to equip. Each weapon has their 'Q' ability unlocked by default; all other abilities are unlocked by spending Skill Points. Each weapon has unique abilities and playstyles:
+                    Choose 2 weapons to equip. Your Primary Weapon has its 'Q' and 'E' hotkey abilities unlocked by default while your Secondary Weapon has its 'Q' ability unlocked at the start of the game; all other abilities are unlocked by spending Skill Points. Each weapon has unique abilities and playstyles:
                   </p>
                   <ul className="text-gray-300 text-sm space-y-1 ml-4">
                     <li>• <strong className="text-green-400">Bow (VIPER) Ranged sniper with burst, harass and long-range siege potential</strong>:</li>

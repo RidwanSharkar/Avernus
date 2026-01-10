@@ -49,39 +49,46 @@ export default function PillarRenderer({
       transparent: true,
       opacity: 0.95,
       depthWrite: false,
+      depthTest: false,
     }),
     glow: new MeshBasicMaterial({
       transparent: true,
       depthWrite: false,
+      depthTest: false,
     }),
     background: new MeshBasicMaterial({
       color: "#2a2a2a",
       transparent: true,
       opacity: 0.85,
       depthWrite: false,
+      depthTest: false,
     }),
     border: new MeshBasicMaterial({
       color: "#1a1a1a",
       transparent: true,
       opacity: 0.9,
       depthWrite: false,
+      depthTest: false,
     }),
     shadow: new MeshBasicMaterial({
       color: "#1a1a1a",
       transparent: true,
       opacity: 0.5,
       depthWrite: false,
+      depthTest: false,
     }),
     highlight: new MeshBasicMaterial({
       color: "#ffffff",
       transparent: true,
       opacity: 0.2,
       depthWrite: false,
+      depthTest: false,
     }),
     borderHighlight: new MeshBasicMaterial({
       transparent: true,
       opacity: 0.4,
       depthWrite: false,
+      depthTest: false,
     }),
   }), []);
   
@@ -382,44 +389,48 @@ export default function PillarRenderer({
       {/* Health Bar */}
       <group ref={healthBarRef} position={[0, healthBarY, 0]}>
         {/* Outer glow effect (behind everything) */}
-        <mesh ref={healthBarGlowRef} position={[0, 0, -0.01]} geometry={healthBarGeometries.glow}>
+        <mesh ref={healthBarGlowRef} position={[0, 0, -0.01]} geometry={healthBarGeometries.glow} renderOrder={1}>
           <meshBasicMaterial 
             color={pillarColor} 
             transparent 
             opacity={0.3}
             depthWrite={false}
+            depthTest={false}
           />
         </mesh>
         
         {/* Outer border (dark) */}
-        <mesh position={[0, 0, 0.001]} geometry={healthBarGeometries.border}>
+        <mesh position={[0, 0, 0.001]} geometry={healthBarGeometries.border} renderOrder={2}>
           <meshBasicMaterial 
             color="#1a1a1a" 
             transparent 
             opacity={0.9}
             depthWrite={false}
+            depthTest={false}
           />
         </mesh>
         
         {/* Background (slightly rounded appearance) */}
-        <mesh position={[0, 0, 0.002]} geometry={healthBarGeometries.background}>
+        <mesh position={[0, 0, 0.002]} geometry={healthBarGeometries.background} renderOrder={3}>
           <meshBasicMaterial
             attach="material"
             color="#2a2a2a"
             transparent
             opacity={0.85}
             depthWrite={false}
+            depthTest={false}
           />
         </mesh>
 
         {/* Inner shadow/depth effect */}
-        <mesh position={[0, 0, 0.003]} geometry={healthBarGeometries.shadow}>
+        <mesh position={[0, 0, 0.003]} geometry={healthBarGeometries.shadow} renderOrder={4}>
           <meshBasicMaterial
             attach="material"
             color="#1a1a1a"
             transparent
             opacity={0.5}
             depthWrite={false}
+            depthTest={false}
           />
         </mesh>
 
@@ -430,27 +441,30 @@ export default function PillarRenderer({
           geometry={healthBarGeometries.fill}
           material={healthBarMaterials.fill}
           scale={[1, 1, 1]}
+          renderOrder={5}
         />
 
         {/* Top highlight for depth */}
-        <mesh position={[0, healthBarHeight * 0.25, 0.005]} geometry={healthBarGeometries.highlight}>
+        <mesh position={[0, healthBarHeight * 0.25, 0.005]} geometry={healthBarGeometries.highlight} renderOrder={6}>
           <meshBasicMaterial
             attach="material"
             color="#ffffff"
             transparent
             opacity={0.2}
             depthWrite={false}
+            depthTest={false}
           />
         </mesh>
 
         {/* Outer border highlight */}
-        <mesh position={[0, 0, 0.006]} geometry={healthBarGeometries.outerHighlight}>
+        <mesh position={[0, 0, 0.006]} geometry={healthBarGeometries.outerHighlight} renderOrder={7}>
           <meshBasicMaterial
             attach="material"
             color={pillarColor}
             transparent
             opacity={0.4}
             depthWrite={false}
+            depthTest={false}
           />
         </mesh>
       </group>

@@ -2,7 +2,7 @@
 
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Color, Group, Mesh, MeshBasicMaterial, PlaneGeometry, OctahedronGeometry, SphereGeometry, CylinderGeometry, AdditiveBlending, MathUtils, DoubleSide } from '@/utils/three-exports';
+import { Vector3, Color, Group, Mesh, MeshBasicMaterial, PlaneGeometry, OctahedronGeometry, SphereGeometry, CylinderGeometry, AdditiveBlending, MathUtils } from '@/utils/three-exports';
 import { World } from '@/ecs/World';
 
 interface SummonedUnitRendererProps {
@@ -77,47 +77,47 @@ export default function SummonedUnitRenderer({
       transparent: true,
       opacity: 0.95,
       depthWrite: false,
+      depthTest: false,
       vertexColors: true,
-      side: DoubleSide
     }),
     glow: new MeshBasicMaterial({
       transparent: true,
       depthWrite: false,
-      side: DoubleSide
+      depthTest: false,
     }),
     background: new MeshBasicMaterial({
       color: "#2a2a2a",
       transparent: true,
       opacity: 0.85,
       depthWrite: false,
-      side: DoubleSide
+      depthTest: false,
     }),
     border: new MeshBasicMaterial({
       color: "#1a1a1a",
       transparent: true,
       opacity: 0.9,
       depthWrite: false,
-      side: DoubleSide
+      depthTest: false,
     }),
     shadow: new MeshBasicMaterial({
       color: "#1a1a1a",
       transparent: true,
       opacity: 0.5,
       depthWrite: false,
-      side: DoubleSide
+      depthTest: false,
     }),
     highlight: new MeshBasicMaterial({
       color: "#ffffff",
       transparent: true,
       opacity: 0.2,
       depthWrite: false,
-      side: DoubleSide
+      depthTest: false,
     }),
     borderHighlight: new MeshBasicMaterial({
       transparent: true,
       opacity: 0.4,
       depthWrite: false,
-      side: DoubleSide
+      depthTest: false,
     }),
   }), []);
 
@@ -405,11 +405,11 @@ export default function SummonedUnitRenderer({
         <mesh
           key={`aura-particle-${i}`}
           position={[
-            Math.cos(currentTimeRef.current * 2 + i * Math.PI / (isElite ? 6 : 3)) * unitBaseRadius * 2,
-            unitHeight * 0.75 + Math.sin(currentTimeRef.current * 3 + i) * 0.2,
-            Math.sin(currentTimeRef.current * 2 + i * Math.PI / (isElite ? 6 : 3)) * unitBaseRadius * 2
+            Math.cos(currentTimeRef.current * 2 + i * Math.PI / (isElite ? 6 : 3)) * unitBaseRadius * 1.75,
+            unitHeight * 0.75 + Math.sin(currentTimeRef.current * 3 + i) * 0.075,
+            Math.sin(currentTimeRef.current * 2 + i * Math.PI / (isElite ? 6 : 3)) * unitBaseRadius * 1.75
           ]}
-          scale={[0.2, 0.2, 0.2]}
+          scale={[0.25, 0.25, 0.25]}
           geometry={geometries.shoulder}
         >
           <meshBasicMaterial
@@ -425,48 +425,48 @@ export default function SummonedUnitRenderer({
       {!isDead && (
         <group ref={healthBarRef} position={[0, healthBarY, 0]}>
           {/* Outer glow effect (behind everything) */}
-          <mesh ref={healthBarGlowRef} position={[0, 0, -0.01]} geometry={geometries.healthBarGlow}>
+          <mesh ref={healthBarGlowRef} position={[0, 0, -0.01]} geometry={geometries.healthBarGlow} renderOrder={1}>
             <meshBasicMaterial
               color={unitColor}
               transparent
               opacity={0.3}
               depthWrite={false}
-              side={DoubleSide}
+              depthTest={false}
             />
           </mesh>
 
           {/* Outer border (dark) */}
-          <mesh position={[0, 0, 0.001]} geometry={geometries.healthBarBorder}>
+          <mesh position={[0, 0, 0.001]} geometry={geometries.healthBarBorder} renderOrder={2}>
             <meshBasicMaterial
               color="#1a1a1a"
               transparent
               opacity={0.9}
               depthWrite={false}
-              side={DoubleSide}
+              depthTest={false}
             />
           </mesh>
 
           {/* Background (slightly rounded appearance) */}
-          <mesh position={[0, 0, 0.002]} geometry={geometries.healthBarBg}>
+          <mesh position={[0, 0, 0.002]} geometry={geometries.healthBarBg} renderOrder={3}>
             <meshBasicMaterial
               attach="material"
               color="#2a2a2a"
               transparent
-              opacity={0.85}
+              opacity={1}
               depthWrite={false}
-              side={DoubleSide}
+              depthTest={false}
             />
           </mesh>
 
           {/* Inner shadow/depth effect */}
-          <mesh position={[0, 0, 0.003]} geometry={geometries.healthBarShadow}>
+          <mesh position={[0, 0, 0.003]} geometry={geometries.healthBarShadow} renderOrder={4}>
             <meshBasicMaterial
               attach="material"
               color="#1a1a1a"
               transparent
-              opacity={0.5}
+              opacity={0}
               depthWrite={false}
-              side={DoubleSide}
+              depthTest={false}
             />
           </mesh>
 
@@ -477,29 +477,30 @@ export default function SummonedUnitRenderer({
             geometry={geometries.healthBarFill}
             material={healthBarMaterials.fill}
             scale={[1, 1, 1]}
+            renderOrder={5}
           />
 
           {/* Top highlight for depth */}
-          <mesh position={[0, healthBarHeight * 0.25, 0.005]} geometry={geometries.healthBarHighlight}>
+          <mesh position={[0, healthBarHeight * 0.25, 0.005]} geometry={geometries.healthBarHighlight} renderOrder={6}>
             <meshBasicMaterial
               attach="material"
               color="#ffffff"
               transparent
               opacity={0.2}
               depthWrite={false}
-              side={DoubleSide}
+              depthTest={false}
             />
           </mesh>
 
           {/* Outer border highlight */}
-          <mesh position={[0, 0, 0.006]} geometry={geometries.healthBarOuterHighlight}>
+          <mesh position={[0, 0, 0.006]} geometry={geometries.healthBarOuterHighlight} renderOrder={7}>
             <meshBasicMaterial
               attach="material"
               color={unitColor}
               transparent
               opacity={0.4}
               depthWrite={false}
-              side={DoubleSide}
+              depthTest={false}
             />
           </mesh>
         </group>
