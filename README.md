@@ -2,6 +2,8 @@
 
 A competitive 1v1 multiplayer PVP 3D action game featuring fast-paced real-time combat with strategic weapon switching, dozens of ability combinations and a progression system within a semi-MOBA format.
 
+<img width="750" height="350" alt="Avernus" src="https://github.com/user-attachments/assets/b6814125-58f3-4d51-8fa9-4f945e3ee7f1" />
+
 **GAMEPLAY: https://www.youtube.com/watch?v=5BqoieHbZJw**
 
 <img width="722" height="439" alt="landscape" src="https://github.com/user-attachments/assets/531931f9-d4f7-41e8-88dc-fbf2c8f5ad01" />
