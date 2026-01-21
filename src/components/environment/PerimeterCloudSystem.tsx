@@ -1,13 +1,12 @@
 import React, { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
-  ShaderMaterial,
   BufferGeometry,
   Float32BufferAttribute,
   Vector3,
-  AdditiveBlending,
   Color
 } from '@/utils/three-exports';
+import { shaderRegistry } from '@/utils/shaderRegistry';
 
 // Perimeter cloud vertex shader - for atmospheric red clouds
 const perimeterCloudVertexShader = `
@@ -142,31 +141,24 @@ interface PerimeterCloudParticlesProps {
 }
 
 const PerimeterCloudParticles: React.FC<PerimeterCloudParticlesProps> = ({ cloud, geometry }) => {
-  const materialRef = useRef<ShaderMaterial>(null!);
+  const materialRef = useRef<any>(null!);
 
   const material = useMemo(() => {
-    return new ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-        uSize: { value: 2 },
-        uCloudTime: { value: 0 },
-        uDuration: { value: cloud.duration },
-        uCloudOrigin: { value: cloud.origin },
-        uCloudDirection: { value: cloud.direction },
-        // Cloud variation uniforms
-        uScale: { value: cloud.scale },
-        uSpread: { value: cloud.spread },
-        uHeight: { value: cloud.height },
-        uSpeed: { value: cloud.speed },
-        uRotationSpeed: { value: cloud.rotationSpeed },
-        uRotationOffset: { value: cloud.rotationOffset },
-      },
-      vertexShader: perimeterCloudVertexShader,
-      fragmentShader: perimeterCloudFragmentShader,
-      transparent: true,
-      blending: AdditiveBlending,
-      depthWrite: false,
-    });
+    const precompiledMaterial = shaderRegistry.getShader('perimeterCloud');
+    if (precompiledMaterial) {
+      // Update uniforms for this specific cloud
+      precompiledMaterial.uniforms.uDuration.value = cloud.duration;
+      precompiledMaterial.uniforms.uCloudOrigin.value.copy(cloud.origin);
+      precompiledMaterial.uniforms.uCloudDirection.value.copy(cloud.direction);
+      precompiledMaterial.uniforms.uScale.value = cloud.scale;
+      precompiledMaterial.uniforms.uSpread.value = cloud.spread;
+      precompiledMaterial.uniforms.uHeight.value = cloud.height;
+      precompiledMaterial.uniforms.uSpeed.value = cloud.speed;
+      precompiledMaterial.uniforms.uRotationSpeed.value = cloud.rotationSpeed;
+      precompiledMaterial.uniforms.uRotationOffset.value = cloud.rotationOffset;
+      precompiledMaterial.needsUpdate = true;
+    }
+    return precompiledMaterial;
   }, [cloud.origin, cloud.direction, cloud.duration, cloud.scale, cloud.spread, cloud.height, cloud.speed, cloud.rotationSpeed, cloud.rotationOffset]);
 
   // Cleanup material on unmount to prevent memory leaks
@@ -185,6 +177,8 @@ const PerimeterCloudParticles: React.FC<PerimeterCloudParticlesProps> = ({ cloud
       materialRef.current.uniforms.uCloudTime.value = t - cloud.startTime;
     }
   });
+
+  if (!material) return null;
 
   return (
     <points geometry={geometry}>

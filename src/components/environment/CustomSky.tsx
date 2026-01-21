@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect } from 'react';
 import { Color, BackSide, SphereGeometry } from '@/utils/three-exports';
+import { shaderRegistry } from '@/utils/shaderRegistry';
 
 interface SkyProps {
   theme?: 'purple' | 'lightBlue' | 'lightGreen' | 'red';
@@ -38,42 +39,16 @@ const createSkyShader = (theme: keyof typeof SKY_THEMES = 'purple') => {
   const topColor = new Color(themeColors.topColor);
   const middleColor = new Color(themeColors.middleColor);
   const bottomColor = new Color(themeColors.bottomColor);
-  
-  return {
-    uniforms: {
-      topColor: { value: topColor },
-      middleColor: { value: middleColor },
-      bottomColor: { value: bottomColor },
-      offset: { value: 25 },
-      exponent: { value: 0.8 },
-    },
-    vertexShader: `
-      varying vec3 vWorldPosition;
-      
-      void main() {
-        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPosition.xyz;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 topColor;
-      uniform vec3 middleColor;
-      uniform vec3 bottomColor;
-      uniform float offset;
-      uniform float exponent;
-      
-      varying vec3 vWorldPosition;
-      
-      void main() {
-        float h = normalize(vWorldPosition + vec3(0.0, offset, 0.0)).y;
-        float mixStrength = max(pow(max(h, 0.0), exponent), 0.0);
-        vec3 color = mix(middleColor, topColor, mixStrength);
-        color = mix(bottomColor, color, smoothstep(0.0, 1.0, h));
-        gl_FragColor = vec4(color, 1.0);
-      }
-    `,
-  };
+
+  const precompiledMaterial = shaderRegistry.getShader('skyGradient');
+  if (precompiledMaterial) {
+    // Update uniforms for this theme
+    precompiledMaterial.uniforms.topColor.value = topColor;
+    precompiledMaterial.uniforms.middleColor.value = middleColor;
+    precompiledMaterial.uniforms.bottomColor.value = bottomColor;
+  }
+
+  return precompiledMaterial;
 };
 
 /**
@@ -81,14 +56,12 @@ const createSkyShader = (theme: keyof typeof SKY_THEMES = 'purple') => {
  * Creates an immersive atmospheric backdrop for the game
  */
 const CustomSky: React.FC<SkyProps> = ({ theme = 'purple' }) => {
-  const shaderParams = useMemo(() => {
-    const skyShader = createSkyShader(theme);
-    return {
-      uniforms: skyShader.uniforms,
-      vertexShader: skyShader.vertexShader,
-      fragmentShader: skyShader.fragmentShader,
-      side: BackSide,
-    };
+  const shaderMaterial = useMemo(() => {
+    const material = createSkyShader(theme);
+    if (material) {
+      material.needsUpdate = true;
+    }
+    return material;
   }, [theme]);
 
   // Memoize geometry for performance
@@ -101,9 +74,11 @@ const CustomSky: React.FC<SkyProps> = ({ theme = 'purple' }) => {
     };
   }, [skyGeometry]);
 
+  if (!shaderMaterial) return null;
+
   return (
     <mesh geometry={skyGeometry}>
-      <shaderMaterial attach="material" args={[shaderParams]} />
+      <primitive object={shaderMaterial} attach="material" />
     </mesh>
   );
 };

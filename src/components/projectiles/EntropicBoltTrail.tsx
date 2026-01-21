@@ -1,6 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Color, Mesh, Group, Points, Vector3, AdditiveBlending } from '@/utils/three-exports';
+import { shaderRegistry } from '@/utils/shaderRegistry';
 
 interface EntropicBoltTrailProps {
   color: Color;
@@ -105,6 +106,10 @@ const EntropicBoltTrail: React.FC<EntropicBoltTrailProps> = ({
     }
   });
 
+  const shaderStrings = useMemo(() => {
+    return shaderRegistry.getShaderStrings('particleTrail');
+  }, []);
+
   return (
     <points ref={particlesRef}>
       <bufferGeometry>
@@ -127,47 +132,19 @@ const EntropicBoltTrail: React.FC<EntropicBoltTrailProps> = ({
           itemSize={1}
         />
       </bufferGeometry>
-      <shaderMaterial
-        transparent
-        depthWrite={false}
-        blending={AdditiveBlending}
-        vertexShader={`
-          attribute float opacity;
-          attribute float scale;
-          varying float vOpacity;
-          void main() {
-            vOpacity = opacity;
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_Position = projectionMatrix * mvPosition;
-            gl_PointSize = scale * 18.0 * (300.0 / -mvPosition.z);
-          }
-        `}
-        fragmentShader={`
-          varying float vOpacity;
-          uniform vec3 uColor;
-          uniform bool uIsCryoflame;
-          void main() {
-            float d = length(gl_PointCoord - vec2(0.5));
-            float strength = smoothstep(0.5, 0.1, d);
-            vec3 glowColor;
-            float emissiveMultiplier = 1.0;
-            if (uIsCryoflame) {
-              // For Cryoflame: mix with a deep navy blue for a rich blue effect and increase emissive intensity
-              glowColor = mix(uColor, vec3(0.2, 0.4, 0.8), 0.4);
-              emissiveMultiplier = 2.25;
-            } else {
-              // For normal Entropic: mix with orange for fire effect
-              glowColor = mix(uColor, vec3(1.0, 0.4, 0.0), 0.4);
-              emissiveMultiplier = 2.0; 
-            }
-            gl_FragColor = vec4(glowColor * emissiveMultiplier, vOpacity * strength);
-          }
-        `}
-        uniforms={{
-          uColor: { value: color },
-          uIsCryoflame: { value: isCryoflame },
-        }}
-      />
+      {shaderStrings && (
+        <shaderMaterial
+          transparent
+          depthWrite={false}
+          blending={AdditiveBlending}
+          vertexShader={shaderStrings.vertexShader}
+          fragmentShader={shaderStrings.fragmentShader}
+          uniforms={{
+            uColor: { value: color },
+            uIsCryoflame: { value: isCryoflame },
+          }}
+        />
+      )}
     </points>
   );
 };

@@ -1,13 +1,12 @@
 import React, { useRef, useMemo, useState, useCallback, useEffect, Fragment } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
-  ShaderMaterial,
   BufferGeometry,
   Float32BufferAttribute,
   Vector3,
-  AdditiveBlending,
   Color
 } from '@/utils/three-exports';
+import { shaderRegistry } from '@/utils/shaderRegistry';
 
 // Volcanic eruption vertex shader - for dramatic green eruptions
 const volcanicEruptionVertexShader = `
@@ -228,31 +227,24 @@ interface VolcanicEruptionParticlesProps {
 }
 
 const VolcanicEruptionParticles: React.FC<VolcanicEruptionParticlesProps> = ({ eruption, geometry }) => {
-  const materialRef = useRef<ShaderMaterial>(null!);
+  const materialRef = useRef<any>(null!);
 
   const material = useMemo(() => {
-    return new ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-        uSize: { value: 1.5 },
-        uEruptionTime: { value: 0 },
-        uDuration: { value: eruption.duration },
-        uEruptionOrigin: { value: eruption.origin },
-        uEruptionDirection: { value: eruption.direction },
-        // Variation uniforms
-        uScale: { value: eruption.scale },
-        uSpread: { value: eruption.spread },
-        uDistance: { value: eruption.distance },
-        uSpeed: { value: eruption.speed },
-        uRotationSpeed: { value: eruption.rotationSpeed },
-        uRotationOffset: { value: eruption.rotationOffset },
-      },
-      vertexShader: volcanicEruptionVertexShader,
-      fragmentShader: volcanicEruptionFragmentShader,
-      transparent: true,
-      blending: AdditiveBlending,
-      depthWrite: false,
-    });
+    const precompiledMaterial = shaderRegistry.getShader('volcanicEruption');
+    if (precompiledMaterial) {
+      // Update uniforms for this specific eruption
+      precompiledMaterial.uniforms.uDuration.value = eruption.duration;
+      precompiledMaterial.uniforms.uEruptionOrigin.value.copy(eruption.origin);
+      precompiledMaterial.uniforms.uEruptionDirection.value.copy(eruption.direction);
+      precompiledMaterial.uniforms.uScale.value = eruption.scale;
+      precompiledMaterial.uniforms.uSpread.value = eruption.spread;
+      precompiledMaterial.uniforms.uDistance.value = eruption.distance;
+      precompiledMaterial.uniforms.uSpeed.value = eruption.speed;
+      precompiledMaterial.uniforms.uRotationSpeed.value = eruption.rotationSpeed;
+      precompiledMaterial.uniforms.uRotationOffset.value = eruption.rotationOffset;
+      precompiledMaterial.needsUpdate = true;
+    }
+    return precompiledMaterial;
   }, [eruption.origin, eruption.direction, eruption.duration, eruption.scale, eruption.spread, eruption.distance, eruption.speed, eruption.rotationSpeed, eruption.rotationOffset]);
 
   // Cleanup material on unmount to prevent memory leaks
@@ -272,6 +264,8 @@ const VolcanicEruptionParticles: React.FC<VolcanicEruptionParticlesProps> = ({ e
     }
   });
 
+  if (!material) return null;
+
   return (
     <points geometry={geometry}>
       <primitive object={material} attach="material" ref={materialRef} />
@@ -284,25 +278,19 @@ interface GroundSplashProps {
 }
 
 const GroundSplash: React.FC<GroundSplashProps> = ({ eruption }) => {
-  const materialRef = useRef<ShaderMaterial>(null!);
+  const materialRef = useRef<any>(null!);
 
   const material = useMemo(() => {
-    return new ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-        uSplashTime: { value: 0 },
-        uDuration: { value: eruption.duration * 0.6 }, // Shorter duration than eruption
-        uOrigin: { value: eruption.origin },
-        uScale: { value: eruption.scale },
-        uMaxRadius: { value: eruption.scale * 0.4 }, // Scale affects splash size
-      },
-      vertexShader: groundSplashVertexShader,
-      fragmentShader: groundSplashFragmentShader,
-      transparent: true,
-      blending: AdditiveBlending,
-      depthWrite: false,
-      side: 2, // DoubleSide
-    });
+    const precompiledMaterial = shaderRegistry.getShader('groundSplash');
+    if (precompiledMaterial) {
+      // Update uniforms for this specific eruption
+      precompiledMaterial.uniforms.uDuration.value = eruption.duration * 0.6; // Shorter duration than eruption
+      precompiledMaterial.uniforms.uOrigin.value.copy(eruption.origin);
+      precompiledMaterial.uniforms.uScale.value = eruption.scale;
+      precompiledMaterial.uniforms.uMaxRadius.value = eruption.scale * 0.4; // Scale affects splash size
+      precompiledMaterial.needsUpdate = true;
+    }
+    return precompiledMaterial;
   }, [eruption.origin, eruption.duration, eruption.scale]);
 
   const geometry = useMemo(() => {
@@ -375,6 +363,8 @@ const GroundSplash: React.FC<GroundSplashProps> = ({ eruption }) => {
       materialRef.current.uniforms.uSplashTime.value = Math.max(0, t - (eruption.startTime - 0.5));
     }
   });
+
+  if (!material) return null;
 
   return (
     <mesh geometry={geometry}>
@@ -490,7 +480,7 @@ const VolcanicEruptionSystem: React.FC<VolcanicEruptionSystemProps> = ({
 
   // Create eruption particle geometry (shared between all eruptions)
   const eruptionGeometry = useMemo(() => {
-    const particleCount =15; // More particles for volcanic eruptions
+    const particleCount =20; // More particles for volcanic eruptions
     const positions = new Float32Array(particleCount * 3);
     const randoms = new Float32Array(particleCount);
     const particleIndices = new Float32Array(particleCount);

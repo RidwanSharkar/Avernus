@@ -1,6 +1,7 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, ShaderMaterial, CylinderGeometry, Color, RepeatWrapping, CanvasTexture } from '@/utils/three-exports';
+import { Mesh, CylinderGeometry, Color, RepeatWrapping, CanvasTexture } from '@/utils/three-exports';
+import { shaderRegistry } from '@/utils/shaderRegistry';
 
 // Texture caching system to prevent duplicate texture creation
 const textureCache = new Map<string, CanvasTexture>();
@@ -48,7 +49,7 @@ const EnhancedGround: React.FC<EnhancedGroundProps> = ({
   level = 1
 }) => {
   const meshRef = useRef<Mesh>(null);
-  const materialRef = useRef<ShaderMaterial>(null);
+  const materialRef = useRef<any>(null);
   const timeRef = useRef(0);
 
   // Get level-based colors - Purple volcanic theme matching pedestal (#7D5DE5)
@@ -284,117 +285,20 @@ const EnhancedGround: React.FC<EnhancedGroundProps> = ({
   }, []);
 
   const material = useMemo(() => {
-    return new ShaderMaterial({
-      uniforms: {
-        time: { value: 0 },
-        colorMap: { value: groundTexture },
-        normalMap: { value: normalTexture },
-        primaryColor: { value: getCachedColor(levelColors.primary) },
-        secondaryColor: { value: getCachedColor(levelColors.secondary) },
-        accentColor: { value: getCachedColor(levelColors.accent) },
-        lavaColor: { value: getCachedColor(levelColors.lava) },
-        lavaGlowColor: { value: getCachedColor(levelColors.lavaGlow) }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        varying vec3 vPosition;
-        varying vec3 vNormal;
-
-        void main() {
-          vUv = uv;
-          vPosition = position;
-          vNormal = normal;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform float time;
-        uniform sampler2D colorMap;
-        uniform sampler2D normalMap;
-        uniform vec3 primaryColor;
-        uniform vec3 secondaryColor;
-        uniform vec3 accentColor;
-        uniform vec3 lavaColor;
-        uniform vec3 lavaGlowColor;
-
-        varying vec2 vUv;
-        varying vec3 vPosition;
-        varying vec3 vNormal;
-
-        // Simple noise function for procedural effects
-        float noise(vec2 p) {
-          return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
-        }
-
-        // Fractal noise for more complex patterns
-        float fbm(vec2 p) {
-          float value = 0.0;
-          float amplitude = 0.5;
-          for (int i = 0; i < 4; i++) {
-            value += amplitude * noise(p);
-            p *= 2.0;
-            amplitude *= 0.5;
-          }
-          return value;
-        }
-
-        void main() {
-          // Sample textures
-          vec4 colorSample = texture2D(colorMap, vUv);
-          vec3 normalSample = texture2D(normalMap, vUv).rgb * 2.0 - 1.0;
-
-          // Distance from center for ambient occlusion effect
-          float distanceFromCenter = length(vPosition.xz) / 29.0;
-          float ao = 1.0 - smoothstep(0.0, 1.0, distanceFromCenter) * 0.25;
-
-          // Volcanic crack pattern detection (using noise)
-          vec2 crackUV = vUv * 8.0;
-          float crackPattern = fbm(crackUV + time * 0.05);
-          float crackIntensity = smoothstep(0.6, 0.8, crackPattern);
-          
-          // Animated lava glow effect
-          vec2 lavaUV = vUv * 3.0;
-          float lavaNoise = fbm(lavaUV + vec2(time * 0.1, time * 0.08));
-          float lavaFlow = sin(vPosition.x * 0.1 + time * 0.3) * sin(vPosition.z * 0.1 + time * 0.2) * 0.5 + 0.5;
-          float lavaIntensity = smoothstep(0.4, 0.7, lavaNoise * lavaFlow);
-          
-          // Pulsing lava glow animation
-          float pulse = sin(time * 2.0) * 0.3 + 0.7;
-          float glowIntensity = lavaIntensity * pulse;
-
-          // Base volcanic rock color with texture
-          vec3 rockColor = colorSample.rgb;
-          
-          // Add crack glow (darker cracks with enhanced emissive intensity)
-          rockColor = mix(rockColor, crackIntensity * accentColor * 0.3, crackIntensity * 0.2);
-          
-          // Add animated lava glow
-          vec3 lavaGlow = mix(lavaColor, lavaGlowColor, glowIntensity);
-          rockColor = mix(rockColor, lavaGlow, glowIntensity * 0.4);
-          
-          // Add subtle heat shimmer effect
-          float heatDistortion = sin(vPosition.x * 0.2 + time * 0.5) * sin(vPosition.z * 0.2 + time * 0.4) * 0.02;
-          rockColor += lavaGlow * heatDistortion * glowIntensity * 0.1;
-
-          // Apply ambient occlusion
-          vec3 finalColor = rockColor * ao;
-
-          // Enhanced rim lighting for volcanic edges
-          float rim = 1.0 - dot(vNormal, vec3(0.0, 1.0, 0.0));
-          rim = pow(rim, 2.5);
-          
-          // Rim glow from lava
-          vec3 rimGlow = mix(accentColor, lavaGlowColor, glowIntensity);
-          finalColor += rimGlow * rim * 0.15;
-
-          // Add subtle surface variation animation
-          float surfaceVariation = sin(vPosition.x * 0.015 + time * 0.08) * sin(vPosition.z * 0.015 + time * 0.06) * 0.03 + 1.0;
-          finalColor *= surfaceVariation;
-
-          gl_FragColor = vec4(finalColor, 1.0);
-        }
-      `
-    });
+    const precompiledMaterial = shaderRegistry.getShader('enhancedGround');
+    if (precompiledMaterial) {
+      // Update texture and color uniforms for this specific ground instance
+      precompiledMaterial.uniforms.colorMap.value = groundTexture;
+      precompiledMaterial.uniforms.normalMap.value = normalTexture;
+      precompiledMaterial.uniforms.primaryColor.value.copy(getCachedColor(levelColors.primary));
+      precompiledMaterial.uniforms.secondaryColor.value.copy(getCachedColor(levelColors.secondary));
+      precompiledMaterial.uniforms.accentColor.value.copy(getCachedColor(levelColors.accent));
+      precompiledMaterial.uniforms.lavaColor.value.copy(getCachedColor(levelColors.lava));
+      precompiledMaterial.uniforms.lavaGlowColor.value.copy(getCachedColor(levelColors.lavaGlow));
+      // Force material update
+      precompiledMaterial.needsUpdate = true;
+    }
+    return precompiledMaterial;
   }, [groundTexture, normalTexture, levelColors]);
 
   const geometry = useMemo(() => new CylinderGeometry(radius, radius, height, 32, 1), [radius, height]);
@@ -404,7 +308,9 @@ const EnhancedGround: React.FC<EnhancedGroundProps> = ({
     return () => {
       // Only dispose geometry and material - textures may be shared
       geometry.dispose();
-      material.dispose();
+      if (material) {
+        material.dispose();
+      }
 
       // Dispose ground texture only if it's not cached (shouldn't happen with current implementation)
       if (groundTexture && !textureCache.has(`ground_${level}`)) {
@@ -423,6 +329,8 @@ const EnhancedGround: React.FC<EnhancedGroundProps> = ({
       materialRef.current.uniforms.time.value = timeRef.current;
     }
   });
+
+  if (!material) return null;
 
   return (
     <mesh

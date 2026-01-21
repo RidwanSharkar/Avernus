@@ -1,6 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Color, Mesh, Group, Points, Vector3, AdditiveBlending } from '@/utils/three-exports';
+import { shaderRegistry } from '@/utils/shaderRegistry';
 
 interface TowerProjectileTrailProps {
   team: 'Red' | 'Blue';
@@ -107,6 +108,10 @@ const TowerProjectileTrail: React.FC<TowerProjectileTrailProps> = ({
     }
   });
 
+  const shaderStrings = useMemo(() => {
+    return shaderRegistry.getShaderStrings('particleTrailCryo');
+  }, []);
+
   return (
     <points ref={particlesRef}>
       <bufferGeometry>
@@ -129,35 +134,18 @@ const TowerProjectileTrail: React.FC<TowerProjectileTrailProps> = ({
           itemSize={1}
         />
       </bufferGeometry>
-      <shaderMaterial
-        transparent
-        depthWrite={false}
-        blending={AdditiveBlending}
-        vertexShader={`
-          attribute float opacity;
-          attribute float scale;
-          varying float vOpacity;
-          void main() {
-            vOpacity = opacity;
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_Position = projectionMatrix * mvPosition;
-            gl_PointSize = scale * 20.0 * (300.0 / -mvPosition.z);
-          }
-        `}
-        fragmentShader={`
-          varying float vOpacity;
-          uniform vec3 uColor;
-          void main() {
-            float d = length(gl_PointCoord - vec2(0.5));
-            float strength = smoothstep(0.5, 0.15, d);
-            vec3 finalColor = uColor;
-            gl_FragColor = vec4(finalColor, vOpacity * strength);
-          }
-        `}
-        uniforms={{
-          uColor: { value: trailColor },
-        }}
-      />
+      {shaderStrings && (
+        <shaderMaterial
+          transparent
+          depthWrite={false}
+          blending={AdditiveBlending}
+          vertexShader={shaderStrings.vertexShader}
+          fragmentShader={shaderStrings.fragmentShader}
+          uniforms={{
+            uColor: { value: trailColor },
+          }}
+        />
+      )}
     </points>
   );
 };
