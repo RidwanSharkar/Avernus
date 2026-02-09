@@ -160,7 +160,7 @@ export class ControlSystem extends System {
   private swordFireRate = 0.825; // Rate for sword attacks
   private runebladeFireRate = 0.725; // Runeblade attack rate
   private sabresFireRate = 0.6; // Sabres dual attack rate (600ms between attacks)
-  private scytheFireRate = 0.35; // EntropicBolt rate (0.33s cooldown)
+  private scytheFireRate = 0.4; // EntropicBolt rate (0.33s cooldown)
   private crossentropyFireRate = 2; // CrossentropyBolt rate (1 per second)
   private summonTotemFireRate = 5.0; // Summon Totem rate (5 seconds cooldown)
   private viperStingFireRate = 2.0; // Viper Sting rate (2 seconds cooldown)
